@@ -251,6 +251,12 @@
         <a class="nav-item" data-panel="comentarios" onclick="showPanel('comentarios')">
             <i class="fas fa-comments"></i> Comentários
         </a>
+        <a class="nav-item" data-panel="avaliacoes" onclick="showPanel('avaliacoes')">
+            <i class="fas fa-star"></i> Avaliações
+        </a>
+        <a class="nav-item" data-panel="quiz" onclick="showPanel('quiz')">
+            <i class="fas fa-trophy"></i> Quiz / Leads
+        </a>
         <a class="nav-item" data-panel="planos" onclick="showPanel('planos')">
             <i class="fas fa-dollar-sign"></i> Planos
         </a>
@@ -304,12 +310,17 @@
         <div class="panel" id="panel-pratos">
             <div class="toolbar">
                 <h2>Pratos</h2>
-                <button class="btn btn-primary" onclick="openModal('prato')"><i class="fas fa-plus"></i> Novo prato</button>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <select id="filtro-prato-cat" onchange="renderPratosFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
+                        <option value="">Todas as categorias</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openModal('prato')"><i class="fas fa-plus"></i> Novo prato</button>
+                </div>
             </div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Foto</th><th>Nome</th><th>Categoria</th><th>Destaque</th><th>Ações</th></tr></thead>
-                    <tbody id="tb-pratos"><tr class="empty-row"><td colspan="5">Carregando...</td></tr></tbody>
+                    <thead><tr><th>Foto</th><th>Nome</th><th>Categoria</th><th>⭐ Média</th><th>Votos</th><th>Destaque</th><th>Ações</th></tr></thead>
+                    <tbody id="tb-pratos"><tr class="empty-row"><td colspan="7">Carregando...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -318,7 +329,12 @@
         <div class="panel" id="panel-restaurantes">
             <div class="toolbar">
                 <h2>Restaurantes</h2>
-                <button class="btn btn-primary" onclick="openModal('restaurante')"><i class="fas fa-plus"></i> Novo restaurante</button>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <select id="filtro-rest-cat" onchange="renderRestaurantesFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
+                        <option value="">Todas as categorias</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openModal('restaurante')"><i class="fas fa-plus"></i> Novo restaurante</button>
+                </div>
             </div>
             <div class="table-wrap">
                 <table>
@@ -380,6 +396,34 @@
                 <table>
                     <thead><tr><th>Nome</th><th>Restaurante</th><th>Comentário</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
                     <tbody id="tb-comentarios"><tr class="empty-row"><td colspan="6">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── Avaliações de Pratos ── -->
+        <div class="panel" id="panel-avaliacoes">
+            <div class="toolbar">
+                <h2>Avaliações de Pratos</h2>
+                <span style="font-size:0.85em;color:var(--muted)">Média de estrelas por prato</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Prato</th><th>Categoria</th><th>⭐ Média</th><th>Votos</th></tr></thead>
+                    <tbody id="tb-avaliacoes"><tr class="empty-row"><td colspan="4">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── Quiz / Leads ── -->
+        <div class="panel" id="panel-quiz">
+            <div class="toolbar">
+                <h2>Quiz — Leads Gerados</h2>
+                <span style="font-size:0.85em;color:var(--muted)">Usuários que participaram da disputa de pratos</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Nome</th><th>E-mail</th><th>Categoria</th><th>Vencedor escolhido</th><th>Data</th><th>Ações</th></tr></thead>
+                    <tbody id="tb-quiz"><tr class="empty-row"><td colspan="6">Carregando...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -627,7 +671,8 @@ const PANEL_TITLES = {
     dashboard: 'Dashboard', categorias: 'Categorias', pratos: 'Pratos',
     restaurantes: 'Restaurantes', blog: 'Blog',
     vagas: 'Vagas de Emprego', candidatos: 'Candidatos',
-    comentarios: 'Comentários', planos: 'Planos'
+    comentarios: 'Comentários', avaliacoes: 'Avaliações de Pratos',
+    quiz: 'Quiz / Leads', planos: 'Planos'
 };
 
 function showPanel(name) {
@@ -643,6 +688,8 @@ function showPanel(name) {
     if (name === 'vagas')        loadVagas();
     if (name === 'candidatos')   loadCandidatos();
     if (name === 'comentarios')  loadComentariosAdmin();
+    if (name === 'avaliacoes')   loadAvaliacoes();
+    if (name === 'quiz')         loadQuiz();
     if (name === 'planos')       loadPlanos();
     closeSidebar();
 }
@@ -773,25 +820,40 @@ async function saveCategoria() {
 let pratos = [];
 async function loadPratos() {
     const tb = document.getElementById('tb-pratos');
-    tb.innerHTML = '<tr class="empty-row"><td colspan="5">Carregando...</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
     await loadCatSelectsIfNeeded();
+    // popula filtro de categoria
+    const filtro = document.getElementById('filtro-prato-cat');
+    filtro.innerHTML = '<option value="">Todas as categorias</option>' +
+        cats.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
     try {
         pratos = await fetch('/api/admin/pratos').then(r => r.json());
-        if (!pratos.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum prato cadastrado.</td></tr>'; return; }
-        tb.innerHTML = pratos.map(p => {
-            const cat = cats.find(c => c.id === p.categoria_id);
-            return `<tr>
-                <td><img class="img-thumb" src="${p.foto_url || 'https://placehold.co/80x60?text=?'}" alt="${p.nome}" onerror="this.src='https://placehold.co/80x60?text=?'"></td>
-                <td><strong>${p.nome}</strong></td>
-                <td>${cat ? cat.nome : '—'}</td>
-                <td>${p.destaque ? '<span class="badge badge-gold">⭐ Sim</span>' : '<span style="color:var(--muted)">—</span>'}</td>
-                <td><div class="actions">
-                    <button class="btn btn-secondary btn-sm" onclick="editPrato(${p.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteItem('prato', ${p.id})"><i class="fas fa-trash"></i></button>
-                </div></td>
-            </tr>`;
-        }).join('');
-    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="5">Erro ao carregar.</td></tr>'; }
+        renderPratosFiltrados();
+    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar.</td></tr>'; }
+}
+
+function renderPratosFiltrados() {
+    const tb = document.getElementById('tb-pratos');
+    const catFiltro = document.getElementById('filtro-prato-cat').value;
+    const lista = catFiltro ? pratos.filter(p => String(p.categoria_id) === catFiltro) : pratos;
+    if (!lista.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum prato encontrado.</td></tr>'; return; }
+    tb.innerHTML = lista.map(p => {
+        const cat = cats.find(c => c.id === p.categoria_id);
+        const media = p.media_nota ? Number(p.media_nota).toFixed(1) : '—';
+        const votos = p.total_votos || 0;
+        return `<tr>
+            <td><img class="img-thumb" src="${p.foto_url || 'https://placehold.co/80x60?text=?'}" alt="${p.nome}" onerror="this.src='https://placehold.co/80x60?text=?'"></td>
+            <td><strong>${p.nome}</strong></td>
+            <td>${cat ? cat.nome : '—'}</td>
+            <td>${media !== '—' ? `<span style="color:#a16207;font-weight:600">${media} ★</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+            <td style="color:var(--muted);font-size:0.88em">${votos}</td>
+            <td>${p.destaque ? '<span class="badge badge-gold">⭐ Sim</span>' : '<span style="color:var(--muted)">—</span>'}</td>
+            <td><div class="actions">
+                <button class="btn btn-secondary btn-sm" onclick="editPrato(${p.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteItem('prato', ${p.id})"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`;
+    }).join('');
 }
 
 function editPrato(id) {
@@ -844,25 +906,36 @@ async function loadRestaurantes() {
     tb.innerHTML = '<tr class="empty-row"><td colspan="6">Carregando...</td></tr>';
     await loadCatSelectsIfNeeded();
     await loadPlanosIfNeeded();
+    // popula filtro de categoria
+    const filtro = document.getElementById('filtro-rest-cat');
+    filtro.innerHTML = '<option value="">Todas as categorias</option>' +
+        cats.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
     try {
         restaurantes = await fetch('/api/admin/restaurantes').then(r => r.json());
-        if (!restaurantes.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum restaurante cadastrado.</td></tr>'; return; }
-        tb.innerHTML = restaurantes.map(r => {
-            const cat = cats.find(c => c.id === r.categoria_id);
-            const pl  = planos.find(p => p.id === r.plano_id);
-            return `<tr>
-                <td><strong>${r.nome}</strong></td>
-                <td>${cat ? cat.nome : '—'}</td>
-                <td>${r.bairro || '—'}</td>
-                <td>${pl ? pl.nome : '—'}</td>
-                <td><span class="badge ${r.ativo ? 'badge-green' : 'badge-red'}">${r.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                <td><div class="actions">
-                    <button class="btn btn-secondary btn-sm" onclick="editRestaurante(${r.id})"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteItem('restaurante', ${r.id})"><i class="fas fa-trash"></i></button>
-                </div></td>
-            </tr>`;
-        }).join('');
+        renderRestaurantesFiltrados();
     } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Erro ao carregar.</td></tr>'; }
+}
+
+function renderRestaurantesFiltrados() {
+    const tb = document.getElementById('tb-restaurantes');
+    const catFiltro = document.getElementById('filtro-rest-cat').value;
+    const lista = catFiltro ? restaurantes.filter(r => String(r.categoria_id) === catFiltro) : restaurantes;
+    if (!lista.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum restaurante encontrado.</td></tr>'; return; }
+    tb.innerHTML = lista.map(r => {
+        const cat = cats.find(c => c.id === r.categoria_id);
+        const pl  = planos.find(p => p.id === r.plano_id);
+        return `<tr>
+            <td><strong>${r.nome}</strong></td>
+            <td>${cat ? cat.nome : '—'}</td>
+            <td>${r.bairro || '—'}</td>
+            <td>${pl ? pl.nome : '—'}</td>
+            <td><span class="badge ${r.ativo ? 'badge-green' : 'badge-red'}">${r.ativo ? 'Ativo' : 'Inativo'}</span></td>
+            <td><div class="actions">
+                <button class="btn btn-secondary btn-sm" onclick="editRestaurante(${r.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="deleteItem('restaurante', ${r.id})"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`;
+    }).join('');
 }
 
 function editRestaurante(id) {
@@ -1146,6 +1219,67 @@ async function deleteItem(type, id) {
         if (type === 'post')        loadBlog();
         if (type === 'vaga')        loadVagas();
         if (type === 'candidato')   loadCandidatos();
+    } catch(e) { toast('Erro ao excluir.', 'error'); }
+}
+
+// ════════════════════════════════════════
+//  AVALIAÇÕES DE PRATOS
+// ════════════════════════════════════════
+async function loadAvaliacoes() {
+    const tb = document.getElementById('tb-avaliacoes');
+    tb.innerHTML = '<tr class="empty-row"><td colspan="4">Carregando...</td></tr>';
+    try {
+        const rows = await fetch('/api/admin/avaliacoes').then(r => r.json());
+        if (!rows.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma avaliação registrada ainda.</td></tr>'; return; }
+        tb.innerHTML = rows.map(a => {
+            const stars = '★'.repeat(Math.round(a.media)) + '☆'.repeat(5 - Math.round(a.media));
+            return `<tr>
+                <td><strong>${a.prato_nome}</strong></td>
+                <td>${a.categoria_nome || '—'}</td>
+                <td><span style="color:#a16207;font-size:1.1em;letter-spacing:1px">${stars}</span>
+                    <span style="margin-left:6px;font-weight:600">${Number(a.media).toFixed(1)}</span></td>
+                <td style="color:var(--muted)">${a.total_votos} voto${a.total_votos !== 1 ? 's' : ''}</td>
+            </tr>`;
+        }).join('');
+    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="4">Erro ao carregar.</td></tr>'; }
+}
+
+// ════════════════════════════════════════
+//  QUIZ / LEADS
+// ════════════════════════════════════════
+let quizResultados = [];
+async function loadQuiz() {
+    const tb = document.getElementById('tb-quiz');
+    tb.innerHTML = '<tr class="empty-row"><td colspan="6">Carregando...</td></tr>';
+    try {
+        quizResultados = await fetch('/api/admin/quiz_resultados').then(r => r.json());
+        if (!quizResultados.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum lead gerado ainda.</td></tr>'; return; }
+        tb.innerHTML = quizResultados.map(q => {
+            // extrai o último vencedor dos duelos
+            let vencedor = '—';
+            try {
+                const duelos = JSON.parse(q.pratos_escolhidos);
+                if (duelos && duelos.length) vencedor = duelos[duelos.length - 1].vencedor;
+            } catch(e) {}
+            return `<tr>
+                <td><strong>${q.nome}</strong></td>
+                <td>${q.email ? `<a href="mailto:${q.email}" style="color:var(--primary)">${q.email}</a>` : '<span style="color:var(--muted)">—</span>'}</td>
+                <td>${q.categoria_slug || '—'}</td>
+                <td>${vencedor}</td>
+                <td style="font-size:0.82em;color:var(--muted)">${q.criado_em || ''}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="deletarQuiz(${q.id})" title="Excluir"><i class="fas fa-trash"></i></button></td>
+            </tr>`;
+        }).join('');
+    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Erro ao carregar.</td></tr>'; }
+}
+
+async function deletarQuiz(id) {
+    if (!confirm('Excluir este lead permanentemente?')) return;
+    try {
+        const res = await api('DELETE', `/api/admin/quiz_resultados/${id}`);
+        if (res.error) { toast(res.error, 'error'); return; }
+        toast('Lead excluído!');
+        loadQuiz();
     } catch(e) { toast('Erro ao excluir.', 'error'); }
 }
 
