@@ -320,7 +320,7 @@
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Foto</th><th>Nome</th><th>Categoria</th><th>⭐ Média</th><th>Votos</th><th>Destaque</th><th>Ações</th></tr></thead>
-                    <tbody id="tb-pratos"><tr class="empty-row"><td colspan="7">Carregando...</td></tr></tbody>
+                    <tbody id="tb-pratos"><tr class="empty-row"><td colspan="8">Carregando...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -366,8 +366,8 @@
             </div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Cargo</th><th>Restaurante</th><th>Regime</th><th>Salário</th><th>Destaque</th><th>Status</th><th>Ações</th></tr></thead>
-                    <tbody id="tb-vagas"><tr class="empty-row"><td colspan="7">Carregando...</td></tr></tbody>
+                    <thead><tr><th>Cargo</th><th>Restaurante</th><th>Regime</th><th>Salário</th><th>Destaque</th><th>Link</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody id="tb-vagas"><tr class="empty-row"><td colspan="8">Carregando...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -628,7 +628,7 @@
                 <div class="field"><label>Bairro</label><input type="text" id="vaga-bairro" placeholder="Ex: Mooca"></div>
             </div>
             <div class="field"><label>Descrição da vaga</label><textarea id="vaga-descricao" placeholder="Requisitos, benefícios, horários..."></textarea></div>
-            <div class="field"><label>WhatsApp para contato *</label><input type="text" id="vaga-whatsapp" placeholder="(11) 9xxxx-xxxx"><div class="hint">O candidato entrará em contato via WhatsApp.</div></div>
+            <div class="field"><label>Link da vaga</label><input type="text" id="vaga-whatsapp" placeholder="https://catho.com.br/vaga/... ou https://wa.me/5511..."><div class="hint">Cole o link da Catho, Vagas.com, LinkedIn, WhatsApp ou qualquer outro. Deixe vazio se não tiver.</div></div>
             <div style="display:flex;gap:24px;">
                 <div class="check-row">
                     <input type="checkbox" id="vaga-ativo" checked>
@@ -820,7 +820,7 @@ async function saveCategoria() {
 let pratos = [];
 async function loadPratos() {
     const tb = document.getElementById('tb-pratos');
-    tb.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="8">Carregando...</td></tr>';
     await loadCatSelectsIfNeeded();
     // popula filtro de categoria
     const filtro = document.getElementById('filtro-prato-cat');
@@ -829,7 +829,7 @@ async function loadPratos() {
     try {
         pratos = await fetch('/api/admin/pratos').then(r => r.json());
         renderPratosFiltrados();
-    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar.</td></tr>'; }
+    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="8">Erro ao carregar.</td></tr>'; }
 }
 
 function renderPratosFiltrados() {
@@ -1053,11 +1053,11 @@ async function savePost() {
 let vagas = [];
 async function loadVagas() {
     const tb = document.getElementById('tb-vagas');
-    tb.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="8">Carregando...</td></tr>';
     await loadRestSelectIfNeeded();
     try {
         vagas = await fetch('/api/admin/vagas').then(r => r.json());
-        if (!vagas.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhuma vaga cadastrada.</td></tr>'; return; }
+        if (!vagas.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="8">Nenhuma vaga cadastrada.</td></tr>'; return; }
         tb.innerHTML = vagas.map(v => `
             <tr>
                 <td><strong>${v.cargo}</strong></td>
@@ -1065,13 +1065,14 @@ async function loadVagas() {
                 <td>${v.regime || '—'}</td>
                 <td>${v.salario || '—'}</td>
                 <td>${v.destaque ? '<span class="badge badge-gold">⭐ Sim</span>' : '—'}</td>
+                <td>${v.whatsapp ? `<a href="${v.whatsapp}" target="_blank" style="font-size:12px">🔗 Ver link</a>` : '<span style="color:var(--muted)">—</span>'}</td>
                 <td><span class="badge ${v.ativo ? 'badge-green' : 'badge-red'}">${v.ativo ? 'Ativa' : 'Inativa'}</span></td>
                 <td><div class="actions">
                     <button class="btn btn-secondary btn-sm" onclick="editVaga(${v.id})"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-danger btn-sm" onclick="deleteItem('vaga', ${v.id})"><i class="fas fa-trash"></i></button>
                 </div></td>
             </tr>`).join('');
-    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar.</td></tr>'; }
+    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="8">Erro ao carregar.</td></tr>'; }
 }
 
 function editVaga(id) {
@@ -1105,7 +1106,7 @@ async function saveVaga() {
         ativo:          document.getElementById('vaga-ativo').checked,
         destaque:       document.getElementById('vaga-destaque').checked,
     };
-    if (!body.cargo || !body.whatsapp) { toast('Cargo e WhatsApp são obrigatórios.', 'error'); return; }
+    if (!body.cargo) { toast('Cargo é obrigatório.', 'error'); return; }
     try {
         const res = id ? await api('PUT', `/api/admin/vagas/${id}`, body)
                        : await api('POST', '/api/admin/vagas', body);
@@ -1124,7 +1125,7 @@ async function saveVaga() {
 let candidatos = [];
 async function loadCandidatos() {
     const tb = document.getElementById('tb-candidatos');
-    tb.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="8">Carregando...</td></tr>';
     try {
         candidatos = await fetch('/api/admin/candidatos').then(r => r.json());
         if (!candidatos.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="8">Nenhum candidato cadastrado ainda.</td></tr>'; return; }
