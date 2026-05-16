@@ -44,9 +44,10 @@
         }
         .rest-hero-placeholder {
             width: 100%; height: 320px;
-            background: linear-gradient(135deg, #c0392b22, #922b2122);
+            background: var(--light);
             display: flex; align-items: center; justify-content: center;
-            font-size: 5em; color: var(--medium-gray);
+            font-size: 1.4em; font-weight: 700; color: var(--dark);
+            letter-spacing: 0.05em; text-transform: uppercase;
         }
 
         /* ── Layout principal ── */
@@ -172,6 +173,32 @@
             .rest-hero { height: 220px; }
             #map { height: 230px; }
         }
+
+        /* ── Comentários ── */
+        .comentario-item {
+            border-bottom: 1px solid var(--medium-gray);
+            padding: 14px 0;
+        }
+        .comentario-item:last-child { border-bottom: none; }
+        .comentario-item .coment-nome { font-weight: 700; font-size: 0.92em; color: var(--dark-gray); margin-bottom: 4px; }
+        .comentario-item .coment-data { font-size: 0.78em; color: #adb5bd; margin-left: 8px; }
+        .comentario-item .coment-texto { font-size: 0.93em; color: var(--text-color); line-height: 1.5; }
+        .form-comentario { display: flex; flex-direction: column; gap: 12px; }
+        .form-comentario input, .form-comentario textarea {
+            width: 100%; padding: 10px 13px; border: 1px solid var(--medium-gray);
+            border-radius: 8px; font-family: inherit; font-size: 0.92em;
+            background: var(--light-gray); outline: none; transition: border-color 0.2s;
+        }
+        .form-comentario input:focus, .form-comentario textarea:focus { border-color: var(--primary); background: var(--white); }
+        .form-comentario textarea { resize: vertical; min-height: 90px; }
+        .btn-enviar-coment {
+            background: var(--primary); color: var(--white);
+            border: none; padding: 11px 22px; border-radius: 8px;
+            font-family: inherit; font-size: 0.92em; font-weight: 700;
+            cursor: pointer; align-self: flex-end; transition: background 0.2s;
+        }
+        .btn-enviar-coment:hover { background: var(--dark); }
+        .coment-aviso { font-size: 0.8em; color: #6c757d; text-align: center; }
     </style>
 </head>
 <body>
@@ -212,10 +239,14 @@
              src="{{ restaurante.foto_url }}"
              alt="{{ restaurante.nome }}"
              onerror="this.onerror=null;this.style.display='none';document.getElementById('hero-placeholder').style.display='flex';">
+        <div class="rest-hero-placeholder" id="hero-placeholder" style="display:none">
+            {{ restaurante.categoria_nome or '🍽️' }}
+        </div>
+    {% else %}
+        <div class="rest-hero-placeholder" id="hero-placeholder">
+            {{ restaurante.categoria_nome or '🍽️' }}
+        </div>
     {% endif %}
-    <div class="rest-hero-placeholder" id="hero-placeholder" style="{% if restaurante.foto_url %}display:none{% endif %}">
-        🍽️
-    </div>
 
     <!-- Dados do restaurante passados para JS -->
     <script>
@@ -223,6 +254,7 @@
         const REST_LNG = {{ restaurante.lng or 'null' }};
         const REST_NOME = {{ restaurante.nome | tojson }};
         const REST_ENDERECO = {{ (restaurante.endereco or '') | tojson }};
+        const REST_ID = {{ restaurante.id }};
     </script>
 
     <main>
@@ -284,6 +316,25 @@
                     </div>
                 </div>
                 {% endif %}
+
+                <!-- Comentários -->
+                <div class="card">
+                    <h2><i class="fas fa-comments"></i> Comentários</h2>
+                    <div id="comentarios-lista">
+                        <p style="color:#6c757d;font-size:0.9em;">Carregando comentários...</p>
+                    </div>
+                    <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--medium-gray);">
+                        <h3 style="font-size:0.95em;font-weight:700;color:var(--dark-gray);margin-bottom:14px;">Deixe seu comentário</h3>
+                        <div class="form-comentario">
+                            <input type="text" id="coment-nome" placeholder="Seu nome *" maxlength="80">
+                            <input type="email" id="coment-email" placeholder="Seu e-mail (opcional, não será exibido)">
+                            <textarea id="coment-texto" placeholder="Escreva seu comentário... *" maxlength="1000"></textarea>
+                            <button class="btn-enviar-coment" onclick="enviarComentario()"><i class="fas fa-paper-plane"></i> Enviar comentário</button>
+                            <p class="coment-aviso">Comentários passam por moderação antes de serem publicados.</p>
+                        </div>
+                        <div id="coment-feedback" style="display:none;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:0.9em;"></div>
+                    </div>
+                </div>
 
             </div>
 
@@ -507,6 +558,74 @@
                     * Math.sin(dLon/2) * Math.sin(dLon/2);
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
+
+        // ── Comentários ─────────────────────────
+        async function loadComentarios() {
+            const lista = document.getElementById('comentarios-lista');
+            try {
+                const res = await fetch(`/api/restaurantes/${REST_ID}/comentarios`);
+                const comentarios = await res.json();
+                if (!comentarios.length) {
+                    lista.innerHTML = '<p style="color:#6c757d;font-size:0.9em;">Nenhum comentário ainda. Seja o primeiro!</p>';
+                    return;
+                }
+                lista.innerHTML = comentarios.map(c => `
+                    <div class="comentario-item">
+                        <div class="coment-nome">
+                            ${c.nome}
+                            <span class="coment-data">${c.criado_em || ''}</span>
+                        </div>
+                        <div class="coment-texto">${c.texto}</div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                lista.innerHTML = '<p style="color:#6c757d;font-size:0.9em;">Erro ao carregar comentários.</p>';
+            }
+        }
+
+        async function enviarComentario() {
+            const nome  = document.getElementById('coment-nome').value.trim();
+            const email = document.getElementById('coment-email').value.trim();
+            const texto = document.getElementById('coment-texto').value.trim();
+            const fb    = document.getElementById('coment-feedback');
+
+            if (!nome || !texto) {
+                fb.style.display = '';
+                fb.style.background = '#fee2e2';
+                fb.style.color = '#dc2626';
+                fb.textContent = 'Por favor, preencha seu nome e o comentário.';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/restaurantes/${REST_ID}/comentarios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, email, texto })
+                });
+                const data = await res.json();
+                fb.style.display = '';
+                if (data.ok) {
+                    fb.style.background = '#dcfce7';
+                    fb.style.color = '#15803d';
+                    fb.textContent = '✓ Comentário enviado! Aparecerá após aprovação.';
+                    document.getElementById('coment-nome').value  = '';
+                    document.getElementById('coment-email').value = '';
+                    document.getElementById('coment-texto').value = '';
+                } else {
+                    fb.style.background = '#fee2e2';
+                    fb.style.color = '#dc2626';
+                    fb.textContent = data.error || 'Erro ao enviar comentário.';
+                }
+            } catch(e) {
+                fb.style.display = '';
+                fb.style.background = '#fee2e2';
+                fb.style.color = '#dc2626';
+                fb.textContent = 'Erro ao enviar. Tente novamente.';
+            }
+        }
+
+        loadComentarios();
     </script>
 </body>
 </html>
