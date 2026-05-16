@@ -430,6 +430,99 @@
                 flex: 0 0 calc(100%);
             }
         }
+
+        /* ── Competição de Pratos ── */
+        .disputa-section {
+            background: linear-gradient(135deg, #1a0505 0%, #2d0a0a 100%);
+            padding: 60px 0;
+            color: #fff;
+        }
+        .disputa-badge {
+            display: inline-block; background: var(--primary); color: #fff;
+            font-size: 0.75em; font-weight: 700; padding: 3px 14px;
+            border-radius: 20px; margin-bottom: 12px;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .disputa-section .section-title { color: #fff; text-align: center; }
+        .disputa-section .section-subtitle { color: rgba(255,255,255,0.55); text-align: center; }
+        .disputa-progress { display: flex; justify-content: center; gap: 8px; margin: 20px 0 6px; }
+        .disputa-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: rgba(255,255,255,0.18); transition: background 0.3s;
+        }
+        .disputa-dot.feito { background: var(--primary); }
+        .disputa-dot.atual { background: #fff; }
+        .disputa-rodada { text-align: center; font-size: 0.82em; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+        .disputa-arena {
+            display: flex; align-items: center; justify-content: center;
+            gap: 24px; margin: 10px 0 30px; flex-wrap: wrap;
+        }
+        .disputa-prato {
+            background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px; overflow: hidden; width: 240px; cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+        .disputa-prato:hover {
+            transform: translateY(-7px); border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(192,57,43,0.45);
+        }
+        .disputa-prato img { width: 100%; height: 170px; object-fit: cover; display: block; }
+        .disputa-prato .dp-nome { padding: 12px 14px; font-size: 1em; font-weight: 700; color: #fff; }
+        .disputa-prato .dp-ing { padding: 0 14px 12px; font-size: 0.78em; color: rgba(255,255,255,0.5); }
+        .disputa-vs {
+            font-size: 2.4em; font-weight: 900; color: var(--primary);
+            text-shadow: 0 0 20px rgba(192,57,43,0.7); flex-shrink: 0;
+        }
+        .disputa-hint { text-align: center; font-size: 0.82em; color: rgba(255,255,255,0.3); margin-top: -16px; margin-bottom: 16px; }
+        /* Vencedor */
+        .disputa-vencedor { text-align: center; display: none; }
+        .disputa-vencedor .trophy-emoji { font-size: 3.5em; margin-bottom: 10px; display: block; }
+        .disputa-vencedor img {
+            width: 180px; height: 180px; object-fit: cover; border-radius: 50%;
+            border: 4px solid var(--primary); margin: 0 auto 18px; display: block;
+        }
+        .disputa-vencedor h3 { font-size: 1.7em; font-weight: 900; color: #fff; margin-bottom: 6px; }
+        .disputa-vencedor .ven-sub { color: rgba(255,255,255,0.55); font-size: 0.95em; margin-bottom: 8px; }
+        .disputa-vencedor .ven-lead { color: rgba(255,255,255,0.4); font-size: 0.85em; margin-bottom: 24px; }
+        .disputa-form { max-width: 380px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+        .disputa-form input {
+            padding: 12px 16px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.07); color: #fff;
+            font-family: inherit; font-size: 0.95em;
+        }
+        .disputa-form input::placeholder { color: rgba(255,255,255,0.3); }
+        .disputa-form input:focus { outline: none; border-color: var(--primary); }
+        .disputa-btn-salvar {
+            background: var(--primary); color: #fff; border: none;
+            padding: 13px 24px; border-radius: 8px; font-size: 1em;
+            font-weight: 700; cursor: pointer; font-family: inherit;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .disputa-btn-salvar:hover { background: var(--dark); transform: translateY(-1px); }
+        .disputa-btn-pular {
+            background: transparent; color: rgba(255,255,255,0.35); border: none;
+            font-size: 0.85em; cursor: pointer; font-family: inherit; margin-top: 2px;
+        }
+        .disputa-btn-pular:hover { color: rgba(255,255,255,0.65); }
+        .disputa-feedback { text-align: center; margin-top: 8px; font-size: 0.9em; display: none; }
+        .disputa-reiniciar {
+            background: transparent; color: rgba(255,255,255,0.45);
+            border: 1px solid rgba(255,255,255,0.2); padding: 9px 22px;
+            border-radius: 6px; font-size: 0.85em; cursor: pointer;
+            font-family: inherit; margin-top: 18px;
+            transition: all 0.2s; display: none;
+        }
+        .disputa-reiniciar:hover { color: #fff; border-color: rgba(255,255,255,0.5); }
+        @media (max-width: 600px) {
+            .disputa-arena { gap: 12px; }
+            .disputa-prato { width: 140px; }
+            .disputa-prato img { height: 120px; }
+            .disputa-prato .dp-nome { font-size: 0.88em; padding: 10px; }
+            .disputa-prato .dp-ing { display: none; }
+            .disputa-vs { font-size: 1.8em; }
+        }
     </style>
 </head>
 <body>
@@ -519,6 +612,43 @@
             <!-- Mensagem de loading/erro -->
             <div id="pratos-loading">
                 <p class="info-message"><i class="fas fa-spinner fa-spin"></i> Carregando pratos...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Competição de Pratos -->
+    <section class="disputa-section" id="disputa-section" style="display:none;">
+        <div class="container">
+            <div style="text-align:center; margin-bottom:10px;">
+                <span class="disputa-badge">🏆 Competição</span>
+            </div>
+            <h2 class="section-title">Qual é o melhor prato?</h2>
+            <p class="section-subtitle">Vote no seu favorito e descubra o campeão desta categoria</p>
+
+            <div class="disputa-progress" id="disputa-progress"></div>
+            <p class="disputa-rodada" id="disputa-rodada"></p>
+
+            <!-- Arena de duelo -->
+            <div id="disputa-arena-wrap">
+                <div class="disputa-arena" id="disputa-arena"></div>
+                <p class="disputa-hint">👆 Clique no prato favorito para votar</p>
+            </div>
+
+            <!-- Vencedor -->
+            <div class="disputa-vencedor" id="disputa-vencedor">
+                <span class="trophy-emoji">🏆</span>
+                <img id="disputa-ven-img" src="" alt="">
+                <h3 id="disputa-ven-nome"></h3>
+                <p class="ven-sub">é o prato campeão desta categoria!</p>
+                <p class="ven-lead">Quer publicar seu resultado? Deixe seu nome abaixo.</p>
+                <div class="disputa-form" id="disputa-form">
+                    <input type="text" id="disputa-nome" placeholder="Seu nome *" maxlength="100">
+                    <input type="email" id="disputa-email" placeholder="Seu e-mail (opcional)" maxlength="200">
+                    <button class="disputa-btn-salvar" onclick="salvarResultadoDisputa()">Publicar meu resultado 🏆</button>
+                    <button class="disputa-btn-pular" onclick="mostrarReiniciar()">Pular →</button>
+                    <div class="disputa-feedback" id="disputa-feedback"></div>
+                </div>
+                <button class="disputa-reiniciar" id="btn-reiniciar" onclick="iniciarDisputa()">Jogar novamente 🔄</button>
             </div>
         </div>
     </section>
@@ -969,6 +1099,9 @@
                 // Carrega restaurantes por prato
                 todosOsPratos.forEach(p => loadRestaurantesNoPrato(p.id));
 
+                // Inicia a competição de pratos
+                if (todosOsPratos.length >= 2) iniciarDisputa();
+
             } catch(e) {
                 loadingEl.style.display = '';
                 loadingEl.innerHTML = '<p class="info-message">Erro ao carregar pratos.</p>';
@@ -1175,6 +1308,175 @@
         });
         function closeMobileNav() {
             document.getElementById('mobile-nav').classList.remove('active');
+        }
+
+        // ── COMPETIÇÃO DE PRATOS ─────────────────────────────────
+        let disputaPratos      = [];
+        let disputaMatches     = [];
+        let disputaMatchIndex  = 0;
+        let disputaVotos       = {};
+        let disputaVencedor    = null;
+
+        function embaralhar(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function iniciarDisputa() {
+            const section = document.getElementById('disputa-section');
+            if (!todosOsPratos || todosOsPratos.length < 2) { section.style.display = 'none'; return; }
+
+            // Reinicia estado
+            disputaMatchIndex = 0;
+            disputaVotos      = {};
+            disputaVencedor   = null;
+            document.getElementById('disputa-vencedor').style.display    = 'none';
+            document.getElementById('disputa-arena-wrap').style.display  = '';
+            document.getElementById('disputa-feedback').style.display    = 'none';
+            document.getElementById('disputa-form').style.display        = 'flex';
+            document.getElementById('btn-reiniciar').style.display       = 'none';
+            document.getElementById('disputa-nome').value  = '';
+            document.getElementById('disputa-email').value = '';
+
+            // Pega até 6 pratos aleatórios
+            const pool = embaralhar(todosOsPratos).slice(0, 6);
+            disputaPratos = pool;
+            pool.forEach(p => { disputaVotos[p.id] = 0; });
+
+            // Gera os pares
+            disputaMatches = [];
+            for (let i = 0; i + 1 < pool.length; i += 2) {
+                disputaMatches.push([pool[i], pool[i + 1]]);
+            }
+            // Ímpar: último ganha ponto de bye automaticamente
+            if (pool.length % 2 !== 0) {
+                disputaVotos[pool[pool.length - 1].id] += 1;
+            }
+
+            section.style.display = '';
+            renderDisputaProgress();
+            renderDisputaMatch();
+        }
+
+        function renderDisputaProgress() {
+            const el = document.getElementById('disputa-progress');
+            el.innerHTML = disputaMatches.map((_, i) => {
+                let cls = 'disputa-dot';
+                if (i < disputaMatchIndex)      cls += ' feito';
+                else if (i === disputaMatchIndex) cls += ' atual';
+                return `<div class="${cls}"></div>`;
+            }).join('');
+
+            const rodEl = document.getElementById('disputa-rodada');
+            rodEl.textContent = disputaMatchIndex < disputaMatches.length
+                ? `Duelo ${disputaMatchIndex + 1} de ${disputaMatches.length}`
+                : '';
+        }
+
+        function renderDisputaMatch() {
+            if (disputaMatchIndex >= disputaMatches.length) { mostrarVencedorDisputa(); return; }
+            const [a, b] = disputaMatches[disputaMatchIndex];
+            document.getElementById('disputa-arena').innerHTML =
+                disputaCardHTML(a) +
+                '<div class="disputa-vs">VS</div>' +
+                disputaCardHTML(b);
+        }
+
+        function disputaCardHTML(p) {
+            const foto = p.foto_url ||
+                `https://placehold.co/240x170/2d0a0a/ffffff?text=${encodeURIComponent(p.nome.split(' ')[0])}`;
+            return `
+                <div class="disputa-prato" onclick="votar(${p.id})">
+                    <img src="${foto}" alt="${p.nome}"
+                         onerror="this.src='https://placehold.co/240x170/2d0a0a/ffffff?text=Prato'">
+                    <div class="dp-nome">${p.nome}</div>
+                    ${p.ingredientes ? `<div class="dp-ing">${p.ingredientes}</div>` : ''}
+                </div>`;
+        }
+
+        function votar(pratoId) {
+            if (disputaMatchIndex >= disputaMatches.length) return;
+            disputaVotos[pratoId] = (disputaVotos[pratoId] || 0) + 1;
+            disputaMatchIndex++;
+            renderDisputaProgress();
+            const arena = document.getElementById('disputa-arena');
+            arena.style.opacity = '0';
+            arena.style.transition = 'opacity 0.2s';
+            setTimeout(() => { arena.style.opacity = '1'; renderDisputaMatch(); }, 220);
+        }
+
+        function mostrarVencedorDisputa() {
+            let maxV = -1, vencedorId = null;
+            for (const [id, v] of Object.entries(disputaVotos)) {
+                if (v > maxV) { maxV = v; vencedorId = parseInt(id); }
+            }
+            disputaVencedor = disputaPratos.find(p => p.id === vencedorId) || disputaPratos[0];
+
+            document.getElementById('disputa-arena-wrap').style.display = 'none';
+            const venEl = document.getElementById('disputa-vencedor');
+            venEl.style.display = 'block';
+            document.getElementById('disputa-ven-img').src =
+                disputaVencedor.foto_url ||
+                `https://placehold.co/180x180/2d0a0a/ffffff?text=🏆`;
+            document.getElementById('disputa-ven-img').alt = disputaVencedor.nome;
+            document.getElementById('disputa-ven-nome').textContent = disputaVencedor.nome;
+        }
+
+        async function salvarResultadoDisputa() {
+            const nome     = document.getElementById('disputa-nome').value.trim();
+            const email    = document.getElementById('disputa-email').value.trim();
+            const feedback = document.getElementById('disputa-feedback');
+
+            if (!nome) {
+                feedback.style.display   = 'block';
+                feedback.style.color     = '#e74c3c';
+                feedback.textContent     = 'Por favor, informe seu nome.';
+                return;
+            }
+
+            const pratosEscolhidos = disputaMatches.map(([a, b]) => ({
+                duelo:    `${a.nome} vs ${b.nome}`,
+                vencedor: (disputaVotos[a.id] || 0) >= (disputaVotos[b.id] || 0) ? a.nome : b.nome
+            }));
+
+            try {
+                const res = await fetch('/api/quiz_resultados', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome,
+                        email,
+                        categoria_slug:    CATEGORIA_SLUG,
+                        pratos_escolhidos: JSON.stringify(pratosEscolhidos)
+                    })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById('disputa-form').style.display = 'none';
+                    feedback.style.display  = 'block';
+                    feedback.style.color    = '#2ecc71';
+                    feedback.textContent    = `✅ Resultado publicado! ${disputaVencedor.nome} é seu campeão 🏆`;
+                    document.getElementById('btn-reiniciar').style.display = 'inline-block';
+                } else {
+                    feedback.style.display  = 'block';
+                    feedback.style.color    = '#e74c3c';
+                    feedback.textContent    = 'Erro ao salvar. Tente novamente.';
+                }
+            } catch(e) {
+                feedback.style.display  = 'block';
+                feedback.style.color    = '#e74c3c';
+                feedback.textContent    = 'Erro de conexão. Tente novamente.';
+            }
+        }
+
+        function mostrarReiniciar() {
+            document.getElementById('disputa-form').style.display    = 'none';
+            document.getElementById('disputa-feedback').style.display = 'none';
+            document.getElementById('btn-reiniciar').style.display   = 'inline-block';
         }
 
         // Init
