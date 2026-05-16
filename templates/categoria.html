@@ -77,6 +77,20 @@
         }
         .filtro-btn:hover { border-color: var(--primary); color: var(--primary); }
         .filtro-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+        /* Mobile: filtros em scroll horizontal (sem quebra de linha) */
+        @media (max-width: 768px) {
+            .filtros-wrap {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 4px;
+                gap: 8px;
+            }
+            .filtros-wrap::-webkit-scrollbar { display: none; }
+            .filtro-btn { flex-shrink: 0; }
+        }
         .prato-card.hidden { display: none !important; }
 
         /* ── Barra de controles (toggle view) ── */
