@@ -38,7 +38,7 @@
         }
         header .logo { display: flex; align-items: center; }
         header .logo a { display: block; }
-        header .logo img { height: 130px; width: auto; display: block; filter: brightness(0) invert(1); }
+        header .logo img { height: 160px; width: auto; display: block; filter: brightness(0) invert(1); }
         header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
         header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
         header nav.desktop-nav ul li a {
@@ -149,12 +149,31 @@
         .restaurante-card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px var(--shadow-medium); }
         .restaurante-card img { width: 100%; height: 180px; object-fit: cover; }
         .rest-card-sem-foto {
-            width: 100%; height: 180px;
+            width: 100%; height: 80px;
             display: flex; align-items: center; justify-content: center;
             background: var(--light); color: var(--dark);
-            font-size: 1em; font-weight: 700; letter-spacing: 0.03em;
+            font-size: 0.9em; font-weight: 700; letter-spacing: 0.03em;
             text-transform: uppercase;
         }
+
+        /* ── Carrossel destaque ── */
+        .destaque-section { margin-bottom: 30px; }
+        .destaque-section h3 { font-size: 1.1em; color: var(--dark-gray); font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .carrossel-wrap { position: relative; overflow: hidden; }
+        .carrossel-track { display: flex; gap: 20px; transition: transform 0.4s ease; }
+        .carrossel-track .restaurante-card { min-width: 280px; flex-shrink: 0; }
+        .carrossel-track .restaurante-card img { height: 200px; }
+        .carr-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: var(--white); border: 1px solid var(--medium-gray);
+            border-radius: 50%; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 5; box-shadow: 0 2px 8px var(--shadow-medium);
+            font-size: 0.9em; color: var(--dark-gray); transition: background 0.2s;
+        }
+        .carr-btn:hover { background: var(--light); }
+        .carr-btn.prev { left: 4px; }
+        .carr-btn.next { right: 4px; }
         .restaurante-card .card-body { padding: 15px; }
         .restaurante-card h3 { font-size: 1.1em; color: var(--dark-gray); margin-bottom: 5px; }
         .restaurante-card .bairro { font-size: 0.9em; color: #6c757d; }
@@ -455,8 +474,20 @@
             <div id="idx-filtros-regiao-wrap" style="display:none;">
                 <div class="filtros-localidade-index" id="idx-filtros-regiao"></div>
             </div>
+
+            <!-- Carrossel de destaque (só aparece se houver restaurantes com foto) -->
+            <div id="destaque-wrap" style="display:none;" class="destaque-section">
+                <h3>⭐ Destaques</h3>
+                <div class="carrossel-wrap">
+                    <button class="carr-btn prev" id="carr-prev"><i class="fas fa-chevron-left"></i></button>
+                    <div class="carrossel-track" id="carrossel-track"></div>
+                    <button class="carr-btn next" id="carr-next"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Grade de todos os restaurantes -->
             <div class="restaurantes-grid" id="restaurantes-resultado">
-                <p class="info-message">Clique no botão acima para ver os rodízios mais próximos.</p>
+                <p class="info-message">Carregando rodízios...</p>
             </div>
         </div>
     </section>
@@ -580,27 +611,66 @@
             document.getElementById('mobile-nav').classList.remove('active');
         }
 
-        // ── Localização ──
+        // ── Estado global ──
         let idxTodosRestaurantes = [];
         let idxCidadeSel = null;
         let idxRegiaoSel = null;
+        let carrIndex = 0;
+        let carrItems = [];
 
+        // ── Carrossel destaque ──
+        function renderCarrossel(lista) {
+            carrItems = lista.filter(r => r.foto_url);
+            const wrap = document.getElementById('destaque-wrap');
+            const track = document.getElementById('carrossel-track');
+            if (!carrItems.length) { wrap.style.display = 'none'; return; }
+            wrap.style.display = '';
+            carrIndex = 0;
+            track.innerHTML = carrItems.map(r => {
+                const end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
+                return `
+                <a href="/restaurantes/${r.slug}" class="restaurante-card">
+                    <img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML=\'<div class=\"rest-card-sem-foto\">${r.categoria_nome||\'\'}</div>\'">
+                    <div class="card-body">
+                        <h3>${r.nome}</h3>
+                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${end || r.cidade || 'SP'}</p>
+                        ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
+                    </div>
+                </a>`;
+            }).join('');
+            moverCarrossel(0);
+        }
+
+        function moverCarrossel(dir) {
+            const track = document.getElementById('carrossel-track');
+            carrIndex = Math.max(0, Math.min(carrIndex + dir, carrItems.length - 1));
+            track.style.transform = `translateX(-${carrIndex * 300}px)`;
+        }
+
+        document.getElementById('carr-prev').addEventListener('click', () => moverCarrossel(-1));
+        document.getElementById('carr-next').addEventListener('click', () => moverCarrossel(1));
+
+        // ── Render grade ──
         function idxRenderRestaurantes(lista) {
             const grid = document.getElementById('restaurantes-resultado');
             if (!lista.length) {
                 grid.innerHTML = '<p class="info-message">Nenhum rodízio encontrado com esses filtros.</p>';
                 return;
             }
-            grid.innerHTML = lista.slice(0, 6).map(r => {
+            const comFoto = lista.filter(r => r.foto_url);
+            const semFoto = lista.filter(r => !r.foto_url);
+            const ordenada = [...comFoto, ...semFoto];
+            grid.innerHTML = ordenada.slice(0, 12).map(r => {
                 const fotoHTML = r.foto_url
-                    ? `<img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML='<div class=\\'rest-card-sem-foto\\'>${r.categoria_nome || ''}</div>'">`
+                    ? `<img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML=\'<div class=\"rest-card-sem-foto\">${r.categoria_nome||\'\'}</div>\'">`
                     : `<div class="rest-card-sem-foto">${r.categoria_nome || ''}</div>`;
+                const end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
                 return `
                 <a href="/restaurantes/${r.slug}" class="restaurante-card">
                     ${fotoHTML}
                     <div class="card-body">
                         <h3>${r.nome}</h3>
-                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${r.bairro || ''} - ${r.cidade || 'SP'}</p>
+                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${end || r.cidade || 'SP'}</p>
                         ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
                     </div>
                 </a>`;
@@ -611,6 +681,7 @@
             let lista = idxTodosRestaurantes;
             if (idxCidadeSel) lista = lista.filter(r => r.cidade === idxCidadeSel);
             if (idxRegiaoSel) lista = lista.filter(r => r.regiao === idxRegiaoSel);
+            renderCarrossel(lista);
             idxRenderRestaurantes(lista);
         }
 
@@ -658,6 +729,25 @@
             idxAplicarFiltros();
         }
 
+        // ── Carrega todos os restaurantes ao iniciar ──
+        async function loadTodosRestaurantes() {
+            try {
+                const res = await fetch('/api/restaurantes');
+                idxTodosRestaurantes = await res.json();
+                if (idxTodosRestaurantes.length) {
+                    await idxCarregarFiltrosCidade();
+                    idxAplicarFiltros();
+                } else {
+                    document.getElementById('restaurantes-resultado').innerHTML =
+                        '<p class="info-message">Nenhum rodízio cadastrado ainda.</p>';
+                }
+            } catch(e) {
+                document.getElementById('restaurantes-resultado').innerHTML =
+                    '<p class="info-message">Erro ao carregar restaurantes.</p>';
+            }
+        }
+
+        // ── Botão localização — reordena por distância ──
         document.getElementById('btn-localizar').addEventListener('click', () => {
             if (!navigator.geolocation) {
                 alert('Geolocalização não suportada neste navegador.');
@@ -673,15 +763,16 @@
                 try {
                     const res = await fetch(`/api/restaurantes?lat=${latitude}&lng=${longitude}`);
                     idxTodosRestaurantes = await res.json();
-                    const grid = document.getElementById('restaurantes-resultado');
                     if (!idxTodosRestaurantes.length) {
-                        grid.innerHTML = '<p class="info-message">Nenhum rodízio cadastrado próximo a você ainda.</p>';
+                        document.getElementById('restaurantes-resultado').innerHTML =
+                            '<p class="info-message">Nenhum rodízio cadastrado próximo a você ainda.</p>';
                         return;
                     }
                     await idxCarregarFiltrosCidade();
                     idxAplicarFiltros();
                 } catch(e) {
-                    document.getElementById('restaurantes-resultado').innerHTML = '<p class="info-message">Erro ao buscar restaurantes.</p>';
+                    document.getElementById('restaurantes-resultado').innerHTML =
+                        '<p class="info-message">Erro ao buscar restaurantes.</p>';
                 }
             }, () => {
                 btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Usar minha localização';
@@ -716,6 +807,7 @@
             }
         }
 
+        loadTodosRestaurantes();
         loadBlog();
     </script>
 </body>
