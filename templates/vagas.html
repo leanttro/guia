@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empregos em Rodízio | Vagas e Talentos | Guia do Rodízio</title>
+    <meta name="description" content="Vagas de emprego em rodízios: sushiman, churrasqueiro, garçom, pizzaiolo e mais. Restaurantes contratando e profissionais buscando oportunidades.">
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #C0392B; --dark: #922B21; --light: #FADBD8;
+            --light-gray: #f8f9fa; --medium-gray: #e0e0e0;
+            --dark-gray: #343a40; --text-color: #495057; --white: #ffffff;
+            --shadow-light: rgba(0,0,0,0.08); --shadow-medium: rgba(0,0,0,0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background: var(--light-gray); color: var(--text-color); line-height: 1.6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        /* ── Header ── */
+        header { background: var(--primary); padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        header .logo { padding-left: 20px; }
+        header .logo a { text-decoration: none; }
+        header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
+        header nav.desktop-nav ul { list-style: none; display: flex; padding-right: 20px; gap: 35px; }
+        header nav.desktop-nav ul li a { text-decoration: none; color: var(--white); font-weight: 500; transition: color 0.3s; }
+        header nav.desktop-nav ul li a:hover { color: var(--light); }
+        header nav.desktop-nav ul li a.active { font-weight: 700; border-bottom: 2px solid var(--white); padding-bottom: 5px; }
+        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; }
+        .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .mobile-nav-overlay.active { display: flex; opacity: 1; }
+        .mobile-nav-overlay nav ul { list-style: none; flex-direction: column; text-align: center; padding: 0; }
+        .mobile-nav-overlay nav ul li { margin: 20px 0; }
+        .mobile-nav-overlay nav ul li a { color: var(--white); font-size: 1.8em; font-weight: 700; text-decoration: none; display: block; }
+
+        /* ── Hero ── */
+        .hero {
+            background: linear-gradient(135deg, #1a0a0a 0%, #922B21 100%);
+            color: var(--white); text-align: center; padding: 70px 20px;
+        }
+        .hero h1 { font-size: 2.4em; font-weight: 700; margin-bottom: 14px; }
+        .hero p { font-size: 1.1em; opacity: 0.85; max-width: 560px; margin: 0 auto 28px; }
+        .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .btn-hero {
+            padding: 13px 26px; border-radius: 10px; font-weight: 700;
+            font-size: 0.97em; font-family: inherit; cursor: pointer;
+            border: none; text-decoration: none; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-hero-primary { background: var(--white); color: var(--primary); }
+        .btn-hero-primary:hover { background: var(--light); }
+        .btn-hero-outline { background: transparent; color: var(--white); border: 2px solid rgba(255,255,255,0.5); }
+        .btn-hero-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.08); }
+
+        /* ── Tabs ── */
+        .tabs-wrap { background: var(--white); border-bottom: 1px solid var(--medium-gray); position: sticky; top: 0; z-index: 50; }
+        .tabs { display: flex; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        .tab-btn {
+            padding: 18px 28px; font-size: 1em; font-weight: 600;
+            font-family: inherit; background: none; border: none;
+            cursor: pointer; color: var(--text-color);
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-btn:hover:not(.active) { color: var(--dark-gray); }
+        .tab-count {
+            background: var(--light); color: var(--primary);
+            font-size: 0.78em; font-weight: 700;
+            padding: 2px 8px; border-radius: 20px;
+        }
+
+        /* ── Seções ── */
+        .section { padding: 48px 0 60px; }
+        .section-header { margin-bottom: 28px; }
+        .section-header h2 { font-size: 1.5em; font-weight: 700; color: var(--dark-gray); margin-bottom: 6px; }
+        .section-header p { color: var(--text-color); font-size: 0.95em; }
+
+        /* ── Grid de vagas ── */
+        .vagas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .vaga-card {
+            background: var(--white); border-radius: 12px;
+            border: 1px solid var(--medium-gray);
+            padding: 22px; transition: box-shadow 0.2s, transform 0.2s;
+            display: flex; flex-direction: column; gap: 14px;
+            position: relative;
+        }
+        .vaga-card:hover { box-shadow: 0 6px 20px var(--shadow-medium); transform: translateY(-3px); }
+        .vaga-card.destaque { border-color: #f59e0b; border-width: 2px; }
+        .destaque-tag {
+            position: absolute; top: -1px; right: 16px;
+            background: #f59e0b; color: #fff;
+            font-size: 0.72em; font-weight: 700;
+            padding: 3px 10px; border-radius: 0 0 8px 8px;
+        }
+        .vaga-cargo { font-size: 1.15em; font-weight: 700; color: var(--dark-gray); }
+        .vaga-restaurante { font-size: 0.88em; color: var(--primary); font-weight: 600; }
+        .vaga-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--light-gray); color: var(--dark-gray);
+            font-size: 0.8em; padding: 4px 10px; border-radius: 20px;
+        }
+        .tag i { color: var(--primary); font-size: 0.85em; }
+        .vaga-descricao { font-size: 0.9em; color: var(--text-color); flex: 1; }
+        .btn-candidatar {
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            background: var(--primary); color: #fff;
+            padding: 11px; border-radius: 8px;
+            font-weight: 700; font-size: 0.9em;
+            text-decoration: none; transition: background 0.2s;
+        }
+        .btn-candidatar:hover { background: var(--dark); }
+
+        /* ── Grid de candidatos ── */
+        .candidatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+        .candidato-card {
+            background: var(--white); border-radius: 12px;
+            border: 1px solid var(--medium-gray);
+            padding: 20px; transition: box-shadow 0.2s;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .candidato-card:hover { box-shadow: 0 4px 16px var(--shadow-light); }
+        .candidato-avatar {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4em; flex-shrink: 0;
+        }
+        .candidato-top { display: flex; align-items: center; gap: 12px; }
+        .candidato-nome { font-weight: 700; font-size: 1em; color: var(--dark-gray); }
+        .candidato-cargo { font-size: 0.88em; color: var(--primary); font-weight: 600; }
+        .candidato-desc { font-size: 0.88em; color: var(--text-color); }
+        .candidato-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        /* ── Botão "Cadastrar currículo" fixo ── */
+        .fab-curriculo {
+            position: fixed; bottom: 28px; right: 28px;
+            background: var(--primary); color: #fff;
+            padding: 15px 22px; border-radius: 50px;
+            font-weight: 700; font-size: 0.95em;
+            display: flex; align-items: center; gap: 9px;
+            box-shadow: 0 6px 24px rgba(192,57,43,0.45);
+            cursor: pointer; border: none; font-family: inherit;
+            transition: background 0.2s, transform 0.2s; z-index: 100;
+        }
+        .fab-curriculo:hover { background: var(--dark); transform: translateY(-2px); }
+
+        /* ── Modal cadastro candidato ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+            z-index: 200; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--white); border-radius: 16px;
+            width: 100%; max-width: 540px; max-height: 92vh;
+            overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+        }
+        .modal-header {
+            padding: 22px 28px 16px; border-bottom: 1px solid var(--medium-gray);
+            display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 1;
+        }
+        .modal-header h3 { font-size: 1.1em; font-weight: 700; color: var(--dark-gray); }
+        .modal-close { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #999; line-height: 1; }
+        .modal-close:hover { color: var(--dark-gray); }
+        .modal-body { padding: 24px 28px 28px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.82em; font-weight: 700; color: var(--dark-gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%; padding: 11px 14px;
+            border: 1px solid var(--medium-gray); border-radius: 8px;
+            font-family: inherit; font-size: 0.95em; color: var(--dark-gray);
+            background: var(--white); outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus { border-color: var(--primary); }
+        .form-group textarea { resize: vertical; min-height: 90px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .btn-submit {
+            width: 100%; padding: 13px; margin-top: 8px;
+            background: var(--primary); color: #fff;
+            border: none; border-radius: 10px;
+            font-family: inherit; font-size: 1em; font-weight: 700;
+            cursor: pointer; transition: background 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-submit:hover { background: var(--dark); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .msg-success {
+            background: #dcfce7; border: 1px solid #86efac;
+            color: #166534; padding: 14px 18px; border-radius: 8px;
+            font-weight: 600; text-align: center; margin-top: 14px; display: none;
+        }
+        .msg-error {
+            background: #fee2e2; border: 1px solid #fca5a5;
+            color: #991b1b; padding: 12px 16px; border-radius: 8px;
+            font-size: 0.9em; margin-top: 10px; display: none;
+        }
+
+        /* ── Estados vazios / loading ── */
+        .info-msg { text-align: center; color: #6c757d; padding: 50px 0; grid-column: 1/-1; font-size: 0.95em; }
+
+        /* ── Footer ── */
+        footer { background: var(--dark-gray); color: #adb5bd; padding: 30px 0; text-align: center; font-size: 0.9em; }
+        footer a { color: var(--light); text-decoration: none; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            header nav.desktop-nav { display: none; }
+            .hamburger-menu { display: block; }
+            .hero h1 { font-size: 1.8em; }
+            .tab-btn { padding: 14px 16px; font-size: 0.88em; }
+            .form-row { grid-template-columns: 1fr; }
+            .modal-body { padding: 18px 20px 24px; }
+            .modal-header { padding: 18px 20px 14px; }
+            .fab-curriculo { bottom: 16px; right: 16px; padding: 13px 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <a href="/"><span>🥩 Guia do Rodízio</span></a>
+        </div>
+        <nav class="desktop-nav">
+            <ul>
+                <li><a href="/">Início</a></li>
+                <li><a href="/japones">Japonês</a></li>
+                <li><a href="/carnes">Carnes</a></li>
+                <li><a href="/pizza">Pizza</a></li>
+                <li><a href="/mexicano">Mexicano</a></li>
+                <li><a href="/vagas" class="active">Empregos</a></li>
+                <li><a href="/blog">Blog</a></li>
+            </ul>
+        </nav>
+        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+    </header>
+
+    <div class="mobile-nav-overlay" id="mobile-nav">
+        <nav>
+            <ul>
+                <li><a href="/" onclick="closeMobileNav()">Início</a></li>
+                <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
+                <li><a href="/carnes" onclick="closeMobileNav()">Carnes</a></li>
+                <li><a href="/pizza" onclick="closeMobileNav()">Pizza</a></li>
+                <li><a href="/mexicano" onclick="closeMobileNav()">Mexicano</a></li>
+                <li><a href="/vagas" onclick="closeMobileNav()">Empregos</a></li>
+                <li><a href="/blog" onclick="closeMobileNav()">Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="container">
+            <h1>👨‍🍳 Empregos em Rodízio</h1>
+            <p>Sushiman, churrasqueiro, garçom, pizzaiolo e muito mais — conectando profissionais e restaurantes.</p>
+            <div class="hero-btns">
+                <button class="btn-hero btn-hero-primary" onclick="openModal()">
+                    <i class="fas fa-user-plus"></i> Cadastrar meu currículo
+                </button>
+                <button class="btn-hero btn-hero-outline" onclick="switchTab('vagas')">
+                    <i class="fas fa-briefcase"></i> Ver vagas abertas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-wrap">
+        <div class="tabs">
+            <button class="tab-btn active" id="tab-vagas" onclick="switchTab('vagas')">
+                <i class="fas fa-briefcase"></i> Vagas abertas
+                <span class="tab-count" id="count-vagas">0</span>
+            </button>
+            <button class="tab-btn" id="tab-candidatos" onclick="switchTab('candidatos')">
+                <i class="fas fa-users"></i> Banco de talentos
+                <span class="tab-count" id="count-candidatos">0</span>
+            </button>
+        </div>
+    </div>
+
+    <main>
+        <div class="container">
+
+            <!-- ── Seção Vagas ── -->
+            <section class="section" id="sec-vagas">
+                <div class="section-header">
+                    <h2>Vagas abertas agora</h2>
+                    <p>Restaurantes parceiros do Guia do Rodízio buscando profissionais</p>
+                </div>
+                <div class="vagas-grid" id="vagas-grid">
+                    <p class="info-msg"><i class="fas fa-spinner fa-spin"></i> Carregando vagas...</p>
+                </div>
+            </section>
+
+            <!-- ── Seção Candidatos ── -->
+            <section class="section" id="sec-candidatos" style="display:none;">
+                <div class="section-header">
+                    <h2>Profissionais disponíveis</h2>
+                    <p>Talentos do setor buscando oportunidade — entre em contato diretamente</p>
+                </div>
+                <div class="candidatos-grid" id="candidatos-grid">
+                    <p class="info-msg"><i class="fas fa-spinner fa-spin"></i> Carregando profissionais...</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Botão flutuante -->
+    <button class="fab-curriculo" onclick="openModal()">
+        <i class="fas fa-plus"></i> Cadastrar currículo
+    </button>
+
+    <!-- Modal cadastro candidato -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>📋 Cadastrar meu currículo</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.9em;color:var(--text-color);margin-bottom:20px;">
+                    Seu perfil ficará visível para restaurantes parceiros do Guia do Rodízio. Gratuito!
+                </p>
+
+                <div class="form-group">
+                    <label>Nome completo *</label>
+                    <input type="text" id="c-nome" placeholder="Seu nome">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cargo desejado *</label>
+                        <select id="c-cargo">
+                            <option value="">— Selecione —</option>
+                            <option>Sushiman</option>
+                            <option>Auxiliar de Sushiman</option>
+                            <option>Churrasqueiro</option>
+                            <option>Garçom / Garçonete</option>
+                            <option>Pizzaiolo</option>
+                            <option>Cozinheiro</option>
+                            <option>Auxiliar de Cozinha</option>
+                            <option>Gerente de Restaurante</option>
+                            <option>Atendente / Host</option>
+                            <option>Barman / Bartender</option>
+                            <option>Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Experiência</label>
+                        <select id="c-experiencia">
+                            <option value="">— Selecione —</option>
+                            <option>Sem experiência</option>
+                            <option>Menos de 1 ano</option>
+                            <option>1 a 3 anos</option>
+                            <option>3 a 5 anos</option>
+                            <option>Mais de 5 anos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cidade</label>
+                        <input type="text" id="c-cidade" placeholder="São Paulo" value="São Paulo">
+                    </div>
+                    <div class="form-group">
+                        <label>Bairro</label>
+                        <input type="text" id="c-bairro" placeholder="Ex: Mooca">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>WhatsApp (para contato) *</label>
+                    <input type="tel" id="c-telefone" placeholder="(11) 99999-9999">
+                </div>
+
+                <div class="form-group">
+                    <label>Conte um pouco sobre você</label>
+                    <textarea id="c-descricao" placeholder="Ex: 3 anos de experiência em rodízio japonês, especializado em hot roll e temaki..."></textarea>
+                </div>
+
+                <button class="btn-submit" id="btn-submit" onclick="salvarCandidato()">
+                    <i class="fas fa-paper-plane"></i> Enviar currículo
+                </button>
+                <div class="msg-success" id="msg-success">
+                    ✅ Currículo cadastrado com sucesso! Restaurantes já podem te encontrar.
+                </div>
+                <div class="msg-error" id="msg-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 - GuiaDoRodizio.com.br - Todos os direitos reservados.</p>
+            <p style="margin-top:8px;">Desenvolvido por <a href="https://www.linkedin.com/in/leanttro" target="_blank">Leandro Andrade</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // ── Mobile nav ───────────────────────────
+        document.getElementById('hamburger-btn').addEventListener('click', () => {
+            document.getElementById('mobile-nav').classList.toggle('active');
+        });
+        function closeMobileNav() {
+            document.getElementById('mobile-nav').classList.remove('active');
+        }
+
+        // ── Tabs ─────────────────────────────────
+        function switchTab(tab) {
+            document.getElementById('sec-vagas').style.display      = tab === 'vagas'      ? 'block' : 'none';
+            document.getElementById('sec-candidatos').style.display = tab === 'candidatos' ? 'block' : 'none';
+            document.getElementById('tab-vagas').classList.toggle('active',      tab === 'vagas');
+            document.getElementById('tab-candidatos').classList.toggle('active', tab === 'candidatos');
+        }
+
+        // ── Cargo → emoji ────────────────────────
+        function cargoEmoji(cargo) {
+            const map = {
+                'sushiman': '🍣', 'auxiliar de sushiman': '🍱',
+                'churrasqueiro': '🥩', 'garçom': '🍽️', 'garçonete': '🍽️',
+                'pizzaiolo': '🍕', 'cozinheiro': '👨‍🍳', 'auxiliar de cozinha': '🔪',
+                'gerente': '👔', 'atendente': '😊', 'host': '😊',
+                'barman': '🍹', 'bartender': '🍹'
+            };
+            const key = Object.keys(map).find(k => cargo.toLowerCase().includes(k));
+            return key ? map[key] : '👤';
+        }
+
+        // ── Carregar vagas ───────────────────────
+        async function loadVagas() {
+            const grid = document.getElementById('vagas-grid');
+            try {
+                const res  = await fetch('/api/vagas');
+                const data = await res.json();
+                document.getElementById('count-vagas').textContent = data.length;
+
+                if (!data.length) {
+                    grid.innerHTML = '<p class="info-msg">Em breve vagas de restaurantes parceiros! 🍽️</p>';
+                    return;
+                }
+
+                grid.innerHTML = data.map(v => `
+                    <div class="vaga-card ${v.destaque ? 'destaque' : ''}">
+                        ${v.destaque ? '<span class="destaque-tag">⭐ Destaque</span>' : ''}
+                        <div>
+                            <div class="vaga-cargo">${cargoEmoji(v.cargo)} ${v.cargo}</div>
+                            ${v.restaurante_nome ? `<div class="vaga-restaurante"><i class="fas fa-store"></i> ${v.restaurante_nome}</div>` : ''}
+                        </div>
+                        <div class="vaga-tags">
+                            ${v.regime    ? `<span class="tag"><i class="fas fa-clock"></i>${v.regime}</span>` : ''}
+                            ${v.salario   ? `<span class="tag"><i class="fas fa-dollar-sign"></i>${v.salario}</span>` : ''}
+                            ${v.bairro    ? `<span class="tag"><i class="fas fa-map-pin"></i>${v.bairro}</span>` : (v.cidade ? `<span class="tag"><i class="fas fa-map-pin"></i>${v.cidade}</span>` : '')}
+                        </div>
+                        ${v.descricao ? `<p class="vaga-descricao">${v.descricao}</p>` : ''}
+                        ${(v.whatsapp || v.contato) ? `
+                            <a href="https://wa.me/55${(v.whatsapp || v.contato).replace(/\D/g,'')}" target="_blank" class="btn-candidatar">
+                                <i class="fab fa-whatsapp"></i> Tenho interesse
+                            </a>` : ''}
+                    </div>
+                `).join('');
+            } catch(e) {
+                grid.innerHTML = '<p class="info-msg">Erro ao carregar vagas.</p>';
+            }
+        }
+
+        // ── Carregar candidatos ──────────────────
+        async function loadCandidatos() {
+            const grid = document.getElementById('candidatos-grid');
+            try {
+                const res  = await fetch('/api/candidatos');
+                const data = await res.json();
+                document.getElementById('count-candidatos').textContent = data.length;
+
+                if (!data.length) {
+                    grid.innerHTML = '<p class="info-msg">Seja o primeiro a cadastrar seu currículo! 🚀</p>';
+                    return;
+                }
+
+                grid.innerHTML = data.map(c => `
+                    <div class="candidato-card">
+                        <div class="candidato-top">
+                            <div class="candidato-avatar">${cargoEmoji(c.cargo)}</div>
+                            <div>
+                                <div class="candidato-nome">${c.nome}</div>
+                                <div class="candidato-cargo">${c.cargo}</div>
+                            </div>
+                        </div>
+                        <div class="candidato-meta">
+                            ${c.experiencia ? `<span class="tag"><i class="fas fa-star"></i>${c.experiencia}</span>` : ''}
+                            ${c.bairro ? `<span class="tag"><i class="fas fa-map-pin"></i>${c.bairro}</span>` : (c.cidade ? `<span class="tag"><i class="fas fa-map-pin"></i>${c.cidade}</span>` : '')}
+                        </div>
+                        ${c.descricao ? `<p class="candidato-desc">${c.descricao}</p>` : ''}
+                        ${c.telefone ? `
+                            <a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank"
+                               style="display:inline-flex;align-items:center;gap:6px;color:#25D366;font-weight:700;font-size:0.88em;text-decoration:none;">
+                                <i class="fab fa-whatsapp"></i> Entrar em contato
+                            </a>` : ''}
+                    </div>
+                `).join('');
+            } catch(e) {
+                grid.innerHTML = '<p class="info-msg">Erro ao carregar candidatos.</p>';
+            }
+        }
+
+        // ── Modal ────────────────────────────────
+        function openModal() {
+            document.getElementById('modal-overlay').classList.add('open');
+        }
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('open');
+        }
+        document.getElementById('modal-overlay').addEventListener('click', e => {
+            if (e.target === document.getElementById('modal-overlay')) closeModal();
+        });
+
+        // ── Salvar candidato ─────────────────────
+        async function salvarCandidato() {
+            const nome      = document.getElementById('c-nome').value.trim();
+            const cargo     = document.getElementById('c-cargo').value;
+            const telefone  = document.getElementById('c-telefone').value.trim();
+            const msgErr    = document.getElementById('msg-error');
+            const msgOk     = document.getElementById('msg-success');
+            const btn       = document.getElementById('btn-submit');
+
+            msgErr.style.display = 'none';
+            msgOk.style.display  = 'none';
+
+            if (!nome || !cargo || !telefone) {
+                msgErr.textContent = 'Preencha nome, cargo e WhatsApp.';
+                msgErr.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            try {
+                const res = await fetch('/api/candidatos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome,
+                        cargo,
+                        cidade:      document.getElementById('c-cidade').value.trim() || 'São Paulo',
+                        bairro:      document.getElementById('c-bairro').value.trim(),
+                        telefone,
+                        descricao:   document.getElementById('c-descricao').value.trim(),
+                        experiencia: document.getElementById('c-experiencia').value,
+                    })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    msgOk.style.display = 'block';
+                    loadCandidatos();
+                } else {
+                    msgErr.textContent = data.error || 'Erro ao salvar.';
+                    msgErr.style.display = 'block';
+                }
+            } catch(e) {
+                msgErr.textContent = 'Erro de conexão. Tente novamente.';
+                msgErr.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar currículo';
+            }
+        }
+
+        // ── Init ─────────────────────────────────
+        loadVagas();
+        loadCandidatos();
+    </script>
+</body>
+</html>
