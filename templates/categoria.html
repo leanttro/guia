@@ -136,6 +136,8 @@
             gap: 25px;
             transition: transform 0.4s ease;
             will-change: transform;
+            cursor: grab;
+            user-select: none;
         }
         .carousel-track .prato-card,
         .carousel-track .restaurante-card {
@@ -662,6 +664,7 @@
 
             renderCarouselNav(id);
             updateCarouselPosition(id);
+            addDragSupport(id);
         }
 
         function renderCarouselNav(id) {
@@ -724,6 +727,53 @@
             // Esconde nav se tudo cabe em uma página
             const navEl = document.getElementById(`${id}-carousel-nav`);
             if (navEl) navEl.style.display = pageCount <= 1 ? 'none' : 'flex';
+        }
+
+        // ── Drag / Swipe nos carrosséis ──
+        function addDragSupport(id) {
+            const track = document.getElementById(`${id}-track`);
+            if (!track) return;
+            let startX = 0, isDragging = false, startTranslate = 0;
+
+            function getCurrentTranslate() {
+                const style = window.getComputedStyle(track);
+                const matrix = new DOMMatrix(style.transform);
+                return matrix.m41;
+            }
+
+            function onStart(x) {
+                isDragging = true;
+                startX = x;
+                startTranslate = getCurrentTranslate();
+                track.style.transition = 'none';
+                track.style.cursor = 'grabbing';
+            }
+            function onMove(x) {
+                if (!isDragging) return;
+                track.style.transform = `translateX(${startTranslate + (x - startX)}px)`;
+            }
+            function onEnd(x) {
+                if (!isDragging) return;
+                isDragging = false;
+                track.style.cursor = '';
+                track.style.transition = '';
+                const diff = x - startX;
+                if (Math.abs(diff) > 50) {
+                    moveCarousel(id, diff < 0 ? 1 : -1);
+                } else {
+                    updateCarouselPosition(id);
+                }
+            }
+
+            // Mouse
+            track.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
+            window.addEventListener('mousemove', e => { if (isDragging) onMove(e.clientX); });
+            window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientX); });
+
+            // Touch
+            track.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
         }
 
         // Recalcula ao redimensionar
