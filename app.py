@@ -1034,8 +1034,9 @@ def api_admin_restaurantes():
         data = request.get_json()
         cur.execute("""
             INSERT INTO restaurantes (nome, slug, categoria_id, plano_id, descricao, endereco,
-                bairro, cidade, regiao, telefone, whatsapp, site_url, foto_url, ativo, destaque)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
+                bairro, cidade, regiao, telefone, whatsapp, site_url, foto_url, ativo, destaque,
+                lat, lng, instagram)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
         """, (
             data.get('nome',''), data.get('slug',''),
             data.get('categoria_id') or None, data.get('plano_id') or None,
@@ -1043,8 +1044,10 @@ def api_admin_restaurantes():
             data.get('bairro',''), data.get('cidade','São Paulo'),
             data.get('regiao',''),
             data.get('telefone',''), data.get('whatsapp',''),
-            data.get('site_url',''), data.get('foto_url',''),
-            data.get('ativo', True), data.get('destaque', False)
+            data.get('site_url', '') or data.get('website',''), data.get('foto_url',''),
+            data.get('ativo', True), data.get('destaque', False),
+            data.get('lat') or None, data.get('lng') or None,
+            data.get('instagram','')
         ))
         new_id = cur.fetchone()['id']
         conn.commit()
@@ -1072,7 +1075,9 @@ def api_admin_restaurante(rest_id):
         cur.execute("""
             UPDATE restaurantes SET nome=%s, slug=%s, categoria_id=%s, plano_id=%s,
             descricao=%s, endereco=%s, bairro=%s, cidade=%s, regiao=%s, telefone=%s, whatsapp=%s,
-            site_url=%s, foto_url=%s, ativo=%s, destaque=%s WHERE id=%s
+            site_url=%s, foto_url=%s, ativo=%s, destaque=%s,
+            lat=%s, lng=%s, instagram=%s
+            WHERE id=%s
         """, (
             data.get('nome',''), data.get('slug',''),
             data.get('categoria_id') or None, data.get('plano_id') or None,
@@ -1080,8 +1085,11 @@ def api_admin_restaurante(rest_id):
             data.get('bairro',''), data.get('cidade','São Paulo'),
             data.get('regiao',''),
             data.get('telefone',''), data.get('whatsapp',''),
-            data.get('site_url',''), data.get('foto_url',''),
-            data.get('ativo', True), data.get('destaque', False), rest_id
+            data.get('site_url', '') or data.get('website',''), data.get('foto_url',''),
+            data.get('ativo', True), data.get('destaque', False),
+            data.get('lat') or None, data.get('lng') or None,
+            data.get('instagram',''),
+            rest_id
         ))
         conn.commit()
         cur.close()
