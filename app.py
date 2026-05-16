@@ -289,7 +289,7 @@ def api_restaurantes():
         # Se tiver lat/lng, ordena por proximidade (fórmula Haversine aproximada)
         if lat and lng and categoria_slug:
             cur.execute(f"""
-                SELECT r.*, c.nome as categoria_nome,
+                SELECT r.*, c.nome as categoria_nome, c.slug as categoria_slug,
                     (6371 * acos(cos(radians(%s)) * cos(radians(r.lat)) *
                     cos(radians(r.lng) - radians(%s)) +
                     sin(radians(%s)) * sin(radians(r.lat)))) AS distancia_km
@@ -301,7 +301,7 @@ def api_restaurantes():
             """, [lat, lng, lat, categoria_slug] + params_extra_after)
         elif lat and lng:
             cur.execute(f"""
-                SELECT r.*, c.nome as categoria_nome,
+                SELECT r.*, c.nome as categoria_nome, c.slug as categoria_slug,
                     (6371 * acos(cos(radians(%s)) * cos(radians(r.lat)) *
                     cos(radians(r.lng) - radians(%s)) +
                     sin(radians(%s)) * sin(radians(r.lat)))) AS distancia_km
@@ -313,7 +313,7 @@ def api_restaurantes():
             """, [lat, lng, lat] + params_extra_after)
         elif categoria_slug:
             cur.execute(f"""
-                SELECT r.*, c.nome as categoria_nome
+                SELECT r.*, c.nome as categoria_nome, c.slug as categoria_slug
                 FROM restaurantes r
                 JOIN categorias c ON r.categoria_id = c.id
                 WHERE c.slug = %s AND r.ativo = TRUE
@@ -322,7 +322,7 @@ def api_restaurantes():
             """, [categoria_slug] + params_extra_after)
         else:
             cur.execute(f"""
-                SELECT r.*, c.nome as categoria_nome
+                SELECT r.*, c.nome as categoria_nome, c.slug as categoria_slug
                 FROM restaurantes r
                 JOIN categorias c ON r.categoria_id = c.id
                 WHERE r.ativo = TRUE
