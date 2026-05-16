@@ -191,6 +191,74 @@ def api_pratos():
 
 
 # ════════════════════════════════════════════════════════════
+#  API — AVALIAÇÃO DE PRATOS (ESTRELAS) — NOVO
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/pratos/<int:prato_id>/nota', methods=['GET'])
+def api_prato_nota(prato_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT ROUND(AVG(nota)::numeric, 1) as media, COUNT(*) as total
+            FROM avaliacoes_pratos
+            WHERE prato_id = %s
+        """, (prato_id,))
+        row = cur.fetchone()
+        cur.close()
+        return jsonify({
+            'media': float(row['media']) if row['media'] else 0,
+            'total': int(row['total'])
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': 'Erro ao buscar nota'}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/pratos/<int:prato_id>/avaliar', methods=['POST'])
+def api_prato_avaliar(prato_id):
+    conn = None
+    try:
+        data  = request.get_json()
+        nota  = data.get('nota')
+        if not nota or int(nota) < 1 or int(nota) > 5:
+            return jsonify({'ok': False, 'error': 'Nota inválida (1 a 5)'}), 400
+
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if ip and ',' in ip:
+            ip = ip.split(',')[0].strip()
+
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        # INSERT OR UPDATE — se já votou, atualiza a nota
+        cur.execute("""
+            INSERT INTO avaliacoes_pratos (prato_id, ip, nota)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (prato_id, ip) DO UPDATE SET nota = EXCLUDED.nota
+        """, (prato_id, ip, int(nota)))
+
+        # Atualiza cache de média e total na tabela pratos
+        cur.execute("""
+            UPDATE pratos SET
+                media_nota  = (SELECT ROUND(AVG(nota)::numeric, 2) FROM avaliacoes_pratos WHERE prato_id = %s),
+                total_votos = (SELECT COUNT(*) FROM avaliacoes_pratos WHERE prato_id = %s)
+            WHERE id = %s
+        """, (prato_id, prato_id, prato_id))
+
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'ok': False, 'error': 'Erro ao salvar avaliação'}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
 #  API — RESTAURANTES
 # ════════════════════════════════════════════════════════════
 
@@ -199,15 +267,28 @@ def api_restaurantes():
     conn = None
     try:
         categoria_slug = request.args.get('categoria')
-        lat  = request.args.get('lat', type=float)
-        lng  = request.args.get('lng', type=float)
+        lat    = request.args.get('lat', type=float)
+        lng    = request.args.get('lng', type=float)
+        cidade = request.args.get('cidade')   # NOVO
+        regiao = request.args.get('regiao')   # NOVO
 
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+        # Monta filtros extras de cidade e região
+        filtros_extra      = ""
+        params_extra_before = []
+        params_extra_after  = []
+        if cidade:
+            filtros_extra       += " AND r.cidade = %s"
+            params_extra_after.append(cidade)
+        if regiao:
+            filtros_extra       += " AND r.regiao = %s"
+            params_extra_after.append(regiao)
+
         # Se tiver lat/lng, ordena por proximidade (fórmula Haversine aproximada)
         if lat and lng and categoria_slug:
-            cur.execute("""
+            cur.execute(f"""
                 SELECT r.*, c.nome as categoria_nome,
                     (6371 * acos(cos(radians(%s)) * cos(radians(r.lat)) *
                     cos(radians(r.lng) - radians(%s)) +
@@ -215,10 +296,11 @@ def api_restaurantes():
                 FROM restaurantes r
                 JOIN categorias c ON r.categoria_id = c.id
                 WHERE c.slug = %s AND r.ativo = TRUE AND r.lat IS NOT NULL
+                {filtros_extra}
                 ORDER BY distancia_km
-            """, (lat, lng, lat, categoria_slug))
+            """, [lat, lng, lat, categoria_slug] + params_extra_after)
         elif lat and lng:
-            cur.execute("""
+            cur.execute(f"""
                 SELECT r.*, c.nome as categoria_nome,
                     (6371 * acos(cos(radians(%s)) * cos(radians(r.lat)) *
                     cos(radians(r.lng) - radians(%s)) +
@@ -226,23 +308,27 @@ def api_restaurantes():
                 FROM restaurantes r
                 JOIN categorias c ON r.categoria_id = c.id
                 WHERE r.ativo = TRUE AND r.lat IS NOT NULL
+                {filtros_extra}
                 ORDER BY distancia_km
-            """, (lat, lng, lat))
+            """, [lat, lng, lat] + params_extra_after)
         elif categoria_slug:
-            cur.execute("""
+            cur.execute(f"""
                 SELECT r.*, c.nome as categoria_nome
                 FROM restaurantes r
                 JOIN categorias c ON r.categoria_id = c.id
                 WHERE c.slug = %s AND r.ativo = TRUE
+                {filtros_extra}
                 ORDER BY r.nome
-            """, (categoria_slug,))
+            """, [categoria_slug] + params_extra_after)
         else:
-            cur.execute("""
+            cur.execute(f"""
                 SELECT r.*, c.nome as categoria_nome
                 FROM restaurantes r
                 JOIN categorias c ON r.categoria_id = c.id
-                WHERE r.ativo = TRUE ORDER BY r.nome
-            """)
+                WHERE r.ativo = TRUE
+                {filtros_extra}
+                ORDER BY r.nome
+            """, params_extra_after)
 
         rows = [format_db_data(dict(r)) for r in cur.fetchall()]
         cur.close()
@@ -250,6 +336,78 @@ def api_restaurantes():
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': 'Erro ao buscar restaurantes'}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API — CIDADES E REGIÕES DISPONÍVEIS — NOVO
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/cidades')
+def api_cidades():
+    """Retorna apenas as cidades que têm restaurantes ativos cadastrados."""
+    conn = None
+    try:
+        categoria_slug = request.args.get('categoria')
+        conn = get_db_connection()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if categoria_slug:
+            cur.execute("""
+                SELECT DISTINCT r.cidade
+                FROM restaurantes r
+                JOIN categorias c ON r.categoria_id = c.id
+                WHERE r.ativo = TRUE AND r.cidade IS NOT NULL AND c.slug = %s
+                ORDER BY r.cidade
+            """, (categoria_slug,))
+        else:
+            cur.execute("""
+                SELECT DISTINCT cidade FROM restaurantes
+                WHERE ativo = TRUE AND cidade IS NOT NULL
+                ORDER BY cidade
+            """)
+        cidades = [row['cidade'] for row in cur.fetchall()]
+        cur.close()
+        return jsonify(cidades)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': 'Erro ao buscar cidades'}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/regioes')
+def api_regioes():
+    """Retorna as regiões disponíveis, opcionalmente filtradas por cidade e/ou categoria."""
+    conn = None
+    try:
+        cidade         = request.args.get('cidade')
+        categoria_slug = request.args.get('categoria')
+        conn = get_db_connection()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        params = []
+        filtros = "WHERE r.ativo = TRUE AND r.regiao IS NOT NULL"
+        if cidade:
+            filtros += " AND r.cidade = %s"
+            params.append(cidade)
+        if categoria_slug:
+            filtros += " AND c.slug = %s"
+            params.append(categoria_slug)
+
+        cur.execute(f"""
+            SELECT DISTINCT r.regiao
+            FROM restaurantes r
+            LEFT JOIN categorias c ON r.categoria_id = c.id
+            {filtros}
+            ORDER BY r.regiao
+        """, params)
+        regioes = [row['regiao'] for row in cur.fetchall()]
+        cur.close()
+        return jsonify(regioes)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': 'Erro ao buscar regiões'}), 500
     finally:
         if conn: conn.close()
 
@@ -276,6 +434,58 @@ def api_restaurantes_por_prato(prato_id):
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': 'Erro'}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API — COMENTÁRIOS DE RESTAURANTES — NOVO
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/restaurantes/<int:restaurante_id>/comentarios', methods=['GET'])
+def api_comentarios(restaurante_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT id, nome, texto, criado_em
+            FROM comentarios
+            WHERE restaurante_id = %s AND aprovado = TRUE
+            ORDER BY criado_em DESC
+        """, (restaurante_id,))
+        rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+        cur.close()
+        return jsonify(rows)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': 'Erro ao buscar comentários'}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/restaurantes/<int:restaurante_id>/comentarios', methods=['POST'])
+def api_comentario_novo(restaurante_id):
+    conn = None
+    try:
+        data  = request.get_json()
+        nome  = (data.get('nome') or '').strip()
+        texto = (data.get('texto') or '').strip()
+        email = (data.get('email') or '').strip()
+        if not nome or not texto:
+            return jsonify({'ok': False, 'error': 'Nome e comentário são obrigatórios'}), 400
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("""
+            INSERT INTO comentarios (restaurante_id, nome, email, texto, aprovado)
+            VALUES (%s, %s, %s, %s, FALSE)
+        """, (restaurante_id, nome, email, texto))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True, 'msg': 'Comentário enviado e aguardando aprovação!'})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'ok': False, 'error': 'Erro ao salvar comentário'}), 500
     finally:
         if conn: conn.close()
 
@@ -573,6 +783,69 @@ def api_admin_aprovar_candidato(cand_id):
 
 
 # ════════════════════════════════════════════════════════════
+#  API ADMIN — COMENTÁRIOS (requer login) — NOVO
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/comentarios', methods=['GET'])
+@login_required
+def api_admin_comentarios():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT c.*, r.nome as restaurante_nome
+            FROM comentarios c
+            LEFT JOIN restaurantes r ON c.restaurante_id = r.id
+            ORDER BY c.aprovado ASC, c.criado_em DESC
+        """)
+        rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+        cur.close()
+        return jsonify(rows)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/admin/comentarios/<int:com_id>/aprovar', methods=['POST'])
+@login_required
+def api_admin_aprovar_comentario(com_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("UPDATE comentarios SET aprovado = TRUE WHERE id = %s", (com_id,))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/admin/comentarios/<int:com_id>', methods=['DELETE'])
+@login_required
+def api_admin_deletar_comentario(com_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("DELETE FROM comentarios WHERE id = %s", (com_id,))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
 #  SITEMAP
 # ════════════════════════════════════════════════════════════
 
@@ -761,13 +1034,14 @@ def api_admin_restaurantes():
         data = request.get_json()
         cur.execute("""
             INSERT INTO restaurantes (nome, slug, categoria_id, plano_id, descricao, endereco,
-                bairro, cidade, telefone, whatsapp, site_url, foto_url, ativo, destaque)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
+                bairro, cidade, regiao, telefone, whatsapp, site_url, foto_url, ativo, destaque)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
         """, (
             data.get('nome',''), data.get('slug',''),
             data.get('categoria_id') or None, data.get('plano_id') or None,
             data.get('descricao',''), data.get('endereco',''),
             data.get('bairro',''), data.get('cidade','São Paulo'),
+            data.get('regiao',''),
             data.get('telefone',''), data.get('whatsapp',''),
             data.get('site_url',''), data.get('foto_url',''),
             data.get('ativo', True), data.get('destaque', False)
@@ -797,13 +1071,14 @@ def api_admin_restaurante(rest_id):
         data = request.get_json()
         cur.execute("""
             UPDATE restaurantes SET nome=%s, slug=%s, categoria_id=%s, plano_id=%s,
-            descricao=%s, endereco=%s, bairro=%s, cidade=%s, telefone=%s, whatsapp=%s,
+            descricao=%s, endereco=%s, bairro=%s, cidade=%s, regiao=%s, telefone=%s, whatsapp=%s,
             site_url=%s, foto_url=%s, ativo=%s, destaque=%s WHERE id=%s
         """, (
             data.get('nome',''), data.get('slug',''),
             data.get('categoria_id') or None, data.get('plano_id') or None,
             data.get('descricao',''), data.get('endereco',''),
             data.get('bairro',''), data.get('cidade','São Paulo'),
+            data.get('regiao',''),
             data.get('telefone',''), data.get('whatsapp',''),
             data.get('site_url',''), data.get('foto_url',''),
             data.get('ativo', True), data.get('destaque', False), rest_id
