@@ -248,6 +248,9 @@
         </a>
 
         <div class="nav-section">Config</div>
+        <a class="nav-item" data-panel="comentarios" onclick="showPanel('comentarios')">
+            <i class="fas fa-comments"></i> Comentários
+        </a>
         <a class="nav-item" data-panel="planos" onclick="showPanel('planos')">
             <i class="fas fa-dollar-sign"></i> Planos
         </a>
@@ -367,6 +370,20 @@
             </div>
         </div>
 
+        <!-- ── Comentários ── -->
+        <div class="panel" id="panel-comentarios">
+            <div class="toolbar">
+                <h2>Moderação de Comentários</h2>
+                <span style="font-size:0.85em;color:var(--muted)">Pendentes aparecem primeiro</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Nome</th><th>Restaurante</th><th>Comentário</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+                    <tbody id="tb-comentarios"><tr class="empty-row"><td colspan="6">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- ── Planos ── -->
         <div class="panel" id="panel-planos">
             <div class="toolbar">
@@ -469,6 +486,7 @@
                 <div class="field"><label>Bairro</label><input type="text" id="rest-bairro" placeholder="Ex: Liberdade"></div>
                 <div class="field"><label>Cidade</label><input type="text" id="rest-cidade" placeholder="São Paulo"></div>
             </div>
+            <div class="field"><label>Região / Zona</label><input type="text" id="rest-regiao" placeholder="Ex: Zona Sul, Centro, Leste..."></div>
             <div class="form-row">
                 <div class="field"><label>Latitude</label><input type="text" id="rest-lat" placeholder="-23.5505"></div>
                 <div class="field"><label>Longitude</label><input type="text" id="rest-lng" placeholder="-46.6333"></div>
@@ -608,7 +626,8 @@
 const PANEL_TITLES = {
     dashboard: 'Dashboard', categorias: 'Categorias', pratos: 'Pratos',
     restaurantes: 'Restaurantes', blog: 'Blog',
-    vagas: 'Vagas de Emprego', candidatos: 'Candidatos', planos: 'Planos'
+    vagas: 'Vagas de Emprego', candidatos: 'Candidatos',
+    comentarios: 'Comentários', planos: 'Planos'
 };
 
 function showPanel(name) {
@@ -623,6 +642,7 @@ function showPanel(name) {
     if (name === 'blog')         loadBlog();
     if (name === 'vagas')        loadVagas();
     if (name === 'candidatos')   loadCandidatos();
+    if (name === 'comentarios')  loadComentariosAdmin();
     if (name === 'planos')       loadPlanos();
     closeSidebar();
 }
@@ -847,7 +867,7 @@ async function loadRestaurantes() {
 
 function editRestaurante(id) {
     const r = restaurantes.find(x => x.id === id);
-    ['id','nome','slug','foto','descricao','endereco','bairro','cidade','lat','lng','telefone','website','instagram'].forEach(f => {
+    ['id','nome','slug','foto','descricao','endereco','bairro','cidade','regiao','lat','lng','telefone','website','instagram'].forEach(f => {
         const el = document.getElementById('rest-' + f);
         if (el) el.value = r[f === 'foto' ? 'foto_url' : f] || '';
     });
@@ -871,6 +891,7 @@ async function saveRestaurante() {
         endereco:     document.getElementById('rest-endereco').value.trim(),
         bairro:       document.getElementById('rest-bairro').value.trim(),
         cidade:       document.getElementById('rest-cidade').value.trim() || 'São Paulo',
+        regiao:       (document.getElementById('rest-regiao') ? document.getElementById('rest-regiao').value.trim() : ''),
         lat:          parseFloat(document.getElementById('rest-lat').value) || null,
         lng:          parseFloat(document.getElementById('rest-lng').value) || null,
         telefone:     document.getElementById('rest-telefone').value.trim(),
@@ -1158,6 +1179,54 @@ async function loadRestSelectIfNeeded() {
     const cur = sel.value;
     sel.innerHTML = '<option value="">— Nenhum (vaga genérica) —</option>' + restaurantes.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
     if (cur) sel.value = cur;
+}
+
+// ════════════════════════════════════════
+//  COMENTÁRIOS (moderação)
+// ════════════════════════════════════════
+let comentariosAdmin = [];
+async function loadComentariosAdmin() {
+    const tb = document.getElementById('tb-comentarios');
+    tb.innerHTML = '<tr class="empty-row"><td colspan="6">Carregando...</td></tr>';
+    try {
+        comentariosAdmin = await fetch('/api/admin/comentarios').then(r => r.json());
+        if (!comentariosAdmin.length) {
+            tb.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum comentário cadastrado.</td></tr>';
+            return;
+        }
+        tb.innerHTML = comentariosAdmin.map(c => `
+            <tr>
+                <td><strong>${c.nome}</strong>${c.email ? `<br><small style="color:var(--muted)">${c.email}</small>` : ''}</td>
+                <td>${c.restaurante_nome || '—'}</td>
+                <td style="max-width:300px;font-size:0.88em;">${c.texto}</td>
+                <td><span class="badge ${c.aprovado ? 'badge-green' : 'badge-red'}">${c.aprovado ? 'Aprovado' : 'Pendente'}</span></td>
+                <td style="font-size:0.82em;color:var(--muted)">${c.criado_em || ''}</td>
+                <td><div class="actions">
+                    ${!c.aprovado ? `<button class="btn btn-secondary btn-sm" onclick="aprovarComentario(${c.id})" title="Aprovar"><i class="fas fa-check" style="color:var(--success)"></i></button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deletarComentario(${c.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('');
+    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Erro ao carregar.</td></tr>'; }
+}
+
+async function aprovarComentario(id) {
+    if (!confirm('Aprovar este comentário? Ele ficará visível no site.')) return;
+    try {
+        const res = await api('POST', `/api/admin/comentarios/${id}/aprovar`);
+        if (res.error) { toast(res.error, 'error'); return; }
+        toast('Comentário aprovado!');
+        loadComentariosAdmin();
+    } catch(e) { toast('Erro ao aprovar.', 'error'); }
+}
+
+async function deletarComentario(id) {
+    if (!confirm('Excluir este comentário permanentemente?')) return;
+    try {
+        const res = await api('DELETE', `/api/admin/comentarios/${id}`);
+        if (res.error) { toast(res.error, 'error'); return; }
+        toast('Comentário excluído!');
+        loadComentariosAdmin();
+    } catch(e) { toast('Erro ao excluir.', 'error'); }
 }
 </script>
 </body>
