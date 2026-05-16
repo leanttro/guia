@@ -59,7 +59,6 @@
         }
         .hero-categoria .voltar { display: inline-block; color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.95em; margin-bottom: 20px; transition: color 0.2s; }
         .hero-categoria .voltar:hover { color: var(--white); }
-        .hero-categoria .emoji { font-size: 3.5em; margin-bottom: 10px; }
         .hero-categoria h1 { font-size: 2.6em; font-weight: 700; text-shadow: 2px 2px 6px rgba(0,0,0,0.6); margin-bottom: 10px; }
         .hero-categoria p { font-size: 1.1em; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); max-width: 600px; margin: 0 auto; }
 
@@ -300,7 +299,7 @@
     <!-- Hero dinâmico por categoria -->
     <div class="hero-categoria" id="hero-cat">
         <a href="/" class="voltar">❮ Voltar para o início</a>
-        <div class="emoji" id="cat-emoji">🍽️</div>
+
         <h1 id="cat-titulo">Carregando...</h1>
         <p id="cat-descricao"></p>
     </div>
@@ -413,18 +412,31 @@
         const CATEGORIA_SLUG = '{{ categoria_slug }}';
 
         const CATEGORIAS_INFO = {
-            'japones':  { emoji: '🍣', titulo: 'Rodízio Japonês', descricao: 'Sushi, sashimi, hot roll, temaki e muito mais. Aprenda o nome de cada prato antes de pedir.' },
-            'carnes':   { emoji: '🥩', titulo: 'Rodízio de Carnes', descricao: 'Picanha, costela, maminha, fraldinha. Conheça os cortes e os pontos certos.' },
-            'pizza':    { emoji: '🍕', titulo: 'Rodízio de Pizza', descricao: 'Sabores clássicos e especiais. Saiba quais pedir primeiro para aproveitar melhor.' },
-            'mexicano': { emoji: '🌮', titulo: 'Rodízio Mexicano', descricao: 'Tacos, burritos, nachos, guacamole e quesadillas. Tudo explicado para você.' },
+            'japones':  { titulo: 'Rodízio Japonês', descricao: 'Sushi, sashimi, hot roll, temaki e muito mais. Aprenda o nome de cada prato antes de pedir.' },
+            'carnes':   { titulo: 'Rodízio de Carnes', descricao: 'Picanha, costela, maminha, fraldinha. Conheça os cortes e os pontos certos.' },
+            'pizza':    { titulo: 'Rodízio de Pizza', descricao: 'Sabores clássicos e especiais. Saiba quais pedir primeiro para aproveitar melhor.' },
+            'mexicano': { titulo: 'Rodízio Mexicano', descricao: 'Tacos, burritos, nachos, guacamole e quesadillas. Tudo explicado para você.' },
         };
 
-        // Preenche o hero
-        const info = CATEGORIAS_INFO[CATEGORIA_SLUG] || { emoji: '🍽️', titulo: CATEGORIA_SLUG, descricao: '' };
-        document.getElementById('cat-emoji').textContent = info.emoji;
-        document.getElementById('cat-titulo').textContent = info.titulo;
-        document.getElementById('cat-descricao').textContent = info.descricao;
-        document.title = `${info.titulo} em SP | Guia do Rodízio`;
+        // Preenche o hero e aplica imagem de fundo da categoria
+        async function initHero() {
+            const info = CATEGORIAS_INFO[CATEGORIA_SLUG] || { titulo: CATEGORIA_SLUG, descricao: '' };
+            document.getElementById('cat-titulo').textContent = info.titulo;
+            document.getElementById('cat-descricao').textContent = info.descricao;
+            document.title = `${info.titulo} em SP | Guia do Rodízio`;
+
+            try {
+                const cats = await fetch('/api/categorias').then(r => r.json());
+                const cat = cats.find(c => c.slug === CATEGORIA_SLUG);
+                if (cat && cat.icone_url) {
+                    const hero = document.getElementById('hero-cat');
+                    hero.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${cat.icone_url}')`;
+                    hero.style.backgroundSize = 'cover';
+                    hero.style.backgroundPosition = 'center';
+                }
+            } catch(e) { /* mantém fundo padrão */ }
+        }
+        initHero();
 
         // ── Carregar pratos ──────────────────────────────────
         async function loadPratos() {
