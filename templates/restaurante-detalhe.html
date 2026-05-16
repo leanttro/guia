@@ -23,31 +23,61 @@
         .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
         /* ── Header ── */
-        header { background: var(--primary); padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-        header .logo { padding-left: 20px; }
-        header .logo a { text-decoration: none; }
-        header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
-        header nav.desktop-nav ul { list-style: none; display: flex; padding-right: 20px; gap: 35px; }
-        header nav.desktop-nav ul li a { text-decoration: none; color: var(--white); font-weight: 500; transition: color 0.3s; }
-        header nav.desktop-nav ul li a:hover { color: var(--light); }
-        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; }
+        header {
+            background-color: var(--primary);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+        }
+        header .logo { display: flex; align-items: center; }
+        header .logo a { display: block; }
+        header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
+        header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        header nav.desktop-nav ul li a {
+            text-decoration: none; color: var(--white); font-weight: 500;
+            position: relative; padding-bottom: 5px; transition: color 0.3s;
+        }
+        header nav.desktop-nav ul li a::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
+        }
+        header nav.desktop-nav ul li a.active { font-weight: 700; }
+        header nav.desktop-nav ul li a.active::after { width: 100%; }
+        header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
+        header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
+        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
         .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
         .mobile-nav-overlay.active { display: flex; opacity: 1; }
         .mobile-nav-overlay nav ul { list-style: none; flex-direction: column; text-align: center; padding: 0; }
         .mobile-nav-overlay nav ul li { margin: 20px 0; }
         .mobile-nav-overlay nav ul li a { color: var(--white); font-size: 1.8em; font-weight: 700; text-decoration: none; display: block; }
 
-        /* ── Foto hero do restaurante ── */
-        .rest-hero {
-            width: 100%; height: 320px; object-fit: cover;
-            display: block; background: var(--medium-gray);
+        /* ── Hero da categoria (acima do conteúdo) ── */
+        .cat-hero-foto {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 28px 20px;
+            background: var(--light-gray);
         }
-        .rest-hero-placeholder {
-            width: 100%; height: 320px;
+        .cat-hero-foto img {
+            max-width: 560px;
+            width: 100%;
+            height: auto;
+            max-height: 320px;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px var(--shadow-medium);
+            display: block;
+        }
+        .cat-hero-slim {
+            width: 100%;
+            height: 18px;
             background: var(--light);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4em; font-weight: 700; color: var(--dark);
-            letter-spacing: 0.05em; text-transform: uppercase;
         }
 
         /* ── Layout principal ── */
@@ -158,8 +188,120 @@
         .sidebar { display: flex; flex-direction: column; gap: 24px; }
 
         /* ── Footer ── */
-        footer { background: var(--dark-gray); color: #adb5bd; padding: 30px 0; text-align: center; font-size: 0.9em; margin-top: 40px; }
-        footer a { color: var(--light); text-decoration: none; }
+        footer {
+            background: #0d0d0d;
+            border-top: 1px solid #1e1e1e;
+            padding: 40px 0 28px;
+            font-family: 'Roboto', sans-serif;
+        }
+        .footer-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .footer-logo img {
+            height: 48px;
+            width: auto;
+            display: block;
+            filter: brightness(0) invert(1);
+        }
+        .footer-divider {
+            width: 1px;
+            height: 48px;
+            background: #2a2a2a;
+            flex-shrink: 0;
+        }
+        .footer-text {
+            flex: 1;
+            min-width: 200px;
+        }
+        .footer-text strong {
+            display: block;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+        .footer-text span {
+            color: #707070;
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+        .footer-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .f-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 9px 17px;
+            border-radius: 6px;
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+            transition: opacity 0.2s, transform 0.15s;
+            border: none;
+            cursor: pointer;
+        }
+        .f-btn:hover { opacity: 0.82; transform: translateY(-1px); }
+        .f-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+        .f-btn-site { background: #ffffff; color: #0d0d0d; }
+        .f-btn-wpp  { background: #25D366; color: #fff; }
+        .f-btn-ig   { background: #7c5cfc; color: #fff; }
+        .footer-bottom {
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid #1a1a1a;
+            text-align: center;
+            color: #3a3a3a;
+            font-size: 11.5px;
+        }
+        .footer-bottom a { color: #555; text-decoration: none; }
+        .footer-bottom a:hover { color: #888; text-decoration: underline; }
+        /* ── Banner Vagas ── */
+        .vagas-banner {
+            background: #1a0a0a;
+            color: #fff;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .vagas-banner .vagas-emoji { font-size: 3em; margin-bottom: 16px; }
+        .vagas-banner h2 { font-size: 1.9em; font-weight: 700; margin-bottom: 10px; color: #fff; }
+        .vagas-banner p { font-size: 1.05em; color: #c0a0a0; margin-bottom: 32px; max-width: 520px; margin-left: auto; margin-right: auto; }
+        .vagas-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .vagas-btn-primary {
+            display: inline-block; background: #C0392B; color: #fff;
+            padding: 13px 30px; border-radius: 7px; font-size: 1em; font-weight: 700;
+            text-decoration: none; transition: background 0.3s, transform 0.2s;
+        }
+        .vagas-btn-primary:hover { background: #922B21; transform: translateY(-2px); }
+        .vagas-btn-outline {
+            display: inline-block; background: transparent; color: #fff;
+            border: 2px solid #fff; padding: 13px 30px; border-radius: 7px;
+            font-size: 1em; font-weight: 700; text-decoration: none;
+            transition: background 0.3s, color 0.3s, transform 0.2s;
+        }
+        .vagas-btn-outline:hover { background: #fff; color: #1a0a0a; transform: translateY(-2px); }
+        @media (max-width: 600px) {
+            .vagas-btns { flex-direction: column; align-items: center; }
+            .vagas-btn-primary, .vagas-btn-outline { width: 100%; max-width: 320px; text-align: center; }
+        }
+        @media (max-width: 640px) {
+            .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+            .footer-divider { display: none; }
+            .footer-logo img { height: 38px; }
+            .footer-text { min-width: unset; }
+            .footer-actions { width: 100%; justify-content: center; }
+            .f-btn { flex: 1; justify-content: center; font-size: 12px; padding: 9px 10px; }
+        }
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
@@ -169,8 +311,8 @@
         @media (max-width: 768px) {
             header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
+            header .logo img { height: 60px; }
             .rest-nome { font-size: 1.6em; }
-            .rest-hero { height: 220px; }
             #map { height: 230px; }
         }
 
@@ -205,7 +347,16 @@
 
     <header>
         <div class="logo">
-            <a href="/"><span>🥩 Guia do Rodízio</span></a>
+            <a href="/" aria-label="Guia do Rodízio SP — Página inicial">
+                <img
+                    src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+                    alt="Guia do Rodízio SP"
+                    height="90"
+                    width="auto"
+                    loading="eager"
+                    decoding="async"
+                />
+            </a>
         </div>
         <nav class="desktop-nav">
             <ul>
@@ -214,6 +365,7 @@
                 <li><a href="/carnes">Carnes</a></li>
                 <li><a href="/pizza">Pizza</a></li>
                 <li><a href="/mexicano">Mexicano</a></li>
+                <li><a href="/vagas">Empregos</a></li>
                 <li><a href="/blog">Blog</a></li>
             </ul>
         </nav>
@@ -221,6 +373,7 @@
     </header>
 
     <div class="mobile-nav-overlay" id="mobile-nav">
+        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
         <nav>
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
@@ -228,24 +381,23 @@
                 <li><a href="/carnes" onclick="closeMobileNav()">Carnes</a></li>
                 <li><a href="/pizza" onclick="closeMobileNav()">Pizza</a></li>
                 <li><a href="/mexicano" onclick="closeMobileNav()">Mexicano</a></li>
+                <li><a href="/vagas" onclick="closeMobileNav()">Empregos</a></li>
                 <li><a href="/blog" onclick="closeMobileNav()">Blog</a></li>
             </ul>
         </nav>
     </div>
 
-    <!-- Foto de capa -->
+    <!-- Foto / faixa da categoria -->
     {% if restaurante.foto_url %}
-        <img class="rest-hero"
-             src="{{ restaurante.foto_url }}"
-             alt="{{ restaurante.nome }}"
-             onerror="this.onerror=null;this.style.display='none';document.getElementById('hero-placeholder').style.display='flex';">
-        <div class="rest-hero-placeholder" id="hero-placeholder" style="display:none">
-            {{ restaurante.categoria_nome or '🍽️' }}
+        <div class="cat-hero-foto">
+            <img
+                src="{{ restaurante.foto_url }}"
+                alt="{{ restaurante.nome }}"
+                onerror="this.onerror=null;this.closest('.cat-hero-foto').outerHTML='<div class=\'cat-hero-slim\'></div>';"
+            >
         </div>
     {% else %}
-        <div class="rest-hero-placeholder" id="hero-placeholder">
-            {{ restaurante.categoria_nome or '🍽️' }}
-        </div>
+        <div class="cat-hero-slim"></div>
     {% endif %}
 
     <!-- Dados do restaurante passados para JS -->
@@ -445,10 +597,82 @@
         </div>
     </main>
 
-    <footer>
+    <!-- Banner Vagas -->
+    <section class="vagas-banner" aria-label="Trabalhe em rodízios em São Paulo">
+        <div class="vagas-emoji" aria-hidden="true">👨‍🍳</div>
+        <h2>Trabalha na gastronomia?</h2>
+        <p>Veja vagas abertas em rodízios ou cadastre seu currículo — é gratuito.</p>
+        <div class="vagas-btns">
+            <a href="/vagas" class="vagas-btn-primary">Ver vagas</a>
+            <a href="/vagas" class="vagas-btn-outline">Cadastrar currículo</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer itemscope itemtype="https://schema.org/WPFooter">
         <div class="container">
-            <p>© 2025 - GuiaDoRodizio.com.br - Todos os direitos reservados.</p>
-            <p style="margin-top:8px;">Desenvolvido por <a href="https://www.linkedin.com/in/leanttro" target="_blank">Leandro Andrade</a></p>
+            <div class="footer-inner">
+
+                <a href="/" aria-label="Guia do Rodízio SP — Página inicial" class="footer-logo" itemprop="url">
+                    <img
+                        src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+                        alt="Guia do Rodízio SP — Guia completo de rodízios em São Paulo"
+                        width="160"
+                        height="48"
+                        loading="lazy"
+                        decoding="async"
+                        itemprop="logo"
+                    />
+                </a>
+
+                <div class="footer-divider" aria-hidden="true"></div>
+
+                <div class="footer-text" itemscope itemtype="https://schema.org/Organization">
+                    <meta itemprop="name" content="Leanttro" />
+                    <meta itemprop="url" content="https://www.leanttro.com" />
+                    <meta itemprop="telephone" content="+5511913324827" />
+                    <meta itemprop="areaServed" content="São Paulo, SP, Brasil" />
+                    <strong itemprop="description">Você tem uma feira ou negócio local em SP?</strong>
+                    <span>Criação de Sites e Blogs · Automações · Otimização de Tráfego</span>
+                </div>
+
+                <nav class="footer-actions" aria-label="Contato com a Leanttro">
+                    <img
+                        src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png"
+                        alt="Leanttro"
+                        height="32"
+                        width="auto"
+                        loading="lazy"
+                        decoding="async"
+                        style="height:32px;width:auto;display:block;flex-shrink:0;"
+                    />
+
+                    <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-site" aria-label="Conhecer o site da Leanttro">
+                        Quero meu site
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+
+                    <a href="https://wa.me/5511913324827" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-wpp" aria-label="Falar com a Leanttro pelo WhatsApp">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                        WhatsApp
+                    </a>
+
+                    <a href="https://instagram.com/leanttro" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-ig" aria-label="Seguir a Leanttro no Instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+                        Instagram
+                    </a>
+                </nav>
+            </div>
+
+            <div class="footer-bottom">
+                <p>
+                    <span itemprop="copyrightYear">© 2025</span>
+                    <a href="/" title="Guia do Rodízio SP — Guia completo de rodízios em São Paulo">GuiaDoRodizio.com.br</a>
+                    · Todos os direitos reservados ·
+                    Site criado por
+                    <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" title="Leanttro — Criação de Sites e Marketing Digital em São Paulo">Leanttro</a>
+                </p>
+            </div>
         </div>
     </footer>
 
