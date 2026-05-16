@@ -335,6 +335,64 @@
             .vagas-btn-primary, .vagas-btn-outline { width: 100%; max-width: 320px; text-align: center; }
         }
 
+        /* ── Toggle de visualização (carrossel / grade) ── */
+        .view-controls {
+            display: flex; align-items: center; justify-content: flex-end;
+            margin-bottom: 20px; gap: 8px;
+        }
+        .view-controls span { font-size: 0.85em; color: #6c757d; margin-right: 4px; }
+        .view-btn {
+            background: var(--white); border: 2px solid var(--medium-gray);
+            border-radius: 8px; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; color: #6c757d; font-size: 1em;
+        }
+        .view-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .view-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+        /* ── Carrossel principal de restaurantes ── */
+        .carousel-wrapper { position: relative; }
+        .carousel-track-outer { overflow: hidden; border-radius: 12px; }
+        .carousel-track {
+            display: flex; gap: 25px;
+            transition: transform 0.4s ease;
+            will-change: transform; cursor: grab; user-select: none;
+        }
+        .carousel-track .restaurante-card {
+            flex: 0 0 calc(25% - 19px); min-width: 0;
+        }
+        .carousel-nav {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-top: 20px;
+        }
+        .carousel-arrow {
+            background: var(--white); border: 2px solid var(--medium-gray);
+            border-radius: 50%; width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1em; color: var(--dark-gray);
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .carousel-arrow:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .carousel-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .carousel-dots { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+        .carousel-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--medium-gray); cursor: pointer;
+            transition: background 0.2s, transform 0.2s; border: none; padding: 0;
+        }
+        .carousel-dot.active { background: var(--primary); transform: scale(1.3); }
+        .badge-destaque-rest {
+            display: inline-block; background: #F39C12; color: var(--white);
+            font-size: 0.75em; font-weight: 700; padding: 2px 8px;
+            border-radius: 20px; margin-bottom: 6px;
+        }
+        @media (max-width: 768px) {
+            .carousel-track .restaurante-card { flex: 0 0 calc(50% - 13px); }
+        }
+        @media (max-width: 520px) {
+            .carousel-track .restaurante-card { flex: 0 0 100%; }
+        }
+
         /* ── Responsive ── */
         @media (max-width: 768px) {
             header nav.desktop-nav { display: none; }
@@ -511,8 +569,31 @@
                 </div>
             </div>
 
+            <!-- Controles de visualização -->
+            <div class="view-controls" id="idx-rest-view-controls" style="display:none;">
+                <span>Ver como:</span>
+                <button class="view-btn active" id="btn-idx-carousel" title="Carrossel" onclick="setIdxRestView('carousel')">
+                    <i class="fas fa-grip-lines"></i>
+                </button>
+                <button class="view-btn" id="btn-idx-grade" title="Grade" onclick="setIdxRestView('grade')">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
+
+            <!-- Carrossel de todos os restaurantes -->
+            <div id="idx-rest-carousel-wrapper" class="carousel-wrapper">
+                <div class="carousel-track-outer">
+                    <div class="carousel-track" id="idx-rest-track"></div>
+                </div>
+                <div class="carousel-nav" id="idx-rest-carousel-nav">
+                    <button class="carousel-arrow" id="idx-rest-prev" onclick="moveIdxCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <div class="carousel-dots" id="idx-rest-dots"></div>
+                    <button class="carousel-arrow" id="idx-rest-next" onclick="moveIdxCarousel(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
             <!-- Grade de todos os restaurantes -->
-            <div class="restaurantes-grid" id="restaurantes-resultado">
+            <div class="restaurantes-grid" id="restaurantes-resultado" style="display:none;">
                 <p class="info-message"><i class="fas fa-spinner fa-spin"></i> Carregando rod&#237;zios...</p>
             </div>
         </div>
@@ -645,6 +726,119 @@
         let carrIndex = 0;
         let carrItems = [];
 
+        // ── Carrossel principal — estado ──
+        var idxRestView = 'carousel';
+        var idxRestCarousel = { index: 0, visibleCount: 4, total: 0 };
+
+        function getIdxVisibleCount() {
+            var w = window.innerWidth;
+            if (w <= 520) return 1;
+            if (w <= 768) return 2;
+            return 4;
+        }
+
+        function buildIdxCarousel(cards) {
+            var track = document.getElementById('idx-rest-track');
+            idxRestCarousel.index = 0;
+            idxRestCarousel.total = cards.length;
+            idxRestCarousel.visibleCount = getIdxVisibleCount();
+            track.innerHTML = '';
+            cards.forEach(function(html) {
+                var wrapper = document.createElement('div');
+                wrapper.innerHTML = html;
+                track.appendChild(wrapper.firstElementChild);
+            });
+            renderIdxCarouselNav();
+            updateIdxCarouselPosition();
+            addIdxDragSupport();
+        }
+
+        function renderIdxCarouselNav() {
+            var dotsEl = document.getElementById('idx-rest-dots');
+            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
+            dotsEl.innerHTML = '';
+            for (var i = 0; i < pageCount; i++) {
+                var dot = document.createElement('button');
+                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', 'Página ' + (i + 1));
+                (function(page){ dot.onclick = function(){ goIdxCarouselPage(page); }; })(i);
+                dotsEl.appendChild(dot);
+            }
+        }
+
+        function goIdxCarouselPage(page) {
+            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
+            idxRestCarousel.index = Math.max(0, Math.min(page, pageCount - 1));
+            updateIdxCarouselPosition();
+        }
+
+        function moveIdxCarousel(dir) {
+            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
+            idxRestCarousel.index = Math.max(0, Math.min(idxRestCarousel.index + dir, pageCount - 1));
+            updateIdxCarouselPosition();
+        }
+
+        function updateIdxCarouselPosition() {
+            var track = document.getElementById('idx-rest-track');
+            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
+            var outer = track.parentElement;
+            var containerWidth = outer ? outer.offsetWidth : 0;
+            var gapPx = 25;
+            var totalGapPx = gapPx * (idxRestCarousel.visibleCount - 1);
+            var cardWidthPx = (containerWidth - totalGapPx) / idxRestCarousel.visibleCount;
+            var stepPx = (cardWidthPx + gapPx) * idxRestCarousel.visibleCount;
+            track.style.transform = 'translateX(-' + (idxRestCarousel.index * stepPx) + 'px)';
+            document.querySelectorAll('#idx-rest-dots .carousel-dot').forEach(function(dot, i) {
+                dot.classList.toggle('active', i === idxRestCarousel.index);
+            });
+            var prevBtn = document.getElementById('idx-rest-prev');
+            var nextBtn = document.getElementById('idx-rest-next');
+            if (prevBtn) prevBtn.disabled = idxRestCarousel.index === 0;
+            if (nextBtn) nextBtn.disabled = idxRestCarousel.index >= pageCount - 1;
+            var navEl = document.getElementById('idx-rest-carousel-nav');
+            if (navEl) navEl.style.display = pageCount <= 1 ? 'none' : 'flex';
+        }
+
+        function addIdxDragSupport() {
+            var track = document.getElementById('idx-rest-track');
+            if (!track) return;
+            var startX = 0, isDragging = false;
+            function getCurrentTranslate() {
+                var style = window.getComputedStyle(track);
+                var matrix = new DOMMatrix(style.transform);
+                return matrix.m41;
+            }
+            function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; track.style.cursor = 'grabbing'; }
+            function onMove(x) { if (!isDragging) return; track.style.transform = 'translateX(' + (getCurrentTranslate() + (x - startX)) + 'px)'; }
+            function onEnd(x) {
+                if (!isDragging) return;
+                isDragging = false; track.style.cursor = ''; track.style.transition = '';
+                var diff = x - startX;
+                if (Math.abs(diff) > 50) { moveIdxCarousel(diff < 0 ? 1 : -1); } else { updateIdxCarouselPosition(); }
+            }
+            track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
+            window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
+            window.addEventListener('mouseup', function(e){ if (isDragging) onEnd(e.clientX); });
+            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove', function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchend', function(e){ onEnd(e.changedTouches[0].clientX); });
+        }
+
+        function setIdxRestView(mode) {
+            idxRestView = mode;
+            document.getElementById('btn-idx-carousel').classList.toggle('active', mode === 'carousel');
+            document.getElementById('btn-idx-grade').classList.toggle('active', mode === 'grade');
+            document.getElementById('idx-rest-carousel-wrapper').style.display = mode === 'carousel' ? '' : 'none';
+            document.getElementById('restaurantes-resultado').style.display = mode === 'grade' ? 'grid' : 'none';
+        }
+
+        window.addEventListener('resize', function() {
+            idxRestCarousel.visibleCount = getIdxVisibleCount();
+            idxRestCarousel.index = 0;
+            renderIdxCarouselNav();
+            updateIdxCarouselPosition();
+        });
+
         // ── Carrossel destaque ──
         function renderCarrossel(lista) {
             carrItems = lista.filter(function(r){ return r.foto_url; });
@@ -676,30 +870,48 @@
         document.getElementById('carr-prev').addEventListener('click', function(){ moverCarrossel(-1); });
         document.getElementById('carr-next').addEventListener('click', function(){ moverCarrossel(1); });
 
-        // ── Render grade ──
+        // ── Render carrossel principal + grade ──
         function idxRenderRestaurantes(lista) {
             var grid = document.getElementById('restaurantes-resultado');
+            var viewControls = document.getElementById('idx-rest-view-controls');
+
             if (!lista.length) {
+                document.getElementById('idx-rest-track').innerHTML = '';
                 grid.innerHTML = '<p class="info-message">Nenhum rodízio encontrado com esses filtros.</p>';
+                viewControls.style.display = 'none';
                 return;
             }
+
             var comFoto = lista.filter(function(r){ return r.foto_url; });
             var semFoto = lista.filter(function(r){ return !r.foto_url; });
             var ordenada = comFoto.concat(semFoto);
-            grid.innerHTML = ordenada.map(function(r) {
+
+            var cardsHTML = ordenada.map(function(r) {
                 var end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
                 var foto = r.foto_url
                     ? '<img src="' + r.foto_url + '" alt="' + r.nome + '" onerror="this.style.display=\'none\'">'
                     : '<div class="rest-card-sem-foto">' + (r.categoria_nome || '') + '</div>';
                 var dist = r.distancia_km !== undefined ? '<p class="distancia">' + r.distancia_km.toFixed(1) + ' km de você</p>' : '';
+                var destaque = r.destaque ? '<span class="badge-destaque-rest">⭐ Destaque</span>' : '';
                 return '<a href="/restaurantes/' + r.slug + '" class="restaurante-card">' +
                     foto +
                     '<div class="card-body">' +
+                    destaque +
                     '<h3>' + r.nome + '</h3>' +
                     '<p class="bairro"><i class="fas fa-map-marker-alt"></i> ' + (end || r.cidade || 'SP') + '</p>' +
                     dist +
                     '</div></a>';
-            }).join('');
+            });
+
+            // Popula carrossel
+            buildIdxCarousel(cardsHTML);
+
+            // Popula grade
+            grid.innerHTML = cardsHTML.join('');
+
+            // Exibe controles e aplica view atual
+            viewControls.style.display = 'flex';
+            setIdxRestView(idxRestView);
         }
 
         function idxAplicarFiltros() {
