@@ -1190,6 +1190,39 @@ def api_admin_planos():
 
 
 # ════════════════════════════════════════════════════════════
+#  API — QUIZ / COMPETIÇÃO DE PRATOS (salvar lead)
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/quiz_resultados', methods=['POST'])
+def api_quiz_resultados():
+    conn = None
+    try:
+        data              = request.get_json()
+        nome              = (data.get('nome') or '').strip()
+        email             = (data.get('email') or '').strip()
+        categoria_slug    = (data.get('categoria_slug') or '').strip()
+        pratos_escolhidos = data.get('pratos_escolhidos') or ''
+
+        if not nome:
+            return jsonify({'ok': False, 'error': 'Nome obrigatório'}), 400
+
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("""
+            INSERT INTO quiz_resultados (nome, email, categoria_slug, pratos_escolhidos)
+            VALUES (%s, %s, %s, %s)
+        """, (nome, email, categoria_slug, pratos_escolhidos))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'ok': False, 'error': 'Erro ao salvar resultado'}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
 #  STATIC FILES
 # ════════════════════════════════════════════════════════════
 
