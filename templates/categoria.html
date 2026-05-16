@@ -272,6 +272,14 @@
         .restaurante-card .bairro { font-size: 0.88em; color: #6c757d; }
         .restaurante-card .distancia { font-size: 0.85em; color: var(--primary); font-weight: 500; margin-top: 4px; }
         .badge-destaque-rest { display: inline-block; background: #F39C12; color: var(--white); font-size: 0.75em; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
+        .btn-ver-restaurante {
+            display: inline-block; background: var(--primary); color: var(--white);
+            padding: 10px 18px; border-radius: 6px; text-decoration: none;
+            font-weight: 700; font-size: 0.88em; text-align: center;
+            transition: background 0.3s; margin-top: 12px; width: 100%;
+            box-sizing: border-box;
+        }
+        .btn-ver-restaurante:hover { background: var(--dark); }
 
 
         /* ── Carrossel destaque restaurantes ── */
@@ -1167,7 +1175,7 @@
                 ? `<img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML='<div class=\\'rest-card-sem-foto\\'>${r.categoria_nome || ''}</div>'">`
                 : `<div class="rest-card-sem-foto">${r.categoria_nome || ''}</div>`;
             return `
-                <a href="/restaurantes/${r.slug}" class="restaurante-card">
+                <div class="restaurante-card">
                     ${fotoHTML}
                     <div class="card-body">
                         ${r.destaque ? '<span class="badge-destaque-rest">⭐ Destaque</span>' : ''}
@@ -1175,8 +1183,9 @@
                         <h3>${r.nome}</h3>
                         <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${[r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ') || r.cidade || 'SP'}</p>
                         ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
+                        <a href="/restaurantes/${r.slug}" class="btn-ver-restaurante">Ver restaurante &amp; avaliar →</a>
                     </div>
-                </a>`;
+                </div>`;
         }
 
         // ── Estado de filtros de localidade ──
