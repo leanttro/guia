@@ -65,10 +65,10 @@
         /* Seções */
         .section { padding: 60px 0; }
         .section-title { font-size: 2em; font-weight: 700; color: var(--dark-gray); margin-bottom: 8px; }
-        .section-subtitle { color: #6c757d; margin-bottom: 40px; font-size: 1em; }
+        .section-subtitle { color: #6c757d; margin-bottom: 24px; font-size: 1em; }
 
         /* Filtros de subcategoria */
-        .filtros-wrap { margin-bottom: 28px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .filtros-wrap { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .filtro-btn {
             padding: 7px 18px; border-radius: 20px; border: 2px solid var(--medium-gray);
             background: var(--white); color: var(--text-color); font-family: inherit;
@@ -77,7 +77,99 @@
         }
         .filtro-btn:hover { border-color: var(--primary); color: var(--primary); }
         .filtro-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
-        .prato-card.hidden { display: none; }
+        .prato-card.hidden { display: none !important; }
+
+        /* ── Barra de controles (toggle view) ── */
+        .view-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+            gap: 8px;
+        }
+        .view-controls span {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-right: 4px;
+        }
+        .view-btn {
+            background: var(--white);
+            border: 2px solid var(--medium-gray);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6c757d;
+            font-size: 1em;
+        }
+        .view-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .view-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+        /* ── Carrossel ── */
+        .carousel-wrapper {
+            position: relative;
+        }
+        .carousel-track-outer {
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        .carousel-track {
+            display: flex;
+            gap: 25px;
+            transition: transform 0.4s ease;
+            will-change: transform;
+        }
+        .carousel-track .prato-card,
+        .carousel-track .restaurante-card {
+            flex: 0 0 calc(25% - 19px);
+            min-width: 0;
+        }
+        .carousel-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .carousel-arrow {
+            background: var(--white);
+            border: 2px solid var(--medium-gray);
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1em;
+            color: var(--dark-gray);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .carousel-arrow:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .carousel-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .carousel-dots {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--medium-gray);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            border: none;
+            padding: 0;
+        }
+        .carousel-dot.active { background: var(--primary); transform: scale(1.3); }
 
         /* Grid de pratos */
         .pratos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
@@ -261,6 +353,17 @@
             header .logo img { height: 60px; }
             .hero-categoria h1 { font-size: 1.9em; }
             .section-title { font-size: 1.6em; }
+            .carousel-track .prato-card,
+            .carousel-track .restaurante-card {
+                flex: 0 0 calc(50% - 13px);
+            }
+        }
+
+        @media (max-width: 520px) {
+            .carousel-track .prato-card,
+            .carousel-track .restaurante-card {
+                flex: 0 0 calc(100%);
+            }
         }
     </style>
 </head>
@@ -311,7 +414,6 @@
     <!-- Hero dinâmico por categoria -->
     <div class="hero-categoria" id="hero-cat">
         <a href="/" class="voltar">❮ Voltar para o início</a>
-
         <h1 id="cat-titulo">Carregando...</h1>
         <p id="cat-descricao"></p>
     </div>
@@ -322,7 +424,35 @@
             <h2 class="section-title">O que pedir neste rodízio</h2>
             <p class="section-subtitle">Conheça cada prato antes de chegar</p>
             <div class="filtros-wrap" id="filtros-wrap" style="display:none"></div>
-            <div class="pratos-grid" id="pratos-grid">
+
+            <!-- Controles de visualização dos pratos -->
+            <div class="view-controls" id="pratos-view-controls" style="display:none">
+                <span>Ver como:</span>
+                <button class="view-btn active" id="btn-pratos-carousel" title="Carrossel" onclick="setPratosView('carousel')">
+                    <i class="fas fa-grip-lines"></i>
+                </button>
+                <button class="view-btn" id="btn-pratos-grade" title="Grade" onclick="setPratosView('grade')">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
+
+            <!-- Carrossel de pratos -->
+            <div id="pratos-carousel-wrapper" class="carousel-wrapper">
+                <div class="carousel-track-outer" id="pratos-track-outer">
+                    <div class="carousel-track" id="pratos-track"></div>
+                </div>
+                <div class="carousel-nav" id="pratos-carousel-nav">
+                    <button class="carousel-arrow" id="pratos-prev" onclick="moveCarousel('pratos', -1)"><i class="fas fa-chevron-left"></i></button>
+                    <div class="carousel-dots" id="pratos-dots"></div>
+                    <button class="carousel-arrow" id="pratos-next" onclick="moveCarousel('pratos', 1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Grade de pratos (oculta inicialmente) -->
+            <div class="pratos-grid" id="pratos-grid" style="display:none"></div>
+
+            <!-- Mensagem de loading/erro -->
+            <div id="pratos-loading">
                 <p class="info-message"><i class="fas fa-spinner fa-spin"></i> Carregando pratos...</p>
             </div>
         </div>
@@ -336,7 +466,35 @@
             <div class="busca-box">
                 <button id="btn-localizar"><i class="fas fa-map-marker-alt"></i> Ver os mais próximos de mim</button>
             </div>
-            <div class="restaurantes-grid" id="restaurantes-grid">
+
+            <!-- Controles de visualização dos restaurantes -->
+            <div class="view-controls" id="rest-view-controls" style="display:none">
+                <span>Ver como:</span>
+                <button class="view-btn active" id="btn-rest-carousel" title="Carrossel" onclick="setRestView('carousel')">
+                    <i class="fas fa-grip-lines"></i>
+                </button>
+                <button class="view-btn" id="btn-rest-grade" title="Grade" onclick="setRestView('grade')">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
+
+            <!-- Carrossel de restaurantes -->
+            <div id="rest-carousel-wrapper" class="carousel-wrapper">
+                <div class="carousel-track-outer">
+                    <div class="carousel-track" id="rest-track"></div>
+                </div>
+                <div class="carousel-nav" id="rest-carousel-nav">
+                    <button class="carousel-arrow" id="rest-prev" onclick="moveCarousel('rest', -1)"><i class="fas fa-chevron-left"></i></button>
+                    <div class="carousel-dots" id="rest-dots"></div>
+                    <button class="carousel-arrow" id="rest-next" onclick="moveCarousel('rest', 1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Grade de restaurantes (oculta inicialmente) -->
+            <div class="restaurantes-grid" id="restaurantes-grid" style="display:none"></div>
+
+            <!-- Mensagem inicial / loading -->
+            <div id="rest-loading">
                 <p class="info-message">Clique no botão acima para ordenar por distância.</p>
             </div>
         </div>
@@ -455,15 +613,141 @@
         let todosOsPratos = [];
         let filtroAtivo = 'Todos';
 
+        // Estado dos carrosséis
+        const carouselState = {
+            pratos: { index: 0, visibleCount: 4, total: 0 },
+            rest:   { index: 0, visibleCount: 4, total: 0 }
+        };
+
+        // Calcula quantos cards cabem visivelmente
+        function getVisibleCount() {
+            const w = window.innerWidth;
+            if (w <= 520) return 1;
+            if (w <= 768) return 2;
+            return 4;
+        }
+
         function primeirasPalavras(nome) {
-            // Pega a primeira palavra como chave de subcategoria
             return nome.split(' ')[0];
         }
 
+        // ── CARROSSEL GENÉRICO ──
+        function buildCarousel(id, cards) {
+            const track = document.getElementById(`${id}-track`);
+            const state = carouselState[id];
+            state.index = 0;
+            state.total = cards.length;
+            state.visibleCount = getVisibleCount();
+
+            track.innerHTML = '';
+            cards.forEach(html => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = html;
+                track.appendChild(wrapper.firstElementChild);
+            });
+
+            renderCarouselNav(id);
+            updateCarouselPosition(id);
+        }
+
+        function renderCarouselNav(id) {
+            const state = carouselState[id];
+            const dotsEl = document.getElementById(`${id}-dots`);
+            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
+            dotsEl.innerHTML = '';
+            for (let i = 0; i < pageCount; i++) {
+                const dot = document.createElement('button');
+                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', `Página ${i + 1}`);
+                dot.onclick = () => goToPage(id, i);
+                dotsEl.appendChild(dot);
+            }
+        }
+
+        function goToPage(id, page) {
+            const state = carouselState[id];
+            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
+            state.index = Math.max(0, Math.min(page, pageCount - 1));
+            updateCarouselPosition(id);
+        }
+
+        function moveCarousel(id, dir) {
+            const state = carouselState[id];
+            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
+            state.index = Math.max(0, Math.min(state.index + dir, pageCount - 1));
+            updateCarouselPosition(id);
+        }
+
+        function updateCarouselPosition(id) {
+            const state = carouselState[id];
+            const track = document.getElementById(`${id}-track`);
+            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
+
+            // Calcula deslocamento: cada card ocupa (100/visibleCount)% + gap proporcional
+            const cardWidthPercent = 100 / state.visibleCount;
+            // gap de 25px em porcentagem relativa ao container
+            const outer = document.getElementById(`${id === 'pratos' ? 'pratos-track-outer' : 'rest-carousel-wrapper'} .carousel-track-outer`) ||
+                          track.parentElement;
+            const containerWidth = outer ? outer.offsetWidth : track.parentElement.offsetWidth;
+            const gapPx = 25;
+            const totalGapPx = gapPx * (state.visibleCount - 1);
+            const cardWidthPx = (containerWidth - totalGapPx) / state.visibleCount;
+            const stepPx = (cardWidthPx + gapPx) * state.visibleCount;
+
+            track.style.transform = `translateX(-${state.index * stepPx}px)`;
+
+            // Dots
+            document.querySelectorAll(`#${id}-dots .carousel-dot`).forEach((dot, i) => {
+                dot.classList.toggle('active', i === state.index);
+            });
+
+            // Setas
+            const prevBtn = document.getElementById(`${id}-prev`);
+            const nextBtn = document.getElementById(`${id}-next`);
+            if (prevBtn) prevBtn.disabled = state.index === 0;
+            if (nextBtn) nextBtn.disabled = state.index >= pageCount - 1;
+
+            // Esconde nav se tudo cabe em uma página
+            const navEl = document.getElementById(`${id}-carousel-nav`);
+            if (navEl) navEl.style.display = pageCount <= 1 ? 'none' : 'flex';
+        }
+
+        // Recalcula ao redimensionar
+        window.addEventListener('resize', () => {
+            ['pratos', 'rest'].forEach(id => {
+                const state = carouselState[id];
+                state.visibleCount = getVisibleCount();
+                state.index = 0;
+                renderCarouselNav(id);
+                updateCarouselPosition(id);
+            });
+        });
+
+        // ── Toggle visualização pratos ──
+        let pratosView = 'carousel';
+        function setPratosView(mode) {
+            pratosView = mode;
+            document.getElementById('btn-pratos-carousel').classList.toggle('active', mode === 'carousel');
+            document.getElementById('btn-pratos-grade').classList.toggle('active', mode === 'grade');
+            document.getElementById('pratos-carousel-wrapper').style.display = mode === 'carousel' ? '' : 'none';
+            document.getElementById('pratos-grid').style.display = mode === 'grade' ? 'grid' : 'none';
+        }
+
+        // ── Toggle visualização restaurantes ──
+        let restView = 'carousel';
+        function setRestView(mode) {
+            restView = mode;
+            document.getElementById('btn-rest-carousel').classList.toggle('active', mode === 'carousel');
+            document.getElementById('btn-rest-grade').classList.toggle('active', mode === 'grade');
+            document.getElementById('rest-carousel-wrapper').style.display = mode === 'carousel' ? '' : 'none';
+            document.getElementById('restaurantes-grid').style.display = mode === 'grade' ? 'grid' : 'none';
+        }
+
+        // ── Filtros (mantém lógica original, aplica a carrossel e grade) ──
         function renderFiltros(pratos) {
             const wrap = document.getElementById('filtros-wrap');
             const subcats = ['Todos', ...new Set(pratos.map(p => primeirasPalavras(p.nome)))];
-            if (subcats.length <= 2) { wrap.style.display = 'none'; return; } // só mostra se tiver mais de 1 subcat
+            if (subcats.length <= 2) { wrap.style.display = 'none'; return; }
             wrap.style.display = 'flex';
             wrap.innerHTML = subcats.map(s => `
                 <button class="filtro-btn ${s === filtroAtivo ? 'active' : ''}"
@@ -473,97 +757,162 @@
 
         function setFiltro(subcat) {
             filtroAtivo = subcat;
-            // Atualiza botões
             document.querySelectorAll('.filtro-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.textContent === subcat);
             });
-            // Mostra/esconde cards
-            document.querySelectorAll('.prato-card[data-subcat]').forEach(card => {
+
+            // Aplica filtro nos cards do carrossel
+            const trackCards = document.querySelectorAll('#pratos-track .prato-card[data-subcat]');
+            trackCards.forEach(card => {
                 const match = subcat === 'Todos' || card.dataset.subcat === subcat;
                 card.classList.toggle('hidden', !match);
             });
+
+            // Aplica filtro nos cards da grade
+            const gridCards = document.querySelectorAll('#pratos-grid .prato-card[data-subcat]');
+            gridCards.forEach(card => {
+                const match = subcat === 'Todos' || card.dataset.subcat === subcat;
+                card.classList.toggle('hidden', !match);
+            });
+
+            // Recalcula carrossel com base nos cards visíveis
+            const visibleCards = Array.from(trackCards).filter(c => !c.classList.contains('hidden'));
+            carouselState.pratos.total = visibleCards.length;
+            carouselState.pratos.index = 0;
+            renderCarouselNav('pratos');
+            updateCarouselPosition('pratos');
+        }
+
+        // ── Gera HTML de um card de prato ──
+        function pratosCardHTML(p) {
+            return `
+                <div class="prato-card" data-subcat="${primeirasPalavras(p.nome)}">
+                    <img src="${p.foto_url || 'https://placehold.co/400x250/f8f9fa/343a40?text=' + encodeURIComponent(p.nome)}"
+                         alt="${p.nome}"
+                         onerror="this.src='https://placehold.co/400x250/f8f9fa/343a40?text=Sem+Foto'">
+                    <div class="card-body">
+                        ${p.destaque ? '<span class="badge-destaque">⭐ Destaque</span>' : ''}
+                        <h3>${p.nome}</h3>
+                        ${p.ingredientes ? `<p class="ingredientes">${p.ingredientes}</p>` : ''}
+                        ${p.descricao ? `<p>${p.descricao}</p>` : ''}
+                        ${p.cta_url ? `<a href="${p.cta_url}" class="btn-cta" target="_blank">${p.cta_texto || 'Saiba mais'}</a>` : ''}
+                        <div class="restaurantes-do-prato" id="rest-prato-${p.id}">
+                            <p>🗺️ Carregando onde encontrar...</p>
+                        </div>
+                    </div>
+                </div>`;
         }
 
         async function loadPratos() {
-            const grid = document.getElementById('pratos-grid');
+            const loadingEl = document.getElementById('pratos-loading');
             try {
                 const res = await fetch(`/api/pratos?categoria=${CATEGORIA_SLUG}`);
                 todosOsPratos = await res.json();
+                loadingEl.style.display = 'none';
+
                 if (!todosOsPratos.length) {
-                    grid.innerHTML = '<p class="info-message">Nenhum prato cadastrado ainda. Em breve!</p>';
+                    loadingEl.style.display = '';
+                    loadingEl.innerHTML = '<p class="info-message">Nenhum prato cadastrado ainda. Em breve!</p>';
                     return;
                 }
 
                 renderFiltros(todosOsPratos);
 
-                grid.innerHTML = todosOsPratos.map(p => `
-                    <div class="prato-card" data-subcat="${primeirasPalavras(p.nome)}">
-                        <img src="${p.foto_url || 'https://placehold.co/400x250/f8f9fa/343a40?text=' + encodeURIComponent(p.nome)}"
-                             alt="${p.nome}"
-                             onerror="this.src='https://placehold.co/400x250/f8f9fa/343a40?text=Sem+Foto'">
-                        <div class="card-body">
-                            ${p.destaque ? '<span class="badge-destaque">⭐ Destaque</span>' : ''}
-                            <h3>${p.nome}</h3>
-                            ${p.ingredientes ? `<p class="ingredientes">${p.ingredientes}</p>` : ''}
-                            ${p.descricao ? `<p>${p.descricao}</p>` : ''}
-                            ${p.cta_url ? `<a href="${p.cta_url}" class="btn-cta" target="_blank">${p.cta_texto || 'Saiba mais'}</a>` : ''}
-                            <div class="restaurantes-do-prato" id="rest-prato-${p.id}">
-                                <p>🗺️ Carregando onde encontrar...</p>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                const cardsHTML = todosOsPratos.map(pratosCardHTML);
 
+                // Popula carrossel
+                buildCarousel('pratos', cardsHTML);
+
+                // Popula grade (mesmo HTML, clonado)
+                const grid = document.getElementById('pratos-grid');
+                grid.innerHTML = cardsHTML.join('');
+
+                // Exibe controles
+                document.getElementById('pratos-view-controls').style.display = 'flex';
+
+                // Carrega restaurantes por prato
                 todosOsPratos.forEach(p => loadRestaurantesNoPrato(p.id));
 
             } catch(e) {
-                grid.innerHTML = '<p class="info-message">Erro ao carregar pratos.</p>';
+                loadingEl.style.display = '';
+                loadingEl.innerHTML = '<p class="info-message">Erro ao carregar pratos.</p>';
             }
         }
 
         async function loadRestaurantesNoPrato(pratoId) {
-            const el = document.getElementById(`rest-prato-${pratoId}`);
-            if (!el) return;
-            try {
-                const res = await fetch(`/api/pratos/${pratoId}/restaurantes`);
-                const lista = await res.json();
-                if (!lista.length) { el.style.display = 'none'; return; }
-                el.innerHTML = `<p>📍 Disponível em:</p>` + lista.map(r =>
-                    `<a href="/restaurantes/${r.slug}" class="rest-link">${r.nome}</a>`
-                ).join('');
-            } catch(e) {
-                el.style.display = 'none';
-            }
+            // Atualiza tanto no carrossel quanto na grade
+            ['rest-prato-' + pratoId].forEach(async (baseId) => {
+                const els = document.querySelectorAll(`[id="${baseId}"]`);
+                try {
+                    const res = await fetch(`/api/pratos/${pratoId}/restaurantes`);
+                    const lista = await res.json();
+                    els.forEach(el => {
+                        if (!lista.length) { el.style.display = 'none'; return; }
+                        el.innerHTML = `<p>📍 Disponível em:</p>` + lista.map(r =>
+                            `<a href="/restaurantes/${r.slug}" class="rest-link">${r.nome}</a>`
+                        ).join('');
+                    });
+                } catch(e) {
+                    els.forEach(el => el.style.display = 'none');
+                }
+            });
+        }
+
+        // ── Gera HTML de um card de restaurante ──
+        function restCardHTML(r) {
+            return `
+                <a href="/restaurantes/${r.slug}" class="restaurante-card">
+                    <img src="${r.foto_url || 'https://placehold.co/400x200/f8f9fa/343a40?text=Sem+Foto'}"
+                         alt="${r.nome}"
+                         onerror="this.src='https://placehold.co/400x200/f8f9fa/343a40?text=Sem+Foto'">
+                    <div class="card-body">
+                        ${r.destaque ? '<span class="badge-destaque-rest">⭐ Destaque</span>' : ''}
+                        <h3>${r.nome}</h3>
+                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${r.bairro || ''} — ${r.cidade || 'SP'}</p>
+                        ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
+                    </div>
+                </a>`;
         }
 
         // ── Carregar restaurantes ────────────────────────────
         async function loadRestaurantes(lat, lng) {
-            const grid = document.getElementById('restaurantes-grid');
-            grid.innerHTML = '<p class="info-message"><i class="fas fa-spinner fa-spin"></i> Buscando...</p>';
+            const loadingEl = document.getElementById('rest-loading');
+            loadingEl.style.display = '';
+            loadingEl.innerHTML = '<p class="info-message"><i class="fas fa-spinner fa-spin"></i> Buscando...</p>';
+
+            // Reseta grade e carrossel enquanto carrega
+            document.getElementById('rest-track').innerHTML = '';
+            document.getElementById('restaurantes-grid').innerHTML = '';
+
             let url = `/api/restaurantes?categoria=${CATEGORIA_SLUG}`;
             if (lat && lng) url += `&lat=${lat}&lng=${lng}`;
             try {
                 const res = await fetch(url);
                 const lista = await res.json();
+                loadingEl.style.display = 'none';
+
                 if (!lista.length) {
-                    grid.innerHTML = '<p class="info-message">Nenhum restaurante cadastrado nesta categoria ainda.</p>';
+                    loadingEl.style.display = '';
+                    loadingEl.innerHTML = '<p class="info-message">Nenhum restaurante cadastrado nesta categoria ainda.</p>';
                     return;
                 }
-                grid.innerHTML = lista.map(r => `
-                    <a href="/restaurantes/${r.slug}" class="restaurante-card">
-                        <img src="${r.foto_url || 'https://placehold.co/400x200/f8f9fa/343a40?text=Sem+Foto'}"
-                             alt="${r.nome}"
-                             onerror="this.src='https://placehold.co/400x200/f8f9fa/343a40?text=Sem+Foto'">
-                        <div class="card-body">
-                            ${r.destaque ? '<span class="badge-destaque-rest">⭐ Destaque</span>' : ''}
-                            <h3>${r.nome}</h3>
-                            <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${r.bairro || ''} — ${r.cidade || 'SP'}</p>
-                            ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
-                        </div>
-                    </a>
-                `).join('');
+
+                const cardsHTML = lista.map(restCardHTML);
+
+                // Popula carrossel
+                buildCarousel('rest', cardsHTML);
+
+                // Popula grade
+                const grid = document.getElementById('restaurantes-grid');
+                grid.innerHTML = cardsHTML.join('');
+
+                // Exibe controles e mantém modo atual
+                document.getElementById('rest-view-controls').style.display = 'flex';
+                setRestView(restView);
+
             } catch(e) {
-                grid.innerHTML = '<p class="info-message">Erro ao carregar restaurantes.</p>';
+                loadingEl.style.display = '';
+                loadingEl.innerHTML = '<p class="info-message">Erro ao carregar restaurantes.</p>';
             }
         }
 
