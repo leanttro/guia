@@ -386,6 +386,14 @@
             font-size: 0.75em; font-weight: 700; padding: 2px 8px;
             border-radius: 20px; margin-bottom: 6px;
         }
+        .btn-ver-rest {
+            display: inline-block; margin-top: 12px;
+            background: var(--primary); color: var(--white);
+            padding: 8px 16px; border-radius: 6px; font-size: 0.85em;
+            font-weight: 700; text-decoration: none;
+            transition: background 0.2s; white-space: nowrap;
+        }
+        .restaurante-card:hover .btn-ver-rest { background: var(--dark); }
         @media (max-width: 768px) {
             .carousel-track .restaurante-card { flex: 0 0 calc(50% - 13px); }
         }
@@ -856,6 +864,7 @@
                     '<h3>' + r.nome + '</h3>' +
                     '<p class="bairro"><i class="fas fa-map-marker-alt"></i> ' + (end || r.cidade || 'SP') + '</p>' +
                     dist +
+                    '<span class="btn-ver-rest">Ver restaurante &amp; avaliar →</span>' +
                     '</div></a>';
             }).join('');
             moverCarrossel(0);
@@ -900,6 +909,7 @@
                     '<h3>' + r.nome + '</h3>' +
                     '<p class="bairro"><i class="fas fa-map-marker-alt"></i> ' + (end || r.cidade || 'SP') + '</p>' +
                     dist +
+                    '<span class="btn-ver-rest">Ver restaurante &amp; avaliar →</span>' +
                     '</div></a>';
             });
 
