@@ -82,7 +82,7 @@ def blog_post(slug):
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT * FROM blog WHERE slug = %s AND ativo = TRUE", (slug,))
+        cur.execute("SELECT * FROM posts WHERE slug = %s AND ativo = TRUE", (slug,))
         post = cur.fetchone()
         cur.close()
         if not post:
@@ -500,7 +500,7 @@ def api_blog():
     try:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT * FROM blog WHERE ativo = TRUE ORDER BY criado_em DESC")
+        cur.execute("SELECT * FROM posts WHERE ativo = TRUE ORDER BY criado_em DESC")
         rows = [format_db_data(dict(r)) for r in cur.fetchall()]
         cur.close()
         return jsonify(rows)
@@ -674,7 +674,6 @@ def api_admin_vagas():
             data.get('destaque', False),
         ))
         new_id = cur.fetchone()['id']
-        conn.commit()
         cur.close()
         return jsonify({'ok': True, 'id': new_id})
     except Exception as e:
@@ -694,7 +693,6 @@ def api_admin_vaga(vaga_id):
 
         if request.method == 'DELETE':
             cur.execute("DELETE FROM vagas WHERE id = %s", (vaga_id,))
-            conn.commit()
             cur.close()
             return jsonify({'ok': True})
 
@@ -719,7 +717,6 @@ def api_admin_vaga(vaga_id):
             data.get('destaque', False),
             vaga_id,
         ))
-        conn.commit()
         cur.close()
         return jsonify({'ok': True})
     except Exception as e:
@@ -870,7 +867,7 @@ def sitemap():
         cur.execute("SELECT slug FROM restaurantes WHERE ativo = TRUE AND slug IS NOT NULL")
         for row in cur.fetchall():
             urls.append(f'https://www.guiadorodizio.com.br/restaurantes/{row[0]}')
-        cur.execute("SELECT slug FROM blog WHERE ativo = TRUE AND slug IS NOT NULL")
+        cur.execute("SELECT slug FROM posts WHERE ativo = TRUE AND slug IS NOT NULL")
         for row in cur.fetchall():
             urls.append(f'https://www.guiadorodizio.com.br/blog/{row[0]}')
         cur.close()
