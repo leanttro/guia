@@ -91,6 +91,28 @@
             .filtros-wrap::-webkit-scrollbar { display: none; }
             .filtro-btn { flex-shrink: 0; }
         }
+
+        /* ── Filtros de cidade/região ── */
+        .filtros-localidade { margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .filtros-localidade-label { font-size: 0.82em; color: #6c757d; font-weight: 500; margin-right: 4px; }
+        .chip-cidade, .chip-regiao {
+            padding: 5px 14px; border-radius: 20px; border: 2px solid var(--medium-gray);
+            background: var(--white); color: var(--text-color); font-family: inherit;
+            font-size: 0.82em; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .chip-cidade:hover, .chip-regiao:hover { border-color: var(--primary); color: var(--primary); }
+        .chip-cidade.active, .chip-regiao.active { background: var(--dark); border-color: var(--dark); color: var(--white); }
+        @media (max-width: 768px) {
+            .filtros-localidade { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+            .filtros-localidade::-webkit-scrollbar { display: none; }
+            .chip-cidade, .chip-regiao { flex-shrink: 0; }
+        }
+        /* badge cidade/região no card de restaurante */
+        .restaurante-card .cidade-badge {
+            display: inline-block; background: rgba(192,57,43,0.08); color: var(--primary);
+            font-size: 0.75em; font-weight: 600; padding: 2px 8px; border-radius: 12px;
+            margin-bottom: 4px;
+        }
         .prato-card.hidden { display: none !important; }
 
         /* ── Barra de controles (toggle view) ── */
@@ -238,6 +260,13 @@
         .restaurante-card { background: var(--light-gray); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; transition: transform 0.3s, box-shadow 0.3s; }
         .restaurante-card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px var(--shadow-medium); }
         .restaurante-card img { width: 100%; height: 170px; object-fit: cover; }
+        .rest-card-sem-foto {
+            width: 100%; height: 170px;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--light); color: var(--dark);
+            font-size: 1em; font-weight: 700; letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
         .restaurante-card .card-body { padding: 14px; }
         .restaurante-card h3 { font-size: 1.05em; color: var(--dark-gray); margin-bottom: 4px; }
         .restaurante-card .bairro { font-size: 0.88em; color: #6c757d; }
@@ -481,6 +510,18 @@
             <p class="section-subtitle">Use sua localização para encontrar o mais próximo</p>
             <div class="busca-box">
                 <button id="btn-localizar"><i class="fas fa-map-marker-alt"></i> Ver os mais próximos de mim</button>
+            </div>
+
+            <!-- Filtros de cidade e região -->
+            <div id="filtros-cidade-wrap" style="display:none; margin-bottom:8px;">
+                <div class="filtros-localidade" id="filtros-cidade">
+                    <span class="filtros-localidade-label">🏙️ Cidade:</span>
+                </div>
+            </div>
+            <div id="filtros-regiao-wrap" style="display:none; margin-bottom:16px;">
+                <div class="filtros-localidade" id="filtros-regiao">
+                    <span class="filtros-localidade-label">📍 Bairro/Região:</span>
+                </div>
             </div>
 
             <!-- Controles de visualização dos restaurantes -->
@@ -924,18 +965,92 @@
 
         // ── Gera HTML de um card de restaurante ──
         function restCardHTML(r) {
+            const fotoHTML = r.foto_url
+                ? `<img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML='<div class=\\'rest-card-sem-foto\\'>${r.categoria_nome || ''}</div>'">`
+                : `<div class="rest-card-sem-foto">${r.categoria_nome || ''}</div>`;
             return `
                 <a href="/restaurantes/${r.slug}" class="restaurante-card">
-                    <img src="${r.foto_url || 'https://placehold.co/400x200/f8f9fa/343a40?text=Sem+Foto'}"
-                         alt="${r.nome}"
-                         onerror="this.src='https://placehold.co/400x200/f8f9fa/343a40?text=Sem+Foto'">
+                    ${fotoHTML}
                     <div class="card-body">
                         ${r.destaque ? '<span class="badge-destaque-rest">⭐ Destaque</span>' : ''}
+                        ${(r.cidade || r.regiao) ? `<span class="cidade-badge">${[r.cidade, r.regiao].filter(Boolean).join(' · ')}</span>` : ''}
                         <h3>${r.nome}</h3>
                         <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${r.bairro || ''} — ${r.cidade || 'SP'}</p>
                         ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
                     </div>
                 </a>`;
+        }
+
+        // ── Estado de filtros de localidade ──
+        let cidadeSelecionada = null;
+        let regiaoSelecionada = null;
+        let todosOsRestaurantes = [];
+
+        async function carregarFiltrosCidade() {
+            try {
+                const cidades = await fetch(`/api/cidades?categoria=${CATEGORIA_SLUG}`).then(r => r.json());
+                const wrap = document.getElementById('filtros-cidade-wrap');
+                const el   = document.getElementById('filtros-cidade');
+                if (!cidades.length) { wrap.style.display = 'none'; return; }
+                wrap.style.display = '';
+                el.innerHTML = '<span class="filtros-localidade-label">🏙️ Cidade:</span>' +
+                    `<button class="chip-cidade active" data-cidade="" onclick="selecionarCidade(this, '')">Todas</button>` +
+                    cidades.map(c => `<button class="chip-cidade" data-cidade="${c}" onclick="selecionarCidade(this, '${c}')">${c}</button>`).join('');
+            } catch(e) {}
+        }
+
+        async function selecionarCidade(btn, cidade) {
+            cidadeSelecionada = cidade || null;
+            regiaoSelecionada = null;
+            document.querySelectorAll('.chip-cidade').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            await carregarFiltrosRegiao();
+            aplicarFiltrosLocalidade();
+        }
+
+        async function carregarFiltrosRegiao() {
+            const wrap = document.getElementById('filtros-regiao-wrap');
+            const el   = document.getElementById('filtros-regiao');
+            try {
+                let url = `/api/regioes?categoria=${CATEGORIA_SLUG}`;
+                if (cidadeSelecionada) url += `&cidade=${encodeURIComponent(cidadeSelecionada)}`;
+                const regioes = await fetch(url).then(r => r.json());
+                if (!regioes.length) { wrap.style.display = 'none'; return; }
+                wrap.style.display = '';
+                el.innerHTML = '<span class="filtros-localidade-label">📍 Região:</span>' +
+                    `<button class="chip-regiao active" data-regiao="" onclick="selecionarRegiao(this, '')">Todas</button>` +
+                    regioes.map(r => `<button class="chip-regiao" data-regiao="${r}" onclick="selecionarRegiao(this, '${r}')">${r}</button>`).join('');
+            } catch(e) { wrap.style.display = 'none'; }
+        }
+
+        function selecionarRegiao(btn, regiao) {
+            regiaoSelecionada = regiao || null;
+            document.querySelectorAll('.chip-regiao').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            aplicarFiltrosLocalidade();
+        }
+
+        function aplicarFiltrosLocalidade() {
+            let lista = todosOsRestaurantes;
+            if (cidadeSelecionada) lista = lista.filter(r => r.cidade === cidadeSelecionada);
+            if (regiaoSelecionada) lista = lista.filter(r => r.regiao === regiaoSelecionada);
+
+            const cardsHTML = lista.map(restCardHTML);
+
+            buildCarousel('rest', cardsHTML);
+            const grid = document.getElementById('restaurantes-grid');
+            grid.innerHTML = cardsHTML.join('');
+
+            const loadingEl = document.getElementById('rest-loading');
+            if (!lista.length) {
+                loadingEl.style.display = '';
+                loadingEl.innerHTML = '<p class="info-message">Nenhum restaurante encontrado com esses filtros.</p>';
+            } else {
+                loadingEl.style.display = 'none';
+            }
+
+            document.getElementById('rest-view-controls').style.display = lista.length ? 'flex' : 'none';
+            setRestView(restView);
         }
 
         // ── Carregar restaurantes ────────────────────────────
@@ -952,27 +1067,19 @@
             if (lat && lng) url += `&lat=${lat}&lng=${lng}`;
             try {
                 const res = await fetch(url);
-                const lista = await res.json();
+                todosOsRestaurantes = await res.json();
                 loadingEl.style.display = 'none';
 
-                if (!lista.length) {
+                if (!todosOsRestaurantes.length) {
                     loadingEl.style.display = '';
                     loadingEl.innerHTML = '<p class="info-message">Nenhum restaurante cadastrado nesta categoria ainda.</p>';
                     return;
                 }
 
-                const cardsHTML = lista.map(restCardHTML);
+                await carregarFiltrosCidade();
+                if (cidadeSelecionada) await carregarFiltrosRegiao();
 
-                // Popula carrossel
-                buildCarousel('rest', cardsHTML);
-
-                // Popula grade
-                const grid = document.getElementById('restaurantes-grid');
-                grid.innerHTML = cardsHTML.join('');
-
-                // Exibe controles e mantém modo atual
-                document.getElementById('rest-view-controls').style.display = 'flex';
-                setRestView(restView);
+                aplicarFiltrosLocalidade();
 
             } catch(e) {
                 loadingEl.style.display = '';
