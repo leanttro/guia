@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Guia do Rodízio</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a0a0a;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 40%, rgba(192,57,43,0.25) 0%, transparent 60%),
+                        radial-gradient(ellipse at 75% 70%, rgba(146,43,33,0.15) 0%, transparent 55%);
+            pointer-events: none;
+        }
+        .card {
+            position: relative;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 48px 44px;
+            width: 100%;
+            max-width: 420px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        .logo .emoji { font-size: 2.6em; display: block; margin-bottom: 10px; }
+        .logo h1 {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+        .logo span {
+            font-size: 0.85em;
+            color: rgba(255,255,255,0.4);
+            font-weight: 400;
+        }
+        .form-group { margin-bottom: 18px; }
+        label {
+            display: block;
+            font-size: 0.82em;
+            font-weight: 500;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+        }
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 13px 16px;
+            font-size: 0.97em;
+            font-family: inherit;
+            color: #fff;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        input:focus {
+            border-color: rgba(192,57,43,0.7);
+            background: rgba(255,255,255,0.09);
+        }
+        input::placeholder { color: rgba(255,255,255,0.2); }
+        .btn-login {
+            width: 100%;
+            margin-top: 8px;
+            background: #C0392B;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1em;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-login:hover { background: #a93226; transform: translateY(-1px); }
+        .btn-login:active { transform: translateY(0); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .error-msg {
+            background: rgba(192,57,43,0.15);
+            border: 1px solid rgba(192,57,43,0.4);
+            border-radius: 8px;
+            color: #e74c3c;
+            font-size: 0.88em;
+            padding: 10px 14px;
+            margin-top: 14px;
+            display: none;
+        }
+        .voltar {
+            display: block;
+            text-align: center;
+            margin-top: 22px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85em;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .voltar:hover { color: rgba(255,255,255,0.6); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">
+            <span class="emoji">🥩</span>
+            <h1>Guia do Rodízio</h1>
+            <span>Painel Administrativo</span>
+        </div>
+
+        <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <button class="btn-login" id="btn-login">
+            <i class="fas fa-sign-in-alt"></i> Entrar
+        </button>
+
+        <div class="error-msg" id="error-msg"></div>
+
+        <a href="/" class="voltar">← Voltar ao site</a>
+    </div>
+
+    <script>
+        const btn = document.getElementById('btn-login');
+        const emailInput = document.getElementById('email');
+        const senhaInput = document.getElementById('senha');
+        const errorMsg = document.getElementById('error-msg');
+
+        async function login() {
+            const email = emailInput.value.trim();
+            const senha = senhaInput.value;
+            if (!email || !senha) {
+                showError('Preencha e-mail e senha.');
+                return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+            errorMsg.style.display = 'none';
+
+            try {
+                const res = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    window.location.href = '/admin';
+                } else {
+                    showError(data.error || 'Credenciais inválidas.');
+                }
+            } catch(e) {
+                showError('Erro de conexão. Tente novamente.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
+            }
+        }
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = 'block';
+        }
+
+        btn.addEventListener('click', login);
+        [emailInput, senhaInput].forEach(el => {
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+        });
+    </script>
+</body>
+</html>
