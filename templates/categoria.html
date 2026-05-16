@@ -261,7 +261,7 @@
         .restaurante-card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px var(--shadow-medium); }
         .restaurante-card img { width: 100%; height: 170px; object-fit: cover; }
         .rest-card-sem-foto {
-            width: 100%; height: 170px;
+            width: 100%; height: 80px;
             display: flex; align-items: center; justify-content: center;
             background: var(--light); color: var(--dark);
             font-size: 1em; font-weight: 700; letter-spacing: 0.03em;
@@ -272,6 +272,26 @@
         .restaurante-card .bairro { font-size: 0.88em; color: #6c757d; }
         .restaurante-card .distancia { font-size: 0.85em; color: var(--primary); font-weight: 500; margin-top: 4px; }
         .badge-destaque-rest { display: inline-block; background: #F39C12; color: var(--white); font-size: 0.75em; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
+
+
+        /* ── Carrossel destaque restaurantes ── */
+        .destaque-section { margin-bottom: 30px; }
+        .destaque-section h3 { font-size: 1.1em; color: var(--dark-gray); font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .carr-wrap { position: relative; overflow: hidden; }
+        .carr-track { display: flex; gap: 20px; transition: transform 0.4s ease; }
+        .carr-track .restaurante-card { min-width: 260px; flex-shrink: 0; }
+        .carr-track .restaurante-card img { height: 170px; }
+        .carr-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: var(--white); border: 1px solid var(--medium-gray);
+            border-radius: 50%; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 5; box-shadow: 0 2px 8px var(--shadow-medium);
+            font-size: 0.9em; color: var(--dark-gray); transition: background 0.2s;
+        }
+        .carr-btn:hover { background: var(--light); }
+        .carr-btn.carr-prev { left: 4px; }
+        .carr-btn.carr-next { right: 4px; }
 
         .info-message { text-align: center; color: #6c757d; padding: 30px 0; }
 
@@ -509,7 +529,18 @@
             <h2 class="section-title" id="rest-titulo">Restaurantes desta categoria</h2>
             <p class="section-subtitle">Use sua localização para encontrar o mais próximo</p>
             <div class="busca-box">
-                <button id="btn-localizar"><i class="fas fa-map-marker-alt"></i> Ver os mais próximos de mim</button>
+                <button id="btn-localizar"><i class="fas fa-map-marker-alt"></i> Ordenar por distância</button>
+            </div>
+
+
+            <!-- Carrossel de destaque (só aparece se houver restaurantes com foto) -->
+            <div id="destaque-wrap" style="display:none;" class="destaque-section">
+                <h3>⭐ Destaques</h3>
+                <div class="carr-wrap">
+                    <button class="carr-btn carr-prev" id="carr-prev"><i class="fas fa-chevron-left"></i></button>
+                    <div class="carr-track" id="carr-track"></div>
+                    <button class="carr-btn carr-next" id="carr-next"><i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
 
             <!-- Filtros de cidade e região -->
@@ -552,7 +583,7 @@
 
             <!-- Mensagem inicial / loading -->
             <div id="rest-loading">
-                <p class="info-message">Clique no botão acima para ordenar por distância.</p>
+                <p class="info-message">Carregando restaurantes...</p>
             </div>
         </div>
     </section>
@@ -975,7 +1006,7 @@
                         ${r.destaque ? '<span class="badge-destaque-rest">⭐ Destaque</span>' : ''}
                         ${(r.cidade || r.regiao) ? `<span class="cidade-badge">${[r.cidade, r.regiao].filter(Boolean).join(' · ')}</span>` : ''}
                         <h3>${r.nome}</h3>
-                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${r.bairro || ''} — ${r.cidade || 'SP'}</p>
+                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${[r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ') || r.cidade || 'SP'}</p>
                         ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
                     </div>
                 </a>`;
@@ -1030,12 +1061,44 @@
             aplicarFiltrosLocalidade();
         }
 
+        // ── Carrossel destaque ──
+        let carrDestaqueIndex = 0;
+        let carrDestaqueItems = [];
+
+        function renderCarrDestaque(lista) {
+            carrDestaqueItems = lista.filter(r => r.foto_url);
+            const wrap = document.getElementById('destaque-wrap');
+            const track = document.getElementById('carr-track');
+            if (!carrDestaqueItems.length) { wrap.style.display = 'none'; return; }
+            wrap.style.display = '';
+            carrDestaqueIndex = 0;
+            track.innerHTML = carrDestaqueItems.map(r => restCardHTML(r)).join('');
+            moverCarrDestaque(0);
+        }
+
+        function moverCarrDestaque(dir) {
+            const track = document.getElementById('carr-track');
+            carrDestaqueIndex = Math.max(0, Math.min(carrDestaqueIndex + dir, carrDestaqueItems.length - 1));
+            track.style.transform = `translateX(-${carrDestaqueIndex * 280}px)`;
+        }
+
+        document.getElementById('carr-prev').addEventListener('click', () => moverCarrDestaque(-1));
+        document.getElementById('carr-next').addEventListener('click', () => moverCarrDestaque(1));
+
         function aplicarFiltrosLocalidade() {
             let lista = todosOsRestaurantes;
             if (cidadeSelecionada) lista = lista.filter(r => r.cidade === cidadeSelecionada);
             if (regiaoSelecionada) lista = lista.filter(r => r.regiao === regiaoSelecionada);
 
-            const cardsHTML = lista.map(restCardHTML);
+            // Carrossel destaque com os que têm foto
+            renderCarrDestaque(lista);
+
+            // Ordenação: com foto primeiro na grade e carrossel principal
+            const comFoto = lista.filter(r => r.foto_url);
+            const semFoto = lista.filter(r => !r.foto_url);
+            const ordenada = [...comFoto, ...semFoto];
+
+            const cardsHTML = ordenada.map(restCardHTML);
 
             buildCarousel('rest', cardsHTML);
             const grid = document.getElementById('restaurantes-grid');
