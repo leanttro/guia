@@ -12,7 +12,7 @@ import bcrypt
 load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='', template_folder='templates')
-app.secret_key = os.getenv('SECRET_KEY', 'guiarodizio-secret-key-2025')
+app.secret_key = os.getenv('SECRET_KEY')
 CORS(app)
 
 # ── Conexão ──────────────────────────────────────────────────
