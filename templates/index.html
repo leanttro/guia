@@ -657,7 +657,7 @@
                 var end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
                 var dist = r.distancia_km !== undefined ? '<p class="distancia">' + r.distancia_km.toFixed(1) + ' km de você</p>' : '';
                 return '<a href="/restaurantes/' + r.slug + '" class="restaurante-card">' +
-                    '<img src="' + r.foto_url + '" alt="' + r.nome + '" onerror="this.style.display='none'">' +
+                    '<img src="' + r.foto_url + '" alt="' + r.nome + '" onerror="this.style.display=\'none\'">' +
                     '<div class="card-body">' +
                     '<h3>' + r.nome + '</h3>' +
                     '<p class="bairro"><i class="fas fa-map-marker-alt"></i> ' + (end || r.cidade || 'SP') + '</p>' +
@@ -689,7 +689,7 @@
             grid.innerHTML = ordenada.map(function(r) {
                 var end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
                 var foto = r.foto_url
-                    ? '<img src="' + r.foto_url + '" alt="' + r.nome + '" onerror="this.style.display='none'">'
+                    ? '<img src="' + r.foto_url + '" alt="' + r.nome + '" onerror="this.style.display=\'none\'">'
                     : '<div class="rest-card-sem-foto">' + (r.categoria_nome || '') + '</div>';
                 var dist = r.distancia_km !== undefined ? '<p class="distancia">' + r.distancia_km.toFixed(1) + ' km de você</p>' : '';
                 return '<a href="/restaurantes/' + r.slug + '" class="restaurante-card">' +
@@ -831,7 +831,7 @@
                     var sub = (p.subtitulo || '').length > 100 ? p.subtitulo.substring(0, 97) + '...' : (p.subtitulo || '');
                     var img = p.imagem_url || 'https://placehold.co/600x300/f8f9fa/343a40?text=Post';
                     return '<a href="/blog/' + p.slug + '" class="blog-card">' +
-                        '<img src="' + img + '" alt="' + p.titulo + '" onerror="this.src='https://placehold.co/600x300/f8f9fa/343a40?text=Post'">' +
+                        '<img src="' + img + '" alt="' + p.titulo + '" onerror="this.src=\'https://placehold.co/600x300/f8f9fa/343a40?text=Post\'">' +
                         '<div class="card-body">' +
                         '<h3>' + p.titulo + '</h3>' +
                         '<p>' + sub + '</p>' +
