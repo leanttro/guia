@@ -67,6 +67,18 @@
         .section-title { font-size: 2em; font-weight: 700; color: var(--dark-gray); margin-bottom: 8px; }
         .section-subtitle { color: #6c757d; margin-bottom: 40px; font-size: 1em; }
 
+        /* Filtros de subcategoria */
+        .filtros-wrap { margin-bottom: 28px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .filtro-btn {
+            padding: 7px 18px; border-radius: 20px; border: 2px solid var(--medium-gray);
+            background: var(--white); color: var(--text-color); font-family: inherit;
+            font-size: 0.88em; font-weight: 500; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filtro-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .filtro-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .prato-card.hidden { display: none; }
+
         /* Grid de pratos */
         .pratos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
         .prato-card {
@@ -309,6 +321,7 @@
         <div class="container">
             <h2 class="section-title">O que pedir neste rodízio</h2>
             <p class="section-subtitle">Conheça cada prato antes de chegar</p>
+            <div class="filtros-wrap" id="filtros-wrap" style="display:none"></div>
             <div class="pratos-grid" id="pratos-grid">
                 <p class="info-message"><i class="fas fa-spinner fa-spin"></i> Carregando pratos...</p>
             </div>
@@ -439,17 +452,52 @@
         initHero();
 
         // ── Carregar pratos ──────────────────────────────────
+        let todosOsPratos = [];
+        let filtroAtivo = 'Todos';
+
+        function primeirasPalavras(nome) {
+            // Pega a primeira palavra como chave de subcategoria
+            return nome.split(' ')[0];
+        }
+
+        function renderFiltros(pratos) {
+            const wrap = document.getElementById('filtros-wrap');
+            const subcats = ['Todos', ...new Set(pratos.map(p => primeirasPalavras(p.nome)))];
+            if (subcats.length <= 2) { wrap.style.display = 'none'; return; } // só mostra se tiver mais de 1 subcat
+            wrap.style.display = 'flex';
+            wrap.innerHTML = subcats.map(s => `
+                <button class="filtro-btn ${s === filtroAtivo ? 'active' : ''}"
+                        onclick="setFiltro('${s}')">${s}</button>
+            `).join('');
+        }
+
+        function setFiltro(subcat) {
+            filtroAtivo = subcat;
+            // Atualiza botões
+            document.querySelectorAll('.filtro-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === subcat);
+            });
+            // Mostra/esconde cards
+            document.querySelectorAll('.prato-card[data-subcat]').forEach(card => {
+                const match = subcat === 'Todos' || card.dataset.subcat === subcat;
+                card.classList.toggle('hidden', !match);
+            });
+        }
+
         async function loadPratos() {
             const grid = document.getElementById('pratos-grid');
             try {
                 const res = await fetch(`/api/pratos?categoria=${CATEGORIA_SLUG}`);
-                const pratos = await res.json();
-                if (!pratos.length) {
+                todosOsPratos = await res.json();
+                if (!todosOsPratos.length) {
                     grid.innerHTML = '<p class="info-message">Nenhum prato cadastrado ainda. Em breve!</p>';
                     return;
                 }
-                grid.innerHTML = pratos.map(p => `
-                    <div class="prato-card">
+
+                renderFiltros(todosOsPratos);
+
+                grid.innerHTML = todosOsPratos.map(p => `
+                    <div class="prato-card" data-subcat="${primeirasPalavras(p.nome)}">
                         <img src="${p.foto_url || 'https://placehold.co/400x250/f8f9fa/343a40?text=' + encodeURIComponent(p.nome)}"
                              alt="${p.nome}"
                              onerror="this.src='https://placehold.co/400x250/f8f9fa/343a40?text=Sem+Foto'">
@@ -466,8 +514,7 @@
                     </div>
                 `).join('');
 
-                // Para cada prato, busca restaurantes que servem (plano destaque)
-                pratos.forEach(p => loadRestaurantesNoPrato(p.id));
+                todosOsPratos.forEach(p => loadRestaurantesNoPrato(p.id));
 
             } catch(e) {
                 grid.innerHTML = '<p class="info-message">Erro ao carregar pratos.</p>';
