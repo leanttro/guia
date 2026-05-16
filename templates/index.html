@@ -620,111 +620,109 @@
 
         // ── Carrossel destaque ──
         function renderCarrossel(lista) {
-            carrItems = lista.filter(r => r.foto_url);
-            const wrap = document.getElementById('destaque-wrap');
-            const track = document.getElementById('carrossel-track');
+            carrItems = lista.filter(function(r){ return r.foto_url; });
+            var wrap = document.getElementById('destaque-wrap');
+            var track = document.getElementById('carrossel-track');
             if (!carrItems.length) { wrap.style.display = 'none'; return; }
             wrap.style.display = '';
             carrIndex = 0;
-            track.innerHTML = carrItems.map(r => {
-                const end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
-                return `
-                <a href="/restaurantes/${r.slug}" class="restaurante-card">
-                    <img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML=\'<div class=\"rest-card-sem-foto\">${r.categoria_nome||\'\'}</div>\'">
-                    <div class="card-body">
-                        <h3>${r.nome}</h3>
-                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${end || r.cidade || 'SP'}</p>
-                        ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
-                    </div>
-                </a>`;
+            track.innerHTML = carrItems.map(function(r) {
+                var end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
+                var dist = r.distancia_km !== undefined ? '<p class="distancia">' + r.distancia_km.toFixed(1) + ' km de você</p>' : '';
+                return '<a href="/restaurantes/' + r.slug + '" class="restaurante-card">' +
+                    '<img src="' + r.foto_url + '" alt="' + r.nome + '" onerror="this.style.display='none'">' +
+                    '<div class="card-body">' +
+                    '<h3>' + r.nome + '</h3>' +
+                    '<p class="bairro"><i class="fas fa-map-marker-alt"></i> ' + (end || r.cidade || 'SP') + '</p>' +
+                    dist +
+                    '</div></a>';
             }).join('');
             moverCarrossel(0);
         }
 
         function moverCarrossel(dir) {
-            const track = document.getElementById('carrossel-track');
+            var track = document.getElementById('carrossel-track');
             carrIndex = Math.max(0, Math.min(carrIndex + dir, carrItems.length - 1));
-            track.style.transform = `translateX(-${carrIndex * 300}px)`;
+            track.style.transform = 'translateX(-' + (carrIndex * 300) + 'px)';
         }
 
-        document.getElementById('carr-prev').addEventListener('click', () => moverCarrossel(-1));
-        document.getElementById('carr-next').addEventListener('click', () => moverCarrossel(1));
+        document.getElementById('carr-prev').addEventListener('click', function(){ moverCarrossel(-1); });
+        document.getElementById('carr-next').addEventListener('click', function(){ moverCarrossel(1); });
 
         // ── Render grade ──
         function idxRenderRestaurantes(lista) {
-            const grid = document.getElementById('restaurantes-resultado');
+            var grid = document.getElementById('restaurantes-resultado');
             if (!lista.length) {
                 grid.innerHTML = '<p class="info-message">Nenhum rodízio encontrado com esses filtros.</p>';
                 return;
             }
-            const comFoto = lista.filter(r => r.foto_url);
-            const semFoto = lista.filter(r => !r.foto_url);
-            const ordenada = [...comFoto, ...semFoto];
-            grid.innerHTML = ordenada.slice(0, 12).map(r => {
-                const fotoHTML = r.foto_url
-                    ? `<img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML=\'<div class=\"rest-card-sem-foto\">${r.categoria_nome||\'\'}</div>\'">`
-                    : `<div class="rest-card-sem-foto">${r.categoria_nome || ''}</div>`;
-                const end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
-                return `
-                <a href="/restaurantes/${r.slug}" class="restaurante-card">
-                    ${fotoHTML}
-                    <div class="card-body">
-                        <h3>${r.nome}</h3>
-                        <p class="bairro"><i class="fas fa-map-marker-alt"></i> ${end || r.cidade || 'SP'}</p>
-                        ${r.distancia_km !== undefined ? `<p class="distancia">${r.distancia_km.toFixed(1)} km de você</p>` : ''}
-                    </div>
-                </a>`;
+            var comFoto = lista.filter(function(r){ return r.foto_url; });
+            var semFoto = lista.filter(function(r){ return !r.foto_url; });
+            var ordenada = comFoto.concat(semFoto).slice(0, 12);
+            grid.innerHTML = ordenada.map(function(r) {
+                var end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
+                var foto = r.foto_url
+                    ? '<img src="' + r.foto_url + '" alt="' + r.nome + '" onerror="this.style.display='none'">'
+                    : '<div class="rest-card-sem-foto">' + (r.categoria_nome || '') + '</div>';
+                var dist = r.distancia_km !== undefined ? '<p class="distancia">' + r.distancia_km.toFixed(1) + ' km de você</p>' : '';
+                return '<a href="/restaurantes/' + r.slug + '" class="restaurante-card">' +
+                    foto +
+                    '<div class="card-body">' +
+                    '<h3>' + r.nome + '</h3>' +
+                    '<p class="bairro"><i class="fas fa-map-marker-alt"></i> ' + (end || r.cidade || 'SP') + '</p>' +
+                    dist +
+                    '</div></a>';
             }).join('');
         }
 
         function idxAplicarFiltros() {
-            let lista = idxTodosRestaurantes;
-            if (idxCidadeSel) lista = lista.filter(r => r.cidade === idxCidadeSel);
-            if (idxRegiaoSel) lista = lista.filter(r => r.regiao === idxRegiaoSel);
+            var lista = idxTodosRestaurantes;
+            if (idxCidadeSel) lista = lista.filter(function(r){ return r.cidade === idxCidadeSel; });
+            if (idxRegiaoSel) lista = lista.filter(function(r){ return r.regiao === idxRegiaoSel; });
             renderCarrossel(lista);
             idxRenderRestaurantes(lista);
         }
 
         async function idxCarregarFiltrosCidade() {
             try {
-                const cidades = await fetch('/api/cidades').then(r => r.json());
-                const wrap = document.getElementById('idx-filtros-cidade-wrap');
-                const el   = document.getElementById('idx-filtros-cidade');
+                var cidades = await fetch('/api/cidades').then(function(r){ return r.json(); });
+                var wrap = document.getElementById('idx-filtros-cidade-wrap');
+                var el   = document.getElementById('idx-filtros-cidade');
                 if (!cidades.length) { wrap.style.display = 'none'; return; }
                 wrap.style.display = '';
                 el.innerHTML = '<span class="loc-label">🏙️ Cidade:</span>' +
-                    `<button class="chip-loc active" onclick="idxSelecionarCidade(this,'')">Todas</button>` +
-                    cidades.map(c => `<button class="chip-loc" onclick="idxSelecionarCidade(this,'${c}')">${c}</button>`).join('');
+                    '<button class="chip-loc active" onclick="idxSelecionarCidade(this,\'\')">Todas</button>' +
+                    cidades.map(function(c){ return '<button class="chip-loc" onclick="idxSelecionarCidade(this,\'' + c + '\')">' + c + '</button>'; }).join('');
             } catch(e) {}
         }
 
         async function idxSelecionarCidade(btn, cidade) {
             idxCidadeSel = cidade || null;
             idxRegiaoSel = null;
-            document.querySelectorAll('#idx-filtros-cidade .chip-loc').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#idx-filtros-cidade .chip-loc').forEach(function(b){ b.classList.remove('active'); });
             btn.classList.add('active');
             await idxCarregarFiltrosRegiao();
             idxAplicarFiltros();
         }
 
         async function idxCarregarFiltrosRegiao() {
-            const wrap = document.getElementById('idx-filtros-regiao-wrap');
-            const el   = document.getElementById('idx-filtros-regiao');
+            var wrap = document.getElementById('idx-filtros-regiao-wrap');
+            var el   = document.getElementById('idx-filtros-regiao');
             try {
-                let url = '/api/regioes';
-                if (idxCidadeSel) url += `?cidade=${encodeURIComponent(idxCidadeSel)}`;
-                const regioes = await fetch(url).then(r => r.json());
+                var url = '/api/regioes';
+                if (idxCidadeSel) url += '?cidade=' + encodeURIComponent(idxCidadeSel);
+                var regioes = await fetch(url).then(function(r){ return r.json(); });
                 if (!regioes.length) { wrap.style.display = 'none'; return; }
                 wrap.style.display = '';
                 el.innerHTML = '<span class="loc-label">📍 Região:</span>' +
-                    `<button class="chip-loc active" onclick="idxSelecionarRegiao(this,'')">Todas</button>` +
-                    regioes.map(r => `<button class="chip-loc" onclick="idxSelecionarRegiao(this,'${r}')">${r}</button>`).join('');
+                    '<button class="chip-loc active" onclick="idxSelecionarRegiao(this,\'\')">Todas</button>' +
+                    regioes.map(function(r){ return '<button class="chip-loc" onclick="idxSelecionarRegiao(this,\'' + r + '\')">' + r + '</button>'; }).join('');
             } catch(e) { wrap.style.display = 'none'; }
         }
 
         function idxSelecionarRegiao(btn, regiao) {
             idxRegiaoSel = regiao || null;
-            document.querySelectorAll('#idx-filtros-regiao .chip-loc').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#idx-filtros-regiao .chip-loc').forEach(function(b){ b.classList.remove('active'); });
             btn.classList.add('active');
             idxAplicarFiltros();
         }
@@ -732,7 +730,7 @@
         // ── Carrega todos os restaurantes ao iniciar ──
         async function loadTodosRestaurantes() {
             try {
-                const res = await fetch('/api/restaurantes');
+                var res = await fetch('/api/restaurantes');
                 idxTodosRestaurantes = await res.json();
                 if (idxTodosRestaurantes.length) {
                     await idxCarregarFiltrosCidade();
@@ -748,20 +746,18 @@
         }
 
         // ── Botão localização — reordena por distância ──
-        document.getElementById('btn-localizar').addEventListener('click', () => {
-            if (!navigator.geolocation) {
-                alert('Geolocalização não suportada neste navegador.');
-                return;
-            }
-            const btn = document.getElementById('btn-localizar');
+        document.getElementById('btn-localizar').addEventListener('click', function() {
+            if (!navigator.geolocation) { alert('Geolocalização não suportada neste navegador.'); return; }
+            var btn = document.getElementById('btn-localizar');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Localizando...';
             btn.disabled = true;
 
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const { latitude, longitude } = pos.coords;
+            navigator.geolocation.getCurrentPosition(async function(pos) {
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
                 btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Localização obtida!';
                 try {
-                    const res = await fetch(`/api/restaurantes?lat=${latitude}&lng=${longitude}`);
+                    var res = await fetch('/api/restaurantes?lat=' + lat + '&lng=' + lng);
                     idxTodosRestaurantes = await res.json();
                     if (!idxTodosRestaurantes.length) {
                         document.getElementById('restaurantes-resultado').innerHTML =
@@ -774,7 +770,7 @@
                     document.getElementById('restaurantes-resultado').innerHTML =
                         '<p class="info-message">Erro ao buscar restaurantes.</p>';
                 }
-            }, () => {
+            }, function() {
                 btn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Usar minha localização';
                 btn.disabled = false;
                 alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
@@ -784,23 +780,20 @@
         // ── Blog ──
         async function loadBlog() {
             try {
-                const res = await fetch('/api/blog');
-                const posts = await res.json();
-                const grid = document.getElementById('blog-grid');
+                var res = await fetch('/api/blog');
+                var posts = await res.json();
+                var grid = document.getElementById('blog-grid');
                 if (!posts.length) { grid.innerHTML = '<p class="info-message">Em breve novos posts!</p>'; return; }
-                grid.innerHTML = posts.slice(0, 3).map(p => {
-                    const sub = (p.subtitulo || '').length > 100 ? p.subtitulo.substring(0, 97) + '...' : (p.subtitulo || '');
-                    return `
-                    <a href="/blog/${p.slug}" class="blog-card">
-                        <img src="${p.imagem_url || 'https://placehold.co/600x300/f8f9fa/343a40?text=Post'}"
-                             alt="${p.titulo}"
-                             onerror="this.src='https://placehold.co/600x300/f8f9fa/343a40?text=Post'">
-                        <div class="card-body">
-                            <h3>${p.titulo}</h3>
-                            <p>${sub}</p>
-                            <span class="leia-mais">Leia mais →</span>
-                        </div>
-                    </a>`;
+                grid.innerHTML = posts.slice(0, 3).map(function(p) {
+                    var sub = (p.subtitulo || '').length > 100 ? p.subtitulo.substring(0, 97) + '...' : (p.subtitulo || '');
+                    var img = p.imagem_url || 'https://placehold.co/600x300/f8f9fa/343a40?text=Post';
+                    return '<a href="/blog/' + p.slug + '" class="blog-card">' +
+                        '<img src="' + img + '" alt="' + p.titulo + '" onerror="this.src='https://placehold.co/600x300/f8f9fa/343a40?text=Post'">' +
+                        '<div class="card-body">' +
+                        '<h3>' + p.titulo + '</h3>' +
+                        '<p>' + sub + '</p>' +
+                        '<span class="leia-mais">Leia mais →</span>' +
+                        '</div></a>';
                 }).join('');
             } catch(e) {
                 document.getElementById('blog-grid').innerHTML = '<p class="info-message">Erro ao carregar posts.</p>';
