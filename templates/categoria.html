@@ -431,6 +431,24 @@
             }
         }
 
+        /* ── Estrelas de avaliação nos pratos ── */
+        .prato-estrelas {
+            display: flex; align-items: center; gap: 6px;
+            margin-top: 10px; padding-top: 10px;
+            border-top: 1px solid var(--medium-gray);
+            flex-wrap: wrap;
+        }
+        .estrelas-btn-wrap { display: flex; gap: 2px; }
+        .estrela-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.2em; padding: 0; line-height: 1;
+            color: #ddd; transition: color 0.15s, transform 0.1s;
+        }
+        .estrela-btn:hover { color: #f39c12; transform: scale(1.2); }
+        .estrela-btn.acesa { color: #f39c12; }
+        .estrelas-media { font-size: 0.78em; color: #6c757d; white-space: nowrap; }
+        .estrelas-ja-votou { font-size: 0.75em; color: var(--primary); font-weight: 500; }
+
         /* ── Competição de Pratos ── */
         .disputa-section {
             background: linear-gradient(135deg, #1a0505 0%, #2d0a0a 100%);
@@ -1051,6 +1069,18 @@
 
         // ── Gera HTML de um card de prato ──
         function pratosCardHTML(p) {
+            const estrelasHTML = `
+                <div class="prato-estrelas" id="estrelas-${p.id}">
+                    <div class="estrelas-btn-wrap" id="estrelas-btns-${p.id}">
+                        ${[1,2,3,4,5].map(n =>
+                            `<button class="estrela-btn" data-prato="${p.id}" data-nota="${n}"
+                                onmouseover="hoverEstrelas(${p.id},${n})"
+                                onmouseout="resetHoverEstrelas(${p.id})"
+                                onclick="avaliarPrato(${p.id},${n})">★</button>`
+                        ).join('')}
+                    </div>
+                    <span class="estrelas-media" id="estrelas-media-${p.id}">carregando...</span>
+                </div>`;
             return `
                 <div class="prato-card" data-subcat="${primeirasPalavras(p.nome)}">
                     <img src="${p.foto_url || 'https://placehold.co/400x250/f8f9fa/343a40?text=' + encodeURIComponent(p.nome)}"
@@ -1061,6 +1091,7 @@
                         <h3>${p.nome}</h3>
                         ${p.ingredientes ? `<p class="ingredientes">${p.ingredientes}</p>` : ''}
                         ${p.descricao ? `<p>${p.descricao}</p>` : ''}
+                        ${estrelasHTML}
                         ${p.cta_url ? `<a href="${p.cta_url}" class="btn-cta" target="_blank">${p.cta_texto || 'Saiba mais'}</a>` : ''}
                         <div class="restaurantes-do-prato" id="rest-prato-${p.id}">
                             <p>🗺️ Carregando onde encontrar...</p>
@@ -1096,8 +1127,11 @@
                 // Exibe controles
                 document.getElementById('pratos-view-controls').style.display = 'flex';
 
-                // Carrega restaurantes por prato
-                todosOsPratos.forEach(p => loadRestaurantesNoPrato(p.id));
+                // Carrega restaurantes por prato e notas
+                todosOsPratos.forEach(p => {
+                    loadRestaurantesNoPrato(p.id);
+                    carregarNota(p.id);
+                });
 
                 // Inicia a competição de pratos
                 if (todosOsPratos.length >= 2) iniciarDisputa();
@@ -1308,6 +1342,86 @@
         });
         function closeMobileNav() {
             document.getElementById('mobile-nav').classList.remove('active');
+        }
+
+        // ── ESTRELAS DE AVALIAÇÃO ────────────────────────────────
+        // Guarda localmente quais pratos o usuário já avaliou nesta sessão
+        const jaAvaliou = {};
+
+        function renderEstrelas(pratoId, media, total, votou) {
+            // Atualiza todos os blocos de estrelas com este pratoId (carrossel + grade)
+            document.querySelectorAll(`#estrelas-btns-${pratoId} .estrela-btn`).forEach(btn => {
+                const n = parseInt(btn.dataset.nota);
+                btn.classList.toggle('acesa', n <= Math.round(media));
+            });
+            document.querySelectorAll(`#estrelas-media-${pratoId}`).forEach(el => {
+                if (total === 0) {
+                    el.textContent = 'Seja o primeiro a avaliar!';
+                } else {
+                    el.innerHTML = `${media.toFixed(1)} <span style="color:#f39c12">★</span> (${total} voto${total !== 1 ? 's' : ''})`;
+                }
+            });
+            if (votou) {
+                document.querySelectorAll(`#estrelas-btns-${pratoId}`).forEach(wrap => {
+                    wrap.style.pointerEvents = 'none';
+                });
+                document.querySelectorAll(`#estrelas-${pratoId}`).forEach(el => {
+                    // Adiciona badge "Você avaliou" se ainda não tiver
+                    if (!el.querySelector('.estrelas-ja-votou')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'estrelas-ja-votou';
+                        badge.textContent = '✓ Avaliado';
+                        el.appendChild(badge);
+                    }
+                });
+            }
+        }
+
+        async function carregarNota(pratoId) {
+            try {
+                const res  = await fetch(`/api/pratos/${pratoId}/nota`);
+                const data = await res.json();
+                renderEstrelas(pratoId, data.media || 0, data.total || 0, !!jaAvaliou[pratoId]);
+            } catch(e) {
+                document.querySelectorAll(`#estrelas-media-${pratoId}`).forEach(el => {
+                    el.textContent = '';
+                });
+            }
+        }
+
+        function hoverEstrelas(pratoId, nota) {
+            if (jaAvaliou[pratoId]) return;
+            document.querySelectorAll(`#estrelas-btns-${pratoId} .estrela-btn`).forEach(btn => {
+                btn.classList.toggle('acesa', parseInt(btn.dataset.nota) <= nota);
+            });
+        }
+
+        function resetHoverEstrelas(pratoId) {
+            if (jaAvaliou[pratoId]) return;
+            // Volta para o estado salvo (sem voto ainda = tudo apagado)
+            document.querySelectorAll(`#estrelas-btns-${pratoId} .estrela-btn`).forEach(btn => {
+                btn.classList.remove('acesa');
+            });
+        }
+
+        async function avaliarPrato(pratoId, nota) {
+            if (jaAvaliou[pratoId]) return;
+            jaAvaliou[pratoId] = nota;
+            try {
+                const res  = await fetch(`/api/pratos/${pratoId}/avaliar`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ nota })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    await carregarNota(pratoId);
+                } else {
+                    delete jaAvaliou[pratoId];
+                }
+            } catch(e) {
+                delete jaAvaliou[pratoId];
+            }
         }
 
         // ── COMPETIÇÃO DE PRATOS ─────────────────────────────────
