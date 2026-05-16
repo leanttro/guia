@@ -1223,6 +1223,77 @@ def api_quiz_resultados():
 
 
 # ════════════════════════════════════════════════════════════
+#  API ADMIN — QUIZ RESULTADOS (requer login)
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/quiz_resultados', methods=['GET'])
+@login_required
+def api_admin_quiz_resultados():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM quiz_resultados ORDER BY criado_em DESC")
+        rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+        cur.close()
+        return jsonify(rows)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/admin/quiz_resultados/<int:qr_id>', methods=['DELETE'])
+@login_required
+def api_admin_quiz_resultado(qr_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("DELETE FROM quiz_resultados WHERE id = %s", (qr_id,))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API ADMIN — AVALIAÇÕES DE PRATOS (requer login)
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/avaliacoes', methods=['GET'])
+@login_required
+def api_admin_avaliacoes():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT p.nome as prato_nome, c.nome as categoria_nome,
+                   ROUND(AVG(a.nota)::numeric, 1) as media,
+                   COUNT(*) as total_votos
+            FROM avaliacoes_pratos a
+            JOIN pratos p ON a.prato_id = p.id
+            LEFT JOIN categorias c ON p.categoria_id = c.id
+            GROUP BY p.id, p.nome, c.nome
+            ORDER BY media DESC, total_votos DESC
+        """)
+        rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+        cur.close()
+        return jsonify(rows)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
 #  STATIC FILES
 # ════════════════════════════════════════════════════════════
 
