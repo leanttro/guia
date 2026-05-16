@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ restaurante.nome }} | Guia do Rodízio</title>
+    <meta name="description" content="{{ restaurante.descricao or restaurante.nome ~ ' - rodízio em ' ~ restaurante.cidade }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet CSS (mapa open source, sem precisar de API key) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
+    <style>
+        :root {
+            --primary: #C0392B; --dark: #922B21; --light: #FADBD8;
+            --light-gray: #f8f9fa; --medium-gray: #e0e0e0;
+            --dark-gray: #343a40; --text-color: #495057; --white: #ffffff;
+            --shadow-light: rgba(0,0,0,0.08); --shadow-medium: rgba(0,0,0,0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background: var(--light-gray); color: var(--text-color); line-height: 1.6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        /* ── Header ── */
+        header { background: var(--primary); padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        header .logo { padding-left: 20px; }
+        header .logo a { text-decoration: none; }
+        header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
+        header nav.desktop-nav ul { list-style: none; display: flex; padding-right: 20px; gap: 35px; }
+        header nav.desktop-nav ul li a { text-decoration: none; color: var(--white); font-weight: 500; transition: color 0.3s; }
+        header nav.desktop-nav ul li a:hover { color: var(--light); }
+        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; }
+        .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .mobile-nav-overlay.active { display: flex; opacity: 1; }
+        .mobile-nav-overlay nav ul { list-style: none; flex-direction: column; text-align: center; padding: 0; }
+        .mobile-nav-overlay nav ul li { margin: 20px 0; }
+        .mobile-nav-overlay nav ul li a { color: var(--white); font-size: 1.8em; font-weight: 700; text-decoration: none; display: block; }
+
+        /* ── Foto hero do restaurante ── */
+        .rest-hero {
+            width: 100%; height: 320px; object-fit: cover;
+            display: block; background: var(--medium-gray);
+        }
+        .rest-hero-placeholder {
+            width: 100%; height: 320px;
+            background: linear-gradient(135deg, #c0392b22, #922b2122);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 5em; color: var(--medium-gray);
+        }
+
+        /* ── Layout principal ── */
+        .page-wrap {
+            max-width: 1100px; margin: 0 auto;
+            padding: 32px 20px 60px;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 28px;
+        }
+
+        /* ── Card de info ── */
+        .card {
+            background: var(--white); border-radius: 14px;
+            box-shadow: 0 4px 14px var(--shadow-light);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .card:last-child { margin-bottom: 0; }
+        .card h2 {
+            font-size: 1.05em; font-weight: 700; color: var(--dark-gray);
+            margin-bottom: 18px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--light);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card h2 i { color: var(--primary); }
+
+        /* ── Cabeçalho do restaurante ── */
+        .rest-title-block { margin-bottom: 24px; }
+        .breadcrumb { font-size: 0.88em; margin-bottom: 12px; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .rest-categoria-badge {
+            display: inline-block; background: var(--light);
+            color: var(--dark); font-size: 0.78em; font-weight: 700;
+            padding: 3px 12px; border-radius: 20px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        .rest-nome { font-size: 2em; font-weight: 700; color: var(--dark-gray); line-height: 1.2; margin-bottom: 10px; }
+        .rest-descricao { font-size: 1em; color: var(--text-color); }
+
+        /* ── Info items ── */
+        .info-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+        .info-list li {
+            display: flex; align-items: flex-start; gap: 12px;
+            font-size: 0.95em; color: var(--dark-gray);
+        }
+        .info-list li .icon-wrap {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: #fef2f2; color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; font-size: 0.9em;
+        }
+        .info-list li a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        .info-list li a:hover { text-decoration: underline; }
+
+        /* ── Distância badge ── */
+        .dist-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #e8f5e9; color: #2e7d32;
+            border-radius: 20px; padding: 4px 14px;
+            font-size: 0.85em; font-weight: 600; margin-top: 6px;
+        }
+        .dist-badge.loading { background: #fff8e1; color: #f57f17; }
+
+        /* ── Botões de ação ── */
+        .action-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+        .btn-action {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 16px; border-radius: 10px;
+            font-family: inherit; font-size: 0.92em; font-weight: 600;
+            cursor: pointer; border: none; text-decoration: none;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-action:active { transform: scale(0.98); }
+        .btn-maps { background: var(--primary); color: #fff; }
+        .btn-maps:hover { background: var(--dark); }
+        .btn-wpp { background: #25D366; color: #fff; }
+        .btn-wpp:hover { background: #1ebe5d; }
+        .btn-site { background: var(--light-gray); color: var(--dark-gray); border: 1px solid var(--medium-gray); }
+        .btn-site:hover { background: var(--medium-gray); }
+        .btn-insta { background: linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366); color: #fff; }
+        .btn-insta:hover { opacity: 0.9; }
+
+        /* ── Mapa ── */
+        #map {
+            width: 100%; height: 280px; border-radius: 12px;
+            overflow: hidden; border: 1px solid var(--medium-gray);
+        }
+
+        /* ── Pratos ── */
+        .pratos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .prato-card {
+            border-radius: 10px; overflow: hidden;
+            border: 1px solid var(--medium-gray);
+            background: var(--white);
+            text-decoration: none; color: inherit;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .prato-card:hover { box-shadow: 0 4px 16px var(--shadow-medium); transform: translateY(-3px); }
+        .prato-card img { width: 100%; height: 130px; object-fit: cover; display: block; }
+        .prato-card .prato-info { padding: 10px 12px; }
+        .prato-card .prato-info h3 { font-size: 0.92em; font-weight: 700; color: var(--dark-gray); margin-bottom: 4px; }
+        .prato-card .prato-info p { font-size: 0.8em; color: var(--text-color); }
+
+        /* ── Sidebar (coluna direita) ── */
+        .sidebar { display: flex; flex-direction: column; gap: 24px; }
+
+        /* ── Footer ── */
+        footer { background: var(--dark-gray); color: #adb5bd; padding: 30px 0; text-align: center; font-size: 0.9em; margin-top: 40px; }
+        footer a { color: var(--light); text-decoration: none; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .page-wrap { grid-template-columns: 1fr; }
+            .sidebar { order: -1; }
+        }
+        @media (max-width: 768px) {
+            header nav.desktop-nav { display: none; }
+            .hamburger-menu { display: block; }
+            .rest-nome { font-size: 1.6em; }
+            .rest-hero { height: 220px; }
+            #map { height: 230px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <a href="/"><span>🥩 Guia do Rodízio</span></a>
+        </div>
+        <nav class="desktop-nav">
+            <ul>
+                <li><a href="/">Início</a></li>
+                <li><a href="/japones">Japonês</a></li>
+                <li><a href="/carnes">Carnes</a></li>
+                <li><a href="/pizza">Pizza</a></li>
+                <li><a href="/mexicano">Mexicano</a></li>
+                <li><a href="/blog">Blog</a></li>
+            </ul>
+        </nav>
+        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+    </header>
+
+    <div class="mobile-nav-overlay" id="mobile-nav">
+        <nav>
+            <ul>
+                <li><a href="/" onclick="closeMobileNav()">Início</a></li>
+                <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
+                <li><a href="/carnes" onclick="closeMobileNav()">Carnes</a></li>
+                <li><a href="/pizza" onclick="closeMobileNav()">Pizza</a></li>
+                <li><a href="/mexicano" onclick="closeMobileNav()">Mexicano</a></li>
+                <li><a href="/blog" onclick="closeMobileNav()">Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Foto de capa -->
+    {% if restaurante.foto_url %}
+        <img class="rest-hero"
+             src="{{ restaurante.foto_url }}"
+             alt="{{ restaurante.nome }}"
+             onerror="this.onerror=null;this.style.display='none';document.getElementById('hero-placeholder').style.display='flex';">
+    {% endif %}
+    <div class="rest-hero-placeholder" id="hero-placeholder" style="{% if restaurante.foto_url %}display:none{% endif %}">
+        🍽️
+    </div>
+
+    <!-- Dados do restaurante passados para JS -->
+    <script>
+        const REST_LAT = {{ restaurante.lat or 'null' }};
+        const REST_LNG = {{ restaurante.lng or 'null' }};
+        const REST_NOME = {{ restaurante.nome | tojson }};
+        const REST_ENDERECO = {{ (restaurante.endereco or '') | tojson }};
+    </script>
+
+    <main>
+        <div class="page-wrap">
+
+            <!-- ── Coluna principal ── -->
+            <div class="main-col">
+
+                <!-- Cabeçalho -->
+                <div class="rest-title-block">
+                    <div class="breadcrumb">
+                        <a href="/">Início</a> &rsaquo;
+                        {% if restaurante.categoria_slug %}
+                            <a href="/{{ restaurante.categoria_slug }}">{{ restaurante.categoria_nome }}</a> &rsaquo;
+                        {% endif %}
+                        {{ restaurante.nome }}
+                    </div>
+                    {% if restaurante.categoria_nome %}
+                        <span class="rest-categoria-badge">{{ restaurante.categoria_nome }}</span>
+                    {% endif %}
+                    <h1 class="rest-nome">{{ restaurante.nome }}</h1>
+                    {% if restaurante.descricao %}
+                        <p class="rest-descricao">{{ restaurante.descricao }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Pratos servidos -->
+                {% if pratos %}
+                <div class="card">
+                    <h2><i class="fas fa-utensils"></i> Pratos servidos aqui</h2>
+                    <div class="pratos-grid">
+                        {% for prato in pratos %}
+                        <div class="prato-card">
+                            <img src="{{ prato.foto_url or 'https://placehold.co/400x260/f8f9fa/343a40?text=' ~ prato.nome }}"
+                                 alt="{{ prato.nome }}"
+                                 onerror="this.src='https://placehold.co/400x260/f8f9fa/343a40?text={{ prato.nome }}'">
+                            <div class="prato-info">
+                                <h3>{{ prato.nome }}</h3>
+                                {% if prato.descricao %}
+                                    <p>{{ prato.descricao | truncate(60) }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Mapa -->
+                {% if restaurante.lat and restaurante.lng %}
+                <div class="card">
+                    <h2><i class="fas fa-map-marker-alt"></i> Localização</h2>
+                    <div id="map"></div>
+                    <div id="dist-info" style="margin-top:14px;font-size:0.9em;color:var(--text-color);">
+                        <span class="dist-badge loading" id="dist-badge">
+                            <i class="fas fa-location-dot"></i>
+                            <span id="dist-text">Calculando distância...</span>
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- ── Sidebar ── -->
+            <div class="sidebar">
+
+                <!-- Informações de contato -->
+                <div class="card">
+                    <h2><i class="fas fa-info-circle"></i> Informações</h2>
+                    <ul class="info-list">
+                        {% if restaurante.endereco %}
+                        <li>
+                            <span class="icon-wrap"><i class="fas fa-map-pin"></i></span>
+                            <div>
+                                {{ restaurante.endereco }}
+                                {% if restaurante.bairro %} — {{ restaurante.bairro }}{% endif %}
+                                {% if restaurante.cidade %}<br><small>{{ restaurante.cidade }}</small>{% endif %}
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        {% if restaurante.telefone %}
+                        <li>
+                            <span class="icon-wrap"><i class="fas fa-phone"></i></span>
+                            <div>
+                                <a href="tel:{{ restaurante.telefone }}">{{ restaurante.telefone }}</a>
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        {% if restaurante.website %}
+                        <li>
+                            <span class="icon-wrap"><i class="fas fa-globe"></i></span>
+                            <div>
+                                <a href="{{ restaurante.website }}" target="_blank" rel="noopener">Site oficial</a>
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        {% if restaurante.instagram %}
+                        <li>
+                            <span class="icon-wrap"><i class="fab fa-instagram"></i></span>
+                            <div>
+                                <a href="https://instagram.com/{{ restaurante.instagram | replace('@','') }}" target="_blank" rel="noopener">
+                                    @{{ restaurante.instagram | replace('@','') }}
+                                </a>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Botões de ação -->
+                <div class="card">
+                    <h2><i class="fas fa-directions"></i> Como chegar</h2>
+                    <div class="action-btns">
+                        {% if restaurante.lat and restaurante.lng %}
+                        <a class="btn-action btn-maps"
+                           href="https://www.google.com/maps/dir/?api=1&destination={{ restaurante.lat }},{{ restaurante.lng }}"
+                           target="_blank" rel="noopener">
+                            <i class="fas fa-map-marker-alt"></i> Abrir no Google Maps
+                        </a>
+                        {% elif restaurante.endereco %}
+                        <a class="btn-action btn-maps"
+                           href="https://www.google.com/maps/search/{{ restaurante.nome ~ ' ' ~ restaurante.endereco | urlencode }}"
+                           target="_blank" rel="noopener">
+                            <i class="fas fa-map-marker-alt"></i> Ver no Google Maps
+                        </a>
+                        {% endif %}
+
+                        {% if restaurante.telefone %}
+                        <a class="btn-action btn-wpp"
+                           href="https://wa.me/55{{ restaurante.telefone | replace('(','') | replace(')','') | replace('-','') | replace(' ','') }}"
+                           target="_blank" rel="noopener">
+                            <i class="fab fa-whatsapp"></i> Chamar no WhatsApp
+                        </a>
+                        {% endif %}
+
+                        {% if restaurante.instagram %}
+                        <a class="btn-action btn-insta"
+                           href="https://instagram.com/{{ restaurante.instagram | replace('@','') }}"
+                           target="_blank" rel="noopener">
+                            <i class="fab fa-instagram"></i> Ver Instagram
+                        </a>
+                        {% endif %}
+
+                        {% if restaurante.website %}
+                        <a class="btn-action btn-site"
+                           href="{{ restaurante.website }}"
+                           target="_blank" rel="noopener">
+                            <i class="fas fa-external-link-alt"></i> Acessar site
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Voltar à categoria -->
+                {% if restaurante.categoria_slug %}
+                <div style="text-align:center;">
+                    <a href="/{{ restaurante.categoria_slug }}"
+                       style="color:var(--primary);font-size:0.9em;font-weight:600;text-decoration:none;">
+                        ← Ver todos os restaurantes de {{ restaurante.categoria_nome }}
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 - GuiaDoRodizio.com.br - Todos os direitos reservados.</p>
+            <p style="margin-top:8px;">Desenvolvido por <a href="https://www.linkedin.com/in/leanttro" target="_blank">Leandro Andrade</a></p>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+    <script>
+        // ── Mobile nav ──────────────────────────
+        document.getElementById('hamburger-btn').addEventListener('click', () => {
+            document.getElementById('mobile-nav').classList.toggle('active');
+        });
+        function closeMobileNav() {
+            document.getElementById('mobile-nav').classList.remove('active');
+        }
+
+        // ── Mapa Leaflet ────────────────────────
+        if (REST_LAT && REST_LNG) {
+            const map = L.map('map').setView([REST_LAT, REST_LNG], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Ícone personalizado na cor vermelha do site
+            const icone = L.divIcon({
+                html: `<div style="
+                    background:#C0392B;
+                    width:36px;height:36px;
+                    border-radius:50% 50% 50% 0;
+                    transform:rotate(-45deg);
+                    border:3px solid #fff;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.35);
+                    display:flex;align-items:center;justify-content:center;">
+                    <span style="transform:rotate(45deg);font-size:15px;">🍽️</span>
+                </div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 36],
+                className: ''
+            });
+
+            L.marker([REST_LAT, REST_LNG], { icon: icone })
+             .addTo(map)
+             .bindPopup(`<strong>${REST_NOME}</strong><br>${REST_ENDERECO}`)
+             .openPopup();
+
+            // ── Geolocalização do usuário ───────
+            const distBadge = document.getElementById('dist-badge');
+            const distText  = document.getElementById('dist-text');
+
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const uLat = position.coords.latitude;
+                        const uLng = position.coords.longitude;
+
+                        // Marca o usuário no mapa
+                        const userIcon = L.divIcon({
+                            html: `<div style="
+                                background:#1565c0;width:14px;height:14px;
+                                border-radius:50%;border:3px solid #fff;
+                                box-shadow:0 0 0 4px rgba(21,101,192,0.25);">
+                            </div>`,
+                            iconSize: [14, 14],
+                            iconAnchor: [7, 7],
+                            className: ''
+                        });
+                        L.marker([uLat, uLng], { icon: userIcon })
+                         .addTo(map)
+                         .bindPopup('📍 Você está aqui');
+
+                        // Ajusta o zoom para mostrar ambos
+                        map.fitBounds([
+                            [uLat, uLng],
+                            [REST_LAT, REST_LNG]
+                        ], { padding: [40, 40] });
+
+                        // Calcula distância (Haversine)
+                        const km = haversine(uLat, uLng, REST_LAT, REST_LNG);
+                        distBadge.classList.remove('loading');
+                        if (km < 1) {
+                            distText.textContent = `A ${Math.round(km * 1000)} metros de você`;
+                        } else {
+                            distText.textContent = `A ${km.toFixed(1)} km de você`;
+                        }
+                    },
+                    () => {
+                        // Usuário negou permissão
+                        distBadge.classList.remove('loading');
+                        distBadge.style.background = '#f5f5f5';
+                        distBadge.style.color = '#999';
+                        distText.textContent = 'Permita a localização para ver a distância';
+                    }
+                );
+            } else {
+                distBadge.style.display = 'none';
+            }
+        }
+
+        // ── Fórmula Haversine ───────────────────
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2)
+                    + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180)
+                    * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+    </script>
+</body>
+</html>
