@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.titulo }} | Blog Guia do Rodízio</title>
+    <meta name="description" content="{{ post.subtitulo or post.conteudo | truncate(155) }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #C0392B; --dark: #922B21; --light: #FADBD8;
+            --light-gray: #f8f9fa; --medium-gray: #e0e0e0;
+            --dark-gray: #343a40; --text-color: #495057; --white: #ffffff;
+            --shadow-light: rgba(0,0,0,0.08); --shadow-medium: rgba(0,0,0,0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background: var(--light-gray); color: var(--text-color); line-height: 1.7; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        header { background: var(--primary); padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        header .logo a { text-decoration: none; }
+        header .logo { padding-left: 20px; }
+        header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
+        header nav.desktop-nav ul { list-style: none; display: flex; padding-right: 20px; gap: 35px; }
+        header nav.desktop-nav ul li a { text-decoration: none; color: var(--white); font-weight: 500; transition: color 0.3s; }
+        header nav.desktop-nav ul li a:hover { color: var(--light); }
+        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; }
+        .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .mobile-nav-overlay.active { display: flex; opacity: 1; }
+        .mobile-nav-overlay nav ul { list-style: none; flex-direction: column; text-align: center; padding: 0; }
+        .mobile-nav-overlay nav ul li { margin: 20px 0; }
+        .mobile-nav-overlay nav ul li a { color: var(--white); font-size: 1.8em; font-weight: 700; text-decoration: none; display: block; }
+
+        .post-container {
+            max-width: 800px; margin: 40px auto;
+            padding: 20px 40px 40px; background: var(--white);
+            border-radius: 12px; box-shadow: 0 4px 16px var(--shadow-medium);
+        }
+        .breadcrumb { margin-bottom: 24px; font-size: 0.95em; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        .breadcrumb a:hover { text-decoration: underline; }
+
+        .post-header h1 { font-size: 2.6em; margin: 0 0 12px; color: var(--dark-gray); line-height: 1.25; }
+        .post-header .subtitulo { font-size: 1.25em; color: #6c757d; margin-bottom: 18px; }
+        .post-header .meta { color: #6c757d; font-size: 0.9em; border-bottom: 1px solid var(--medium-gray); padding-bottom: 18px; }
+
+        .post-imagem { width: 100%; height: 400px; object-fit: cover; border-radius: 8px; margin: 28px 0; }
+
+        .post-conteudo { font-size: 1.05em; color: var(--dark-gray); }
+        .post-conteudo h2 { font-size: 1.7em; margin-top: 40px; margin-bottom: 12px; color: var(--dark-gray); }
+        .post-conteudo h3 { font-size: 1.3em; margin-top: 30px; margin-bottom: 10px; color: var(--dark-gray); }
+        .post-conteudo p { margin-bottom: 16px; }
+        .post-conteudo a { color: var(--primary); font-weight: 600; }
+        .post-conteudo a:hover { text-decoration: underline; }
+        .post-conteudo ul, .post-conteudo ol { margin: 16px 0 16px 24px; }
+        .post-conteudo li { margin-bottom: 8px; }
+
+        footer { background: var(--dark-gray); color: #adb5bd; padding: 30px 0; text-align: center; font-size: 0.9em; margin-top: 40px; }
+        footer a { color: var(--light); text-decoration: none; }
+
+        @media (max-width: 768px) {
+            header nav.desktop-nav { display: none; }
+            .hamburger-menu { display: block; }
+            .post-container { margin: 15px 10px; padding: 15px 20px 24px; }
+            .post-header h1 { font-size: 1.9em; }
+            .post-imagem { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <a href="/"><span>🥩 Guia do Rodízio</span></a>
+        </div>
+        <nav class="desktop-nav">
+            <ul>
+                <li><a href="/">Início</a></li>
+                <li><a href="/japones">Japonês</a></li>
+                <li><a href="/carnes">Carnes</a></li>
+                <li><a href="/pizza">Pizza</a></li>
+                <li><a href="/mexicano">Mexicano</a></li>
+                <li><a href="/blog">Blog</a></li>
+            </ul>
+        </nav>
+        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+    </header>
+
+    <div class="mobile-nav-overlay" id="mobile-nav">
+        <nav>
+            <ul>
+                <li><a href="/" onclick="closeMobileNav()">Início</a></li>
+                <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
+                <li><a href="/carnes" onclick="closeMobileNav()">Carnes</a></li>
+                <li><a href="/pizza" onclick="closeMobileNav()">Pizza</a></li>
+                <li><a href="/mexicano" onclick="closeMobileNav()">Mexicano</a></li>
+                <li><a href="/blog" onclick="closeMobileNav()">Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <main>
+        <article class="post-container">
+            <div class="breadcrumb">
+                <a href="/blog">❮ Voltar para o Blog</a>
+            </div>
+            <header class="post-header">
+                <h1>{{ post.titulo }}</h1>
+                {% if post.subtitulo %}
+                    <p class="subtitulo">{{ post.subtitulo }}</p>
+                {% endif %}
+                <p class="meta">Por <strong>{{ post.autor or 'Redação' }}</strong> em {{ post.criado_em }}</p>
+            </header>
+
+            {% if post.imagem_url %}
+                <img class="post-imagem"
+                     src="{{ post.imagem_url }}"
+                     alt="{{ post.titulo }}"
+                     onerror="this.onerror=null;this.src='https://placehold.co/800x400/f8f9fa/343a40?text=Imagem+Indisponível';">
+            {% endif %}
+
+            <section class="post-conteudo">
+                {{ post.conteudo | safe }}
+            </section>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 - GuiaDoRodizio.com.br - Todos os direitos reservados.</p>
+            <p style="margin-top:8px;">Desenvolvido por <a href="https://www.linkedin.com/in/leanttro" target="_blank">Leandro Andrade</a></p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('hamburger-btn').addEventListener('click', () => {
+            document.getElementById('mobile-nav').classList.toggle('active');
+        });
+        function closeMobileNav() {
+            document.getElementById('mobile-nav').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
