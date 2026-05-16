@@ -12,7 +12,7 @@ import bcrypt
 load_dotenv()
 
 app = Flask(__name__, static_folder='.', static_url_path='', template_folder='templates')
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv('SECRET_KEY', 'guiarodizio-secret-key-2025')
 CORS(app)
 
 # ── Conexão ──────────────────────────────────────────────────
@@ -609,6 +609,301 @@ def sitemap():
         xml += f'  <url><loc>{url}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n'
     xml += '</urlset>'
     return make_response(xml, 200, {'Content-Type': 'application/xml'})
+
+
+# ════════════════════════════════════════════════════════════
+#  API ADMIN — CATEGORIAS
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/categorias', methods=['GET', 'POST'])
+@login_required
+def api_admin_categorias():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'GET':
+            cur.execute("SELECT * FROM categorias ORDER BY nome")
+            rows = [dict(r) for r in cur.fetchall()]
+            cur.close()
+            return jsonify(rows)
+        data = request.get_json()
+        cur.execute("""
+            INSERT INTO categorias (nome, slug, icone_url, ativo)
+            VALUES (%s, %s, %s, %s) RETURNING id
+        """, (data['nome'], data['slug'], data.get('icone_url', ''), data.get('ativo', True)))
+        new_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True, 'id': new_id})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+@app.route('/api/admin/categorias/<int:cat_id>', methods=['PUT', 'DELETE'])
+@login_required
+def api_admin_categoria(cat_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'DELETE':
+            cur.execute("DELETE FROM categorias WHERE id = %s", (cat_id,))
+            conn.commit()
+            cur.close()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        cur.execute("""
+            UPDATE categorias SET nome=%s, slug=%s, icone_url=%s, ativo=%s WHERE id=%s
+        """, (data['nome'], data['slug'], data.get('icone_url', ''), data.get('ativo', True), cat_id))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API ADMIN — PRATOS
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/pratos', methods=['GET', 'POST'])
+@login_required
+def api_admin_pratos():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'GET':
+            cur.execute("SELECT * FROM pratos ORDER BY nome")
+            rows = [dict(r) for r in cur.fetchall()]
+            cur.close()
+            return jsonify(rows)
+        data = request.get_json()
+        cur.execute("""
+            INSERT INTO pratos (nome, categoria_id, foto_url, ingredientes, descricao, cta_texto, cta_url, destaque)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+        """, (
+            data.get('nome', ''), data.get('categoria_id') or None,
+            data.get('foto_url', ''), data.get('ingredientes', ''),
+            data.get('descricao', ''), data.get('cta_texto', ''),
+            data.get('cta_url', ''), data.get('destaque', False)
+        ))
+        new_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True, 'id': new_id})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+@app.route('/api/admin/pratos/<int:prato_id>', methods=['PUT', 'DELETE'])
+@login_required
+def api_admin_prato(prato_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'DELETE':
+            cur.execute("DELETE FROM pratos WHERE id = %s", (prato_id,))
+            conn.commit()
+            cur.close()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        cur.execute("""
+            UPDATE pratos SET nome=%s, categoria_id=%s, foto_url=%s, ingredientes=%s,
+            descricao=%s, cta_texto=%s, cta_url=%s, destaque=%s WHERE id=%s
+        """, (
+            data.get('nome', ''), data.get('categoria_id') or None,
+            data.get('foto_url', ''), data.get('ingredientes', ''),
+            data.get('descricao', ''), data.get('cta_texto', ''),
+            data.get('cta_url', ''), data.get('destaque', False), prato_id
+        ))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API ADMIN — RESTAURANTES
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/restaurantes', methods=['GET', 'POST'])
+@login_required
+def api_admin_restaurantes():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'GET':
+            cur.execute("""
+                SELECT r.*, c.nome as categoria_nome, p.nome as plano_nome
+                FROM restaurantes r
+                LEFT JOIN categorias c ON r.categoria_id = c.id
+                LEFT JOIN planos p ON r.plano_id = p.id
+                ORDER BY r.nome
+            """)
+            rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+            cur.close()
+            return jsonify(rows)
+        data = request.get_json()
+        cur.execute("""
+            INSERT INTO restaurantes (nome, slug, categoria_id, plano_id, descricao, endereco,
+                bairro, cidade, telefone, whatsapp, site_url, foto_url, ativo, destaque)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id
+        """, (
+            data.get('nome',''), data.get('slug',''),
+            data.get('categoria_id') or None, data.get('plano_id') or None,
+            data.get('descricao',''), data.get('endereco',''),
+            data.get('bairro',''), data.get('cidade','São Paulo'),
+            data.get('telefone',''), data.get('whatsapp',''),
+            data.get('site_url',''), data.get('foto_url',''),
+            data.get('ativo', True), data.get('destaque', False)
+        ))
+        new_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True, 'id': new_id})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+@app.route('/api/admin/restaurantes/<int:rest_id>', methods=['PUT', 'DELETE'])
+@login_required
+def api_admin_restaurante(rest_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'DELETE':
+            cur.execute("DELETE FROM restaurantes WHERE id = %s", (rest_id,))
+            conn.commit()
+            cur.close()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        cur.execute("""
+            UPDATE restaurantes SET nome=%s, slug=%s, categoria_id=%s, plano_id=%s,
+            descricao=%s, endereco=%s, bairro=%s, cidade=%s, telefone=%s, whatsapp=%s,
+            site_url=%s, foto_url=%s, ativo=%s, destaque=%s WHERE id=%s
+        """, (
+            data.get('nome',''), data.get('slug',''),
+            data.get('categoria_id') or None, data.get('plano_id') or None,
+            data.get('descricao',''), data.get('endereco',''),
+            data.get('bairro',''), data.get('cidade','São Paulo'),
+            data.get('telefone',''), data.get('whatsapp',''),
+            data.get('site_url',''), data.get('foto_url',''),
+            data.get('ativo', True), data.get('destaque', False), rest_id
+        ))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API ADMIN — BLOG
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/blog', methods=['GET', 'POST'])
+@login_required
+def api_admin_blog():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'GET':
+            cur.execute("SELECT * FROM posts ORDER BY criado_em DESC")
+            rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+            cur.close()
+            return jsonify(rows)
+        data = request.get_json()
+        cur.execute("""
+            INSERT INTO posts (titulo, slug, autor, conteudo, foto_url, ativo)
+            VALUES (%s,%s,%s,%s,%s,%s) RETURNING id
+        """, (
+            data.get('titulo',''), data.get('slug',''),
+            data.get('autor',''), data.get('conteudo',''),
+            data.get('foto_url',''), data.get('ativo', True)
+        ))
+        new_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True, 'id': new_id})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+@app.route('/api/admin/blog/<int:post_id>', methods=['PUT', 'DELETE'])
+@login_required
+def api_admin_post(post_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'DELETE':
+            cur.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+            conn.commit()
+            cur.close()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        cur.execute("""
+            UPDATE posts SET titulo=%s, slug=%s, autor=%s, conteudo=%s, foto_url=%s, ativo=%s
+            WHERE id=%s
+        """, (
+            data.get('titulo',''), data.get('slug',''),
+            data.get('autor',''), data.get('conteudo',''),
+            data.get('foto_url',''), data.get('ativo', True), post_id
+        ))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API ADMIN — PLANOS
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/planos', methods=['GET'])
+@login_required
+def api_admin_planos():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM planos ORDER BY preco")
+        rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+        cur.close()
+        return jsonify(rows)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
 
 
 # ════════════════════════════════════════════════════════════
