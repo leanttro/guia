@@ -192,6 +192,22 @@
         .chip-loc:hover { border-color: var(--primary); color: var(--primary); }
         .chip-loc.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
 
+        /* ── Chips de categoria (index) ── */
+        .filtros-categoria-index { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 24px; }
+        .chip-cat {
+            padding: 7px 20px; border-radius: 20px; border: 2px solid var(--medium-gray);
+            background: var(--white); color: var(--text-color); font-family: inherit;
+            font-size: 0.9em; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .chip-cat:hover { border-color: var(--primary); color: var(--primary); }
+        .chip-cat.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        @media (max-width: 600px) {
+            .filtros-categoria-index { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+            .filtros-categoria-index::-webkit-scrollbar { display: none; }
+            .chip-cat { flex-shrink: 0; }
+        }
+
         /* ── Blog ── */
         .blog-section { background: var(--white); }
         .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
@@ -468,6 +484,16 @@
             <div class="busca-box">
                 <button id="btn-localizar"><i class="fas fa-map-marker-alt"></i> Usar minha localização</button>
             </div>
+
+            <!-- Filtros de categoria -->
+            <div class="filtros-categoria-index" id="idx-filtros-categoria">
+                <button class="chip-cat active" onclick="idxSelecionarCategoria(this, '')">&#127374; Todas</button>
+                <button class="chip-cat" onclick="idxSelecionarCategoria(this, 'japones')">&#127843; Japon&#234;s</button>
+                <button class="chip-cat" onclick="idxSelecionarCategoria(this, 'carnes')">&#129385; Carnes</button>
+                <button class="chip-cat" onclick="idxSelecionarCategoria(this, 'pizza')">&#127829; Pizza</button>
+                <button class="chip-cat" onclick="idxSelecionarCategoria(this, 'mexicano')">&#127790; Mexicano</button>
+            </div>
+
             <div id="idx-filtros-cidade-wrap" style="display:none;">
                 <div class="filtros-localidade-index" id="idx-filtros-cidade"></div>
             </div>
@@ -477,7 +503,7 @@
 
             <!-- Carrossel de destaque (só aparece se houver restaurantes com foto) -->
             <div id="destaque-wrap" style="display:none;" class="destaque-section">
-                <h3>⭐ Destaques</h3>
+                <h3>&#11088; Destaques</h3>
                 <div class="carrossel-wrap">
                     <button class="carr-btn prev" id="carr-prev"><i class="fas fa-chevron-left"></i></button>
                     <div class="carrossel-track" id="carrossel-track"></div>
@@ -487,7 +513,7 @@
 
             <!-- Grade de todos os restaurantes -->
             <div class="restaurantes-grid" id="restaurantes-resultado">
-                <p class="info-message">Carregando rodízios...</p>
+                <p class="info-message"><i class="fas fa-spinner fa-spin"></i> Carregando rod&#237;zios...</p>
             </div>
         </div>
     </section>
@@ -615,6 +641,7 @@
         let idxTodosRestaurantes = [];
         let idxCidadeSel = null;
         let idxRegiaoSel = null;
+        let idxCategoriaSel = null;
         let carrIndex = 0;
         let carrItems = [];
 
@@ -658,7 +685,7 @@
             }
             var comFoto = lista.filter(function(r){ return r.foto_url; });
             var semFoto = lista.filter(function(r){ return !r.foto_url; });
-            var ordenada = comFoto.concat(semFoto).slice(0, 12);
+            var ordenada = comFoto.concat(semFoto);
             grid.innerHTML = ordenada.map(function(r) {
                 var end = [r.endereco, r.bairro, r.cidade].filter(Boolean).join(', ');
                 var foto = r.foto_url
@@ -677,20 +704,33 @@
 
         function idxAplicarFiltros() {
             var lista = idxTodosRestaurantes;
+            if (idxCategoriaSel) lista = lista.filter(function(r){ return r.categoria_slug === idxCategoriaSel; });
             if (idxCidadeSel) lista = lista.filter(function(r){ return r.cidade === idxCidadeSel; });
             if (idxRegiaoSel) lista = lista.filter(function(r){ return r.regiao === idxRegiaoSel; });
             renderCarrossel(lista);
             idxRenderRestaurantes(lista);
         }
 
+        function idxSelecionarCategoria(btn, categoria) {
+            idxCategoriaSel = categoria || null;
+            idxCidadeSel = null;
+            idxRegiaoSel = null;
+            document.querySelectorAll('#idx-filtros-categoria .chip-cat').forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            idxCarregarFiltrosCidade();
+            idxAplicarFiltros();
+        }
+
         async function idxCarregarFiltrosCidade() {
             try {
-                var cidades = await fetch('/api/cidades').then(function(r){ return r.json(); });
+                var url = '/api/cidades';
+                if (idxCategoriaSel) url += '?categoria=' + encodeURIComponent(idxCategoriaSel);
+                var cidades = await fetch(url).then(function(r){ return r.json(); });
                 var wrap = document.getElementById('idx-filtros-cidade-wrap');
                 var el   = document.getElementById('idx-filtros-cidade');
                 if (!cidades.length) { wrap.style.display = 'none'; return; }
                 wrap.style.display = '';
-                el.innerHTML = '<span class="loc-label">🏙️ Cidade:</span>' +
+                el.innerHTML = '<span class="loc-label">&#127961;&#65039; Cidade:</span>' +
                     '<button class="chip-loc active" onclick="idxSelecionarCidade(this,\'\')">Todas</button>' +
                     cidades.map(function(c){ return '<button class="chip-loc" onclick="idxSelecionarCidade(this,\'' + c + '\')">' + c + '</button>'; }).join('');
             } catch(e) {}
@@ -710,11 +750,14 @@
             var el   = document.getElementById('idx-filtros-regiao');
             try {
                 var url = '/api/regioes';
-                if (idxCidadeSel) url += '?cidade=' + encodeURIComponent(idxCidadeSel);
+                var params = [];
+                if (idxCategoriaSel) params.push('categoria=' + encodeURIComponent(idxCategoriaSel));
+                if (idxCidadeSel) params.push('cidade=' + encodeURIComponent(idxCidadeSel));
+                if (params.length) url += '?' + params.join('&');
                 var regioes = await fetch(url).then(function(r){ return r.json(); });
                 if (!regioes.length) { wrap.style.display = 'none'; return; }
                 wrap.style.display = '';
-                el.innerHTML = '<span class="loc-label">📍 Região:</span>' +
+                el.innerHTML = '<span class="loc-label">&#128205; Regi&#227;o:</span>' +
                     '<button class="chip-loc active" onclick="idxSelecionarRegiao(this,\'\')">Todas</button>' +
                     regioes.map(function(r){ return '<button class="chip-loc" onclick="idxSelecionarRegiao(this,\'' + r + '\')">' + r + '</button>'; }).join('');
             } catch(e) { wrap.style.display = 'none'; }
