@@ -14,6 +14,10 @@
     ═══════════════════════════════════════════════════════ -->
     <link rel="canonical" href="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
 
+    <!-- ══ Favicon ══ -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044702/guiadorodiziologo_zc3fih.png">
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044702/guiadorodiziologo_zc3fih.png">
+
     <!-- ═══════════════════════════════════════════════════════
          SEO — Open Graph (WhatsApp, Facebook, LinkedIn)
     ═══════════════════════════════════════════════════════ -->
@@ -22,7 +26,7 @@
     <meta property="og:url"         content="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
     <meta property="og:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %} | Guia do Rodízio">
     <meta property="og:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ restaurante.nome }}, rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %} em {{ restaurante.cidade }}{% endif %}. Cardápio, localização e contato.{% endif %}">
-    <meta property="og:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png' }}">
+    <meta property="og:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png' }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:locale"      content="pt_BR">
@@ -33,7 +37,7 @@
     <meta name="twitter:card"        content="summary_large_image">
     <meta name="twitter:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}">
     <meta name="twitter:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %}, {{ restaurante.cidade }}{% endif %}. Veja cardápio e localização.{% endif %}">
-    <meta name="twitter:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png' }}">
+    <meta name="twitter:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png' }}">
 
     <!-- ═══════════════════════════════════════════════════════
          SEO — Schema.org JSON-LD (Restaurant + BreadcrumbList)
