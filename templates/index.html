@@ -130,6 +130,29 @@
             cursor: grab;
             user-select: none;
         }
+        /* ── Mobile: scroll nativo com snap ── */
+        @media (max-width: 768px) {
+            .features-carousel-wrap {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .features-carousel-wrap::-webkit-scrollbar { display: none; }
+            .features-track {
+                transform: none !important;
+                transition: none !important;
+                cursor: default;
+            }
+            .feature-card {
+                scroll-snap-align: start;
+                flex: 0 0 calc(50% - 10px);
+            }
+        }
+        @media (max-width: 480px) {
+            .feature-card { flex: 0 0 80%; }
+        }
         .feature-card {
             flex: 0 0 calc(25% - 15px);
             min-width: 0;
@@ -173,13 +196,6 @@
         .features-progress-bar { flex: 1; max-width: 200px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
         .features-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
 
-        @media (max-width: 768px) {
-            .feature-card { flex: 0 0 calc(50% - 10px); }
-        }
-        @media (max-width: 480px) {
-            .feature-card { flex: 0 0 80%; }
-        }
-
         /* ── Restaurantes próximos ── */
         .busca-section { background: var(--light-gray); }
         .busca-box { text-align: center; margin-bottom: 30px; }
@@ -213,6 +229,25 @@
         .carrossel-track { display: flex; gap: 20px; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
         .carrossel-track .restaurante-card { min-width: 280px; flex-shrink: 0; }
         .carrossel-track .restaurante-card img { height: 200px; }
+        /* ── Mobile: scroll nativo com snap ── */
+        @media (max-width: 768px) {
+            .carrossel-wrap {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .carrossel-wrap::-webkit-scrollbar { display: none; }
+            .carrossel-track {
+                transform: none !important;
+                transition: none !important;
+            }
+            .carrossel-track .restaurante-card {
+                scroll-snap-align: start;
+                min-width: calc(80vw);
+            }
+        }
         .carr-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
             background: var(--white); border: 1px solid var(--medium-gray);
@@ -280,6 +315,29 @@
         }
         .blog-carousel-track .blog-card {
             flex: 0 0 calc(33.333% - 17px); min-width: 0;
+        }
+        /* ── Mobile: scroll nativo com snap ── */
+        @media (max-width: 768px) {
+            .blog-carousel-outer {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .blog-carousel-outer::-webkit-scrollbar { display: none; }
+            .blog-carousel-track {
+                transform: none !important;
+                transition: none !important;
+                cursor: default;
+            }
+            .blog-carousel-track .blog-card {
+                scroll-snap-align: start;
+                flex: 0 0 calc(50% - 13px);
+            }
+        }
+        @media (max-width: 520px) {
+            .blog-carousel-track .blog-card { flex: 0 0 calc(100% - 2px); }
         }
         .blog-carousel-nav {
             display: flex; align-items: center; justify-content: center;
@@ -461,6 +519,32 @@
         .carousel-track .restaurante-card {
             flex: 0 0 calc(25% - 19px); min-width: 0;
         }
+        /* ── Mobile: scroll nativo com snap ── */
+        @media (max-width: 768px) {
+            .carousel-track-outer {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .carousel-track-outer::-webkit-scrollbar { display: none; }
+            .carousel-track {
+                transform: none !important;
+                transition: none !important;
+                cursor: default;
+                padding-bottom: 2px;
+            }
+            .carousel-track .restaurante-card {
+                scroll-snap-align: start;
+                flex: 0 0 calc(50% - 13px);
+            }
+        }
+        @media (max-width: 520px) {
+            .carousel-track .restaurante-card {
+                flex: 0 0 calc(100% - 2px);
+            }
+        }
         .carousel-nav {
             display: flex; align-items: center; justify-content: center;
             gap: 12px; margin-top: 20px;
@@ -497,12 +581,6 @@
             transition: background 0.2s; white-space: nowrap;
         }
         .restaurante-card:hover .btn-ver-rest { background: var(--dark); }
-        @media (max-width: 768px) {
-            .carousel-track .restaurante-card { flex: 0 0 calc(50% - 13px); }
-        }
-        @media (max-width: 520px) {
-            .carousel-track .restaurante-card { flex: 0 0 100%; }
-        }
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
@@ -959,33 +1037,33 @@
 
         function updateIdxCarouselPosition() {
             var track = document.getElementById('idx-rest-track');
+            var outer = track.parentElement;
             var total = idxRestCarousel.total;
             var idx   = idxRestCarousel.index;
-            var outer = track.parentElement;
-            var containerWidth = outer ? outer.offsetWidth : 0;
+            var isMobile = window.innerWidth <= 768;
             var vis  = idxRestCarousel.visibleCount;
             var gap  = 25;
+            var containerWidth = outer ? outer.offsetWidth : 0;
             var cardW = (containerWidth - gap * (vis - 1)) / vis;
             var stepPx = cardW + gap;
-
-            /* limita para não ultrapassar o último card visível */
             var maxIndex = Math.max(0, total - vis);
             if (idx > maxIndex) { idx = maxIndex; idxRestCarousel.index = idx; }
 
-            track.style.transform = 'translateX(-' + (idx * stepPx) + 'px)';
+            if (isMobile) {
+                outer.scrollTo({ left: idx * stepPx, behavior: 'smooth' });
+            } else {
+                track.style.transform = 'translateX(-' + (idx * stepPx) + 'px)';
+            }
 
-            /* barra de progresso */
             var fill = document.getElementById('idx-rest-progress-fill');
             if (fill) {
                 var pct = total <= vis ? 100 : Math.round(((idx + vis) / total) * 100);
                 fill.style.width = Math.min(100, pct) + '%';
             }
-
             var prevBtn = document.getElementById('idx-rest-prev');
             var nextBtn = document.getElementById('idx-rest-next');
             if (prevBtn) prevBtn.disabled = idx === 0;
             if (nextBtn) nextBtn.disabled = idx >= maxIndex;
-
             var navEl = document.getElementById('idx-rest-carousel-nav');
             if (navEl) navEl.style.display = total <= vis ? 'none' : 'flex';
         }
@@ -1355,20 +1433,23 @@
             var stepPx = cardW + gap;
             var max = Math.max(0, featState.total - vis);
             if (featState.index > max) featState.index = max;
+            var isMobile = window.innerWidth <= 768;
 
-            track.style.transform = 'translateX(-' + (featState.index * stepPx) + 'px)';
+            if (isMobile) {
+                outer.scrollTo({ left: featState.index * stepPx, behavior: 'smooth' });
+            } else {
+                track.style.transform = 'translateX(-' + (featState.index * stepPx) + 'px)';
+            }
 
             var fill = document.getElementById('feat-progress-fill');
             if (fill) {
                 var pct = featState.total <= vis ? 100 : Math.round(((featState.index + vis) / featState.total) * 100);
                 fill.style.width = Math.min(100, pct) + '%';
             }
-
             var prevBtn = document.getElementById('feat-prev');
             var nextBtn = document.getElementById('feat-next');
             if (prevBtn) prevBtn.disabled = featState.index === 0;
             if (nextBtn) nextBtn.disabled = featState.index >= max;
-
             var navEl = document.getElementById('features-nav');
             if (navEl) navEl.style.display = featState.total <= vis ? 'none' : 'flex';
         }
@@ -1471,20 +1552,23 @@
             var stepPx = cardW + gap;
             var max = Math.max(0, blogState.total - vis);
             if (blogState.index > max) blogState.index = max;
+            var isMobile = window.innerWidth <= 768;
 
-            track.style.transform = 'translateX(-' + (blogState.index * stepPx) + 'px)';
+            if (isMobile) {
+                outer.scrollTo({ left: blogState.index * stepPx, behavior: 'smooth' });
+            } else {
+                track.style.transform = 'translateX(-' + (blogState.index * stepPx) + 'px)';
+            }
 
             var fill = document.getElementById('blog-progress-fill');
             if (fill) {
                 var pct = blogState.total <= vis ? 100 : Math.round(((blogState.index + vis) / blogState.total) * 100);
                 fill.style.width = Math.min(100, pct) + '%';
             }
-
             var prevBtn = document.getElementById('blog-prev');
             var nextBtn = document.getElementById('blog-next');
             if (prevBtn) prevBtn.disabled = blogState.index === 0;
             if (nextBtn) nextBtn.disabled = blogState.index >= max;
-
             var navEl = document.getElementById('blog-carousel-nav');
             if (navEl) navEl.style.display = blogState.total <= vis ? 'none' : 'flex';
         }
