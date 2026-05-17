@@ -208,6 +208,9 @@
             padding: 0;
         }
         .carousel-dot.active { background: var(--primary); transform: scale(1.3); }
+        /* barra de progresso carrosseis principais */
+        .carousel-progress-bar { flex: 1; max-width: 200px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
+        .carousel-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
 
         /* Grid de pratos */
         .pratos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
@@ -286,7 +289,7 @@
         .destaque-section { margin-bottom: 30px; }
         .destaque-section h3 { font-size: 1.1em; color: var(--dark-gray); font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
         .carr-wrap { position: relative; overflow: hidden; }
-        .carr-track { display: flex; gap: 20px; transition: transform 0.4s ease; }
+        .carr-track { display: flex; gap: 20px; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
         .carr-track .restaurante-card { min-width: 260px; flex-shrink: 0; }
         .carr-track .restaurante-card img { height: 170px; }
         .carr-btn {
@@ -300,6 +303,8 @@
         .carr-btn:hover { background: var(--light); }
         .carr-btn.carr-prev { left: 4px; }
         .carr-btn.carr-next { right: 4px; }
+        .carr-progress-bar { margin-top: 14px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
+        .carr-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
 
         .info-message { text-align: center; color: #6c757d; padding: 30px 0; }
 
@@ -581,7 +586,7 @@
     </header>
 
     <div class="mobile-nav-overlay" id="mobile-nav">
-        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
+        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;left:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
         <nav>
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
@@ -627,7 +632,7 @@
                 </div>
                 <div class="carousel-nav" id="pratos-carousel-nav">
                     <button class="carousel-arrow" id="pratos-prev" onclick="moveCarousel('pratos', -1)"><i class="fas fa-chevron-left"></i></button>
-                    <div class="carousel-dots" id="pratos-dots"></div>
+                    <div class="carousel-progress-bar"><div class="carousel-progress-fill" id="pratos-progress-fill"></div></div>
                     <button class="carousel-arrow" id="pratos-next" onclick="moveCarousel('pratos', 1)"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
@@ -697,6 +702,7 @@
                     <div class="carr-track" id="carr-track"></div>
                     <button class="carr-btn carr-next" id="carr-next"><i class="fas fa-chevron-right"></i></button>
                 </div>
+                <div class="carr-progress-bar"><div class="carr-progress-fill" id="carr-progress-fill"></div></div>
             </div>
 
             <!-- Filtros de cidade e região -->
@@ -729,7 +735,7 @@
                 </div>
                 <div class="carousel-nav" id="rest-carousel-nav">
                     <button class="carousel-arrow" id="rest-prev" onclick="moveCarousel('rest', -1)"><i class="fas fa-chevron-left"></i></button>
-                    <div class="carousel-dots" id="rest-dots"></div>
+                    <div class="carousel-progress-bar"><div class="carousel-progress-fill" id="rest-progress-fill"></div></div>
                     <button class="carousel-arrow" id="rest-next" onclick="moveCarousel('rest', 1)"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
@@ -896,112 +902,111 @@
         }
 
         function renderCarouselNav(id) {
-            const state = carouselState[id];
-            const dotsEl = document.getElementById(`${id}-dots`);
-            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
-            dotsEl.innerHTML = '';
-            for (let i = 0; i < pageCount; i++) {
-                const dot = document.createElement('button');
-                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                dot.setAttribute('aria-label', `Página ${i + 1}`);
-                dot.onclick = () => goToPage(id, i);
-                dotsEl.appendChild(dot);
-            }
+            /* não usa mais pontos — só atualiza barra de progresso */
+            updateCarouselPosition(id);
         }
 
         function goToPage(id, page) {
             const state = carouselState[id];
-            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
-            state.index = Math.max(0, Math.min(page, pageCount - 1));
+            const max = Math.max(0, state.total - state.visibleCount);
+            state.index = Math.max(0, Math.min(page, max));
             updateCarouselPosition(id);
         }
 
         function moveCarousel(id, dir) {
             const state = carouselState[id];
-            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
-            state.index = Math.max(0, Math.min(state.index + dir, pageCount - 1));
+            const max = Math.max(0, state.total - state.visibleCount);
+            state.index = Math.max(0, Math.min(state.index + dir, max));
             updateCarouselPosition(id);
         }
 
         function updateCarouselPosition(id) {
             const state = carouselState[id];
             const track = document.getElementById(`${id}-track`);
-            const pageCount = Math.max(1, Math.ceil(state.total / state.visibleCount));
+            const outer = track.parentElement;
+            const containerWidth = outer ? outer.offsetWidth : 0;
+            const gap = 25;
+            const cardW = (containerWidth - gap * (state.visibleCount - 1)) / state.visibleCount;
+            const stepPx = cardW + gap;
 
-            // Calcula deslocamento: cada card ocupa (100/visibleCount)% + gap proporcional
-            const cardWidthPercent = 100 / state.visibleCount;
-            // gap de 25px em porcentagem relativa ao container
-            const outer = document.getElementById(`${id === 'pratos' ? 'pratos-track-outer' : 'rest-carousel-wrapper'} .carousel-track-outer`) ||
-                          track.parentElement;
-            const containerWidth = outer ? outer.offsetWidth : track.parentElement.offsetWidth;
-            const gapPx = 25;
-            const totalGapPx = gapPx * (state.visibleCount - 1);
-            const cardWidthPx = (containerWidth - totalGapPx) / state.visibleCount;
-            const stepPx = (cardWidthPx + gapPx) * state.visibleCount;
+            const max = Math.max(0, state.total - state.visibleCount);
+            if (state.index > max) state.index = max;
 
             track.style.transform = `translateX(-${state.index * stepPx}px)`;
 
-            // Dots
-            document.querySelectorAll(`#${id}-dots .carousel-dot`).forEach((dot, i) => {
-                dot.classList.toggle('active', i === state.index);
-            });
+            /* barra de progresso */
+            const fill = document.getElementById(`${id}-progress-fill`);
+            if (fill) {
+                const pct = state.total <= state.visibleCount ? 100
+                    : Math.round(((state.index + state.visibleCount) / state.total) * 100);
+                fill.style.width = Math.min(100, pct) + '%';
+            }
 
-            // Setas
             const prevBtn = document.getElementById(`${id}-prev`);
             const nextBtn = document.getElementById(`${id}-next`);
             if (prevBtn) prevBtn.disabled = state.index === 0;
-            if (nextBtn) nextBtn.disabled = state.index >= pageCount - 1;
+            if (nextBtn) nextBtn.disabled = state.index >= max;
 
-            // Esconde nav se tudo cabe em uma página
             const navEl = document.getElementById(`${id}-carousel-nav`);
-            if (navEl) navEl.style.display = pageCount <= 1 ? 'none' : 'flex';
+            if (navEl) navEl.style.display = state.total <= state.visibleCount ? 'none' : 'flex';
         }
 
         // ── Drag / Swipe nos carrosséis ──
+        // Guarda handlers globais por id para poder remover antes de re-adicionar
+        const _dragHandlers = {};
+
         function addDragSupport(id) {
             const track = document.getElementById(`${id}-track`);
             if (!track) return;
-            let startX = 0, isDragging = false, startTranslate = 0;
 
-            function getCurrentTranslate() {
-                const style = window.getComputedStyle(track);
-                const matrix = new DOMMatrix(style.transform);
-                return matrix.m41;
+            // Remove listeners anteriores do window para este id
+            if (_dragHandlers[id]) {
+                window.removeEventListener('mousemove', _dragHandlers[id].move);
+                window.removeEventListener('mouseup',   _dragHandlers[id].up);
             }
 
+            let startX = 0, isDragging = false;
+
             function onStart(x) {
-                isDragging = true;
-                startX = x;
-                startTranslate = getCurrentTranslate();
-                track.style.transition = 'none';
-                track.style.cursor = 'grabbing';
+                isDragging = true; startX = x;
+                track.style.transition = 'none'; track.style.cursor = 'grabbing';
             }
             function onMove(x) {
                 if (!isDragging) return;
-                track.style.transform = `translateX(${startTranslate + (x - startX)}px)`;
+                const state = carouselState[id];
+                const outer = track.parentElement;
+                const containerWidth = outer ? outer.offsetWidth : 0;
+                const gap = 25;
+                const cardW = (containerWidth - gap * (state.visibleCount - 1)) / state.visibleCount;
+                const stepPx = cardW + gap;
+                const base = -(state.index * stepPx);
+                track.style.transform = `translateX(${base + (x - startX)}px)`;
             }
             function onEnd(x) {
                 if (!isDragging) return;
-                isDragging = false;
-                track.style.cursor = '';
-                track.style.transition = '';
+                isDragging = false; track.style.cursor = ''; track.style.transition = '';
                 const diff = x - startX;
-                if (Math.abs(diff) > 50) {
-                    moveCarousel(id, diff < 0 ? 1 : -1);
-                } else {
-                    updateCarouselPosition(id);
-                }
+                if (Math.abs(diff) > 40) moveCarousel(id, diff < 0 ? 1 : -1);
+                else updateCarouselPosition(id);
             }
 
-            // Mouse
-            track.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
-            window.addEventListener('mousemove', e => { if (isDragging) onMove(e.clientX); });
-            window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientX); });
+            const onMouseMove = e => onMove(e.clientX);
+            const onMouseUp   = e => onEnd(e.clientX);
 
-            // Touch
-            track.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+            _dragHandlers[id] = { move: onMouseMove, up: onMouseUp };
+
+            // Remove e re-adiciona listeners no track (cloneNode limpa os antigos)
+            const newTrack = track.cloneNode(true);
+            track.parentNode.replaceChild(newTrack, track);
+            const t = document.getElementById(`${id}-track`);
+
+            t.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
+            t.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup',   onMouseUp);
         }
 
         // Recalcula ao redimensionar
@@ -1249,13 +1254,70 @@
             wrap.style.display = '';
             carrDestaqueIndex = 0;
             track.innerHTML = carrDestaqueItems.map(r => restCardHTML(r)).join('');
-            moverCarrDestaque(0);
+            atualizarCarrDestaque();
+            addCarrDestaqueDrag();
         }
 
         function moverCarrDestaque(dir) {
-            const track = document.getElementById('carr-track');
             carrDestaqueIndex = Math.max(0, Math.min(carrDestaqueIndex + dir, carrDestaqueItems.length - 1));
-            track.style.transform = `translateX(-${carrDestaqueIndex * 280}px)`;
+            atualizarCarrDestaque();
+        }
+
+        function atualizarCarrDestaque() {
+            const track = document.getElementById('carr-track');
+            const cardW = 260 + 20; /* min-width + gap */
+            track.style.transform = `translateX(-${carrDestaqueIndex * cardW}px)`;
+            const fill = document.getElementById('carr-progress-fill');
+            if (fill) {
+                const pct = carrDestaqueItems.length <= 1 ? 100
+                    : Math.round(((carrDestaqueIndex + 1) / carrDestaqueItems.length) * 100);
+                fill.style.width = pct + '%';
+            }
+        }
+
+        let _carrDestaqueHandlers = null;
+
+        function addCarrDestaqueDrag() {
+            const track = document.getElementById('carr-track');
+            if (!track) return;
+
+            if (_carrDestaqueHandlers) {
+                window.removeEventListener('mousemove', _carrDestaqueHandlers.move);
+                window.removeEventListener('mouseup',   _carrDestaqueHandlers.up);
+            }
+
+            const cardW = 260 + 20;
+            let startX = 0, isDragging = false;
+
+            function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; }
+            function onMove(x) {
+                if (!isDragging) return;
+                const base = -(carrDestaqueIndex * cardW);
+                track.style.transform = `translateX(${base + (x - startX)}px)`;
+            }
+            function onEnd(x) {
+                if (!isDragging) return;
+                isDragging = false; track.style.transition = '';
+                const diff = x - startX;
+                if (Math.abs(diff) > 40) moverCarrDestaque(diff < 0 ? 1 : -1);
+                else atualizarCarrDestaque();
+            }
+
+            const onMouseMove = e => onMove(e.clientX);
+            const onMouseUp   = e => onEnd(e.clientX);
+            _carrDestaqueHandlers = { move: onMouseMove, up: onMouseUp };
+
+            const newTrack = track.cloneNode(true);
+            track.parentNode.replaceChild(newTrack, track);
+            const t = document.getElementById('carr-track');
+
+            t.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
+            t.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup',   onMouseUp);
         }
 
         document.getElementById('carr-prev').addEventListener('click', () => moverCarrDestaque(-1));
