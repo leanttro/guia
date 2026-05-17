@@ -147,11 +147,12 @@
             }
             .feature-card {
                 scroll-snap-align: start;
-                flex: 0 0 calc(50% - 10px);
+                flex: 0 0 calc(75% - 10px);
+                padding: 20px 20px 18px;
             }
         }
         @media (max-width: 480px) {
-            .feature-card { flex: 0 0 80%; }
+            .feature-card { flex: 0 0 85%; padding: 18px 18px 16px; }
         }
         .feature-card {
             flex: 0 0 calc(25% - 15px);
@@ -653,13 +654,14 @@
     <!-- Categorias -->
     <section class="section" id="categorias">
         <div class="container">
+            <p style="text-align:center;font-size:1em;color:var(--primary);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Seu guia completo de rodízios em São Paulo</p>
             <h2 class="section-title">Escolha sua categoria</h2>
             <p class="section-subtitle">Cada guia tem os pratos mais comuns, o que pedir e onde ir</p>
             <div class="categorias-grid" id="categorias-grid">
                 <!-- preenchido pela API -->
                 <a href="/japones" class="categoria-card">
                     <div class="card-photo">
-                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888033/japones_lraetp.jpg" alt="Rodízio Japonês em São Paulo — Sushi, Sashimi e Hot Roll" loading="lazy" decoding="async" width="400" height="400">
+                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888033/japones_lraetp.jpg" alt="Rodízio Japonês em São Paulo — Sushi, Sashimi e Hot Roll" loading="eager" decoding="async" width="400" height="400">
                     </div>
                     <h3>Japonês</h3>
                     <p>Sushi, sashimi, hot roll e muito mais</p>
@@ -667,7 +669,7 @@
                 </a>
                 <a href="/carnes" class="categoria-card">
                     <div class="card-photo">
-                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888033/carne_q1bvtc.jpg" alt="Rodízio de Carnes em São Paulo — Picanha, Costela e Fraldinha" loading="lazy" decoding="async" width="400" height="400">
+                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888033/carne_q1bvtc.jpg" alt="Rodízio de Carnes em São Paulo — Picanha, Costela e Fraldinha" loading="eager" decoding="async" width="400" height="400">
                     </div>
                     <h3>Carnes</h3>
                     <p>Picanha, costela, fraldinha e os pontos certos</p>
@@ -675,7 +677,7 @@
                 </a>
                 <a href="/pizza" class="categoria-card">
                     <div class="card-photo">
-                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888034/pizza_dkgokl.jpg" alt="Rodízio de Pizza em São Paulo — Sabores Clássicos e Especiais" loading="lazy" decoding="async" width="400" height="400">
+                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888034/pizza_dkgokl.jpg" alt="Rodízio de Pizza em São Paulo — Sabores Clássicos e Especiais" loading="eager" decoding="async" width="400" height="400">
                     </div>
                     <h3>Pizza</h3>
                     <p>Sabores clássicos e especiais dos melhores rodízios</p>
@@ -683,7 +685,7 @@
                 </a>
                 <a href="/mexicano" class="categoria-card">
                     <div class="card-photo">
-                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888060/mexicana_rftvuz.jpg" alt="Rodízio Mexicano em São Paulo — Tacos, Burritos e Nachos" loading="lazy" decoding="async" width="400" height="400">
+                        <img src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778888060/mexicana_rftvuz.jpg" alt="Rodízio Mexicano em São Paulo — Tacos, Burritos e Nachos" loading="eager" decoding="async" width="400" height="400">
                     </div>
                     <h3>Mexicano</h3>
                     <p>Tacos, burritos, nachos e guacamole</p>
@@ -706,56 +708,48 @@
                         <span class="feat-num">1</span>
                         <h3>Escolha a categoria de rodízio</h3>
                         <p>Japonês, carnes, pizza ou mexicano — explore cada tipo com pratos, fotos e ingredientes detalhados. Saiba o que pedir no rodízio antes de chegar.</p>
-                        <a href="/japones">Ver rodízio japonês →</a>
                     </div>
 
                     <div class="feature-card">
                         <span class="feat-num">2</span>
                         <h3>Conheça cada prato do cardápio</h3>
                         <p>Foto, nome, ingredientes e descrição completa de cada item. Não chegue sem saber o que é sashimi, picanha, hot roll ou quesadilla.</p>
-                        <a href="/carnes">Ver cortes de carne →</a>
                     </div>
 
                     <div class="feature-card">
                         <span class="feat-num">3</span>
                         <h3>Avalie pratos com estrelas</h3>
                         <p>Dê nota de 1 a 5 estrelas para qualquer prato do cardápio. Veja a média de avaliações da comunidade e descubra os favoritos de quem já foi.</p>
-                        <a href="/japones">Avaliar pratos →</a>
                     </div>
 
                     <div class="feature-card">
                         <span class="feat-num">4</span>
                         <h3>Encontre rodízios perto de você</h3>
                         <p>Use sua localização para ordenar os restaurantes por distância. Encontre o rodízio mais próximo em São Paulo agora mesmo.</p>
-                        <a href="#busca-local">Usar minha localização →</a>
                     </div>
 
                     <div class="feature-card">
                         <span class="feat-num">5</span>
                         <h3>Comente e avalie restaurantes</h3>
                         <p>Deixe sua opinião sobre o restaurante, qualidade, atendimento e custo-benefício. Ajude outros clientes a escolher o melhor rodízio.</p>
-                        <a href="#busca-local">Ver restaurantes →</a>
                     </div>
 
                     <div class="feature-card">
                         <span class="feat-num">6</span>
                         <h3>Batalha de pratos — vote no favorito</h3>
                         <p>Participe da disputa entre pratos e eleja o campeão da categoria. Sushi vs hot roll? Picanha vs costela? Você decide quem é o melhor.</p>
-                        <a href="/japones">Entrar na batalha →</a>
                     </div>
 
                     <div class="feature-card">
                         <span class="feat-num">7</span>
                         <h3>Dicas e guias no blog</h3>
                         <p>Artigos sobre o que pedir, como aproveitar melhor o rodízio, diferença entre cortes de carne, tipos de sushi e muito mais conteúdo útil.</p>
-                        <a href="/blog">Ler o blog →</a>
                     </div>
 
                     <div class="feature-card">
                         <span class="feat-num">8</span>
                         <h3>Vagas de emprego na gastronomia</h3>
                         <p>Sushiman, churrasqueiro, garçom, pizzaiolo — veja vagas abertas em rodízios de São Paulo ou cadastre seu currículo gratuitamente.</p>
-                        <a href="/vagas">Ver vagas →</a>
                     </div>
 
                 </div>
