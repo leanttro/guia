@@ -130,6 +130,16 @@
             cursor: grab;
             user-select: none;
         }
+        .feature-card {
+            flex: 0 0 calc(25% - 15px);
+            min-width: 0;
+            background: var(--light-gray);
+            border-radius: 14px;
+            padding: 28px 22px 24px;
+            text-align: center;
+            border: 1px solid var(--medium-gray);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
         /* ── Mobile: scroll nativo com snap ── */
         @media (max-width: 768px) {
             .features-carousel-wrap {
@@ -153,16 +163,6 @@
         }
         @media (max-width: 480px) {
             .feature-card { flex: 0 0 85%; padding: 18px 18px 16px; }
-        }
-        .feature-card {
-            flex: 0 0 calc(25% - 15px);
-            min-width: 0;
-            background: var(--light-gray);
-            border-radius: 14px;
-            padding: 28px 22px 24px;
-            text-align: center;
-            border: 1px solid var(--medium-gray);
-            transition: box-shadow 0.2s, transform 0.2s;
         }
         .feature-card:hover { box-shadow: 0 6px 20px var(--shadow-medium); transform: translateY(-3px); }
         .feature-card .feat-icon {
