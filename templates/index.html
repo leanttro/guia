@@ -798,6 +798,9 @@
             <div id="idx-filtros-regiao-wrap" style="display:none;">
                 <div class="filtros-localidade-index" id="idx-filtros-regiao"></div>
             </div>
+            <div id="idx-filtros-bairro-wrap" style="display:none;">
+                <div class="filtros-localidade-index" id="idx-filtros-bairro"></div>
+            </div>
 
             <!-- Carrossel de destaque (só aparece se houver restaurantes com foto) -->
             <div id="destaque-wrap" style="display:none;" class="destaque-section">
@@ -993,6 +996,7 @@
         let idxTodosRestaurantes = [];
         let idxCidadeSel = null;
         let idxRegiaoSel = null;
+        let idxBairroSel = null;
         let idxCategoriaSel = null;
         let carrIndex = 0;
         let carrItems = [];
@@ -1306,6 +1310,7 @@
             if (idxCategoriaSel) lista = lista.filter(function(r){ return r.categoria_slug === idxCategoriaSel; });
             if (idxCidadeSel) lista = lista.filter(function(r){ return r.cidade === idxCidadeSel; });
             if (idxRegiaoSel) lista = lista.filter(function(r){ return r.regiao === idxRegiaoSel; });
+            if (idxBairroSel) lista = lista.filter(function(r){ return r.bairro === idxBairroSel; });
             renderCarrossel(lista);
             idxRenderRestaurantes(lista);
         }
@@ -1314,6 +1319,7 @@
             idxCategoriaSel = categoria || null;
             idxCidadeSel = null;
             idxRegiaoSel = null;
+            idxBairroSel = null;
             document.querySelectorAll('#idx-filtros-categoria .chip-cat').forEach(function(b){ b.classList.remove('active'); });
             btn.classList.add('active');
             idxCarregarFiltrosCidade();
@@ -1338,8 +1344,10 @@
         async function idxSelecionarCidade(btn, cidade) {
             idxCidadeSel = cidade || null;
             idxRegiaoSel = null;
+            idxBairroSel = null;
             document.querySelectorAll('#idx-filtros-cidade .chip-loc').forEach(function(b){ b.classList.remove('active'); });
             btn.classList.add('active');
+            idxCarregarFiltrosBairro();
             await idxCarregarFiltrosRegiao();
             idxAplicarFiltros();
         }
@@ -1362,10 +1370,37 @@
             } catch(e) { wrap.style.display = 'none'; }
         }
 
+        function idxCarregarFiltrosBairro() {
+            var wrap = document.getElementById('idx-filtros-bairro-wrap');
+            var el   = document.getElementById('idx-filtros-bairro');
+            // Filtra a lista parcialmente (categoria + cidade + regiao, sem bairro)
+            var lista = idxTodosRestaurantes;
+            if (idxCategoriaSel) lista = lista.filter(function(r){ return r.categoria_slug === idxCategoriaSel; });
+            if (idxCidadeSel) lista = lista.filter(function(r){ return r.cidade === idxCidadeSel; });
+            if (idxRegiaoSel) lista = lista.filter(function(r){ return r.regiao === idxRegiaoSel; });
+            var bairros = [];
+            lista.forEach(function(r){ if (r.bairro && bairros.indexOf(r.bairro) === -1) bairros.push(r.bairro); });
+            bairros.sort();
+            if (!bairros.length) { wrap.style.display = 'none'; return; }
+            wrap.style.display = '';
+            el.innerHTML = '<span class="loc-label">&#127968; Bairro:</span>' +
+                '<button class="chip-loc active" onclick="idxSelecionarBairro(this,'')">Todos</button>' +
+                bairros.map(function(b){ return '<button class="chip-loc" onclick="idxSelecionarBairro(this,'' + b.replace(/'/g, "\'") + '')">' + b + '</button>'; }).join('');
+        }
+
+        function idxSelecionarBairro(btn, bairro) {
+            idxBairroSel = bairro || null;
+            document.querySelectorAll('#idx-filtros-bairro .chip-loc').forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            idxAplicarFiltros();
+        }
+
         function idxSelecionarRegiao(btn, regiao) {
             idxRegiaoSel = regiao || null;
+            idxBairroSel = null;
             document.querySelectorAll('#idx-filtros-regiao .chip-loc').forEach(function(b){ b.classList.remove('active'); });
             btn.classList.add('active');
+            idxCarregarFiltrosBairro();
             idxAplicarFiltros();
         }
 
@@ -1376,6 +1411,7 @@
                 idxTodosRestaurantes = await res.json();
                 if (idxTodosRestaurantes.length) {
                     await idxCarregarFiltrosCidade();
+                    idxCarregarFiltrosBairro();
                     idxAplicarFiltros();
                 } else {
                     document.getElementById('restaurantes-resultado').innerHTML =
@@ -1407,6 +1443,7 @@
                         return;
                     }
                     await idxCarregarFiltrosCidade();
+                    idxCarregarFiltrosBairro();
                     idxAplicarFiltros();
                 } catch(e) {
                     document.getElementById('restaurantes-resultado').innerHTML =
