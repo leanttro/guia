@@ -3,8 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rodízio {{ categoria_slug | title }} em SP | Guia do Rodízio</title>
-    <meta name="description" content="Conheça os pratos do rodízio {{ categoria_slug }} em São Paulo. Saiba o que pedir e encontre os melhores perto de você.">
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Title & Description dinâmicos por categoria
+    ═══════════════════════════════════════════════════════ -->
+    <title>Rodízio de {{ categoria_slug | title }} em São Paulo SP | Melhores Restaurantes | Guia do Rodízio</title>
+    <meta name="description" content="Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo. Veja os pratos servidos, avaliações reais e restaurantes perto de você — filtrados por bairro e região.">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Canonical + Robots
+    ═══════════════════════════════════════════════════════ -->
+    <link rel="canonical" href="https://guiadorodizio.com.br/{{ categoria_slug }}">
+    <meta name="robots" content="index, follow">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Open Graph
+    ═══════════════════════════════════════════════════════ -->
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Guia do Rodízio SP">
+    <meta property="og:url"         content="https://guiadorodizio.com.br/{{ categoria_slug }}">
+    <meta property="og:title"       content="Rodízio de {{ categoria_slug | title }} em São Paulo | Guia do Rodízio">
+    <meta property="og:description" content="Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo. Pratos, avaliações e restaurantes perto de você.">
+    <meta property="og:locale"      content="pt_BR">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Twitter Card
+    ═══════════════════════════════════════════════════════ -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Rodízio de {{ categoria_slug | title }} em São Paulo | Guia do Rodízio">
+    <meta name="twitter:description" content="Encontre os melhores rodízios de {{ categoria_slug }} em SP. Pratos, avaliações e localização.">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Schema.org JSON-LD (CollectionPage + BreadcrumbList)
+    ═══════════════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "CollectionPage",
+          "@id": "https://guiadorodizio.com.br/{{ categoria_slug }}#page",
+          "name": "Rodízio de {{ categoria_slug | title }} em São Paulo",
+          "description": "Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo por bairro e região.",
+          "url": "https://guiadorodizio.com.br/{{ categoria_slug }}",
+          "inLanguage": "pt-BR",
+          "isPartOf": { "@id": "https://guiadorodizio.com.br/#website" }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Início",
+              "item": "https://guiadorodizio.com.br/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Rodízio de {{ categoria_slug | title }}",
+              "item": "https://guiadorodizio.com.br/{{ categoria_slug }}"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -431,9 +495,42 @@
             header .logo img { height: 60px; }
             .hero-categoria h1 { font-size: 1.9em; }
             .section-title { font-size: 1.6em; }
+
+            /* ── Carrosséis principais: scroll-snap nativo ── */
+            .carousel-track-outer {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .carousel-track-outer::-webkit-scrollbar { display: none; }
+            .carousel-track {
+                transform: none !important;
+                transition: none !important;
+                cursor: default;
+            }
             .carousel-track .prato-card,
             .carousel-track .restaurante-card {
                 flex: 0 0 calc(50% - 13px);
+                scroll-snap-align: start;
+            }
+
+            /* ── Carrossel destaque: scroll-snap nativo ── */
+            .carr-wrap {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .carr-wrap::-webkit-scrollbar { display: none; }
+            .carr-track {
+                transform: none !important;
+                transition: none !important;
+            }
+            .carr-track .restaurante-card {
+                scroll-snap-align: start;
             }
         }
 
@@ -932,7 +1029,12 @@
             const max = Math.max(0, state.total - state.visibleCount);
             if (state.index > max) state.index = max;
 
-            track.style.transform = `translateX(-${state.index * stepPx}px)`;
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                outer.scrollTo({ left: state.index * stepPx, behavior: 'smooth' });
+            } else {
+                track.style.transform = `translateX(-${state.index * stepPx}px)`;
+            }
 
             /* barra de progresso */
             const fill = document.getElementById(`${id}-progress-fill`);
@@ -991,19 +1093,15 @@
             }
 
             const onMouseMove = e => onMove(e.clientX);
-            const onMouseUp   = e => onEnd(e.clientX);
+            const onMouseUp   = e => { if (isDragging) onEnd(e.clientX); };
 
             _dragHandlers[id] = { move: onMouseMove, up: onMouseUp };
 
-            // Remove e re-adiciona listeners no track (cloneNode limpa os antigos)
-            const newTrack = track.cloneNode(true);
-            track.parentNode.replaceChild(newTrack, track);
-            const t = document.getElementById(`${id}-track`);
-
-            t.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
-            t.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+            // Apenas mouse drag no desktop — touch é tratado pelo scroll-snap nativo CSS
+            track.addEventListener('mousedown', e => {
+                if (window.innerWidth <= 768) return; // skip no mobile
+                onStart(e.clientX); e.preventDefault();
+            });
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup',   onMouseUp);
@@ -1264,9 +1362,15 @@
         }
 
         function atualizarCarrDestaque() {
+            const wrap = document.querySelector('.carr-wrap');
             const track = document.getElementById('carr-track');
             const cardW = 260 + 20; /* min-width + gap */
-            track.style.transform = `translateX(-${carrDestaqueIndex * cardW}px)`;
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                wrap.scrollTo({ left: carrDestaqueIndex * cardW, behavior: 'smooth' });
+            } else {
+                track.style.transform = `translateX(-${carrDestaqueIndex * cardW}px)`;
+            }
             const fill = document.getElementById('carr-progress-fill');
             if (fill) {
                 const pct = carrDestaqueItems.length <= 1 ? 100
@@ -1304,17 +1408,14 @@
             }
 
             const onMouseMove = e => onMove(e.clientX);
-            const onMouseUp   = e => onEnd(e.clientX);
+            const onMouseUp   = e => { if (isDragging) onEnd(e.clientX); };
             _carrDestaqueHandlers = { move: onMouseMove, up: onMouseUp };
 
-            const newTrack = track.cloneNode(true);
-            track.parentNode.replaceChild(newTrack, track);
-            const t = document.getElementById('carr-track');
-
-            t.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
-            t.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+            // Apenas mouse drag no desktop — touch é tratado pelo scroll-snap nativo CSS
+            track.addEventListener('mousedown', e => {
+                if (window.innerWidth <= 768) return; // skip no mobile
+                onStart(e.clientX); e.preventDefault();
+            });
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup',   onMouseUp);
