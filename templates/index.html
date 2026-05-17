@@ -290,6 +290,31 @@
         .chip-loc:hover { border-color: var(--primary); color: var(--primary); }
         .chip-loc.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
 
+        /* ── Slicer de bairro ── */
+        .bairro-slicer-wrap { display: flex; align-items: flex-start; gap: 10px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+        .bairro-slicer-label { font-size: 0.82em; color: #6c757d; font-weight: 500; align-self: center; white-space: nowrap; }
+        .bairro-slicer-toggle {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 14px; border-radius: 20px; border: 2px solid var(--medium-gray);
+            background: var(--white); color: var(--text-color); font-family: inherit;
+            font-size: 0.82em; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .bairro-slicer-toggle:hover { border-color: var(--primary); color: var(--primary); }
+        .bairro-slicer-toggle.has-active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .bairro-slicer-toggle .slicer-arrow { font-size: 0.75em; transition: transform 0.25s; display: inline-block; }
+        .bairro-slicer-toggle.open .slicer-arrow { transform: rotate(180deg); }
+        .bairro-slicer-dropdown {
+            display: none; flex-wrap: wrap; gap: 7px;
+            background: var(--white); border: 1.5px solid var(--medium-gray);
+            border-radius: 14px; padding: 14px 16px;
+            box-shadow: 0 4px 16px var(--shadow-light);
+            justify-content: center; width: 100%; max-width: 780px;
+            margin-top: 6px;
+        }
+        .bairro-slicer-dropdown.open { display: flex; }
+        .bairro-slicer-outer { display: flex; flex-direction: column; align-items: center; width: 100%; }
+
         /* ── Chips de categoria (index) ── */
         .filtros-categoria-index { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 24px; }
         .chip-cat {
@@ -665,7 +690,7 @@
     <!-- Categorias -->
     <section class="section" id="categorias">
         <div class="container">
-            <p style="text-align:center;font-size:1em;color:var(--primary);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Guia de Rodízios em SP e região: Pratos, Endereços e Avaliações!</p>
+            <p style="text-align:center;font-size:1em;color:var(--primary);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Seu guia completo de rodízios em São Paulo</p>
             <h2 class="section-title">Escolha sua categoria</h2>
             <p class="section-subtitle">Cada guia tem os pratos mais comuns, o que pedir e onde ir</p>
             <div class="categorias-grid" id="categorias-grid">
@@ -1383,20 +1408,66 @@
             bairros.sort();
             if (!bairros.length) { wrap.style.display = 'none'; return; }
             wrap.style.display = '';
-            var chips = '<span class="loc-label">&#127968; Bairro:</span>';
-            chips += '<button class="chip-loc active" onclick="idxSelecionarBairro(this,\'\')">' + 'Todos' + '</button>';
+
+            // Monta slicer colapsável
+            var chips = '';
+            chips += '<button class="chip-loc active" onclick="idxSlicerBairro(this,\'\')">' + 'Todos' + '</button>';
             bairros.forEach(function(b) {
                 var safe = b.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                chips += '<button class="chip-loc" onclick="idxSelecionarBairro(this,\'' + safe + '\')">' + b + '</button>';
+                chips += '<button class="chip-loc" onclick="idxSlicerBairro(this,\'' + safe + '\')">' + b + '</button>';
             });
-            el.innerHTML = chips;
+
+            var labelAtivo = idxBairroSel ? idxBairroSel : 'Todos';
+            var hasActive = !!idxBairroSel;
+
+            el.innerHTML =
+                '<div class="bairro-slicer-outer">' +
+                '<div class="bairro-slicer-wrap">' +
+                '<span class="bairro-slicer-label">&#127968; Bairro:</span>' +
+                '<button class="bairro-slicer-toggle' + (hasActive ? ' has-active' : '') + '" id="bairro-slicer-btn" onclick="idxToggleBairroSlicer()">' +
+                '<span id="bairro-slicer-label-text">' + labelAtivo + '</span>' +
+                '<span class="slicer-arrow">&#9660;</span>' +
+                '</button>' +
+                '</div>' +
+                '<div class="bairro-slicer-dropdown" id="bairro-slicer-dropdown">' +
+                chips +
+                '</div>' +
+                '</div>';
+        }
+
+        function idxToggleBairroSlicer() {
+            var btn = document.getElementById('bairro-slicer-btn');
+            var drop = document.getElementById('bairro-slicer-dropdown');
+            if (!btn || !drop) return;
+            var isOpen = drop.classList.contains('open');
+            drop.classList.toggle('open', !isOpen);
+            btn.classList.toggle('open', !isOpen);
+        }
+
+        function idxSlicerBairro(chipBtn, bairro) {
+            // Atualiza chips
+            var drop = document.getElementById('bairro-slicer-dropdown');
+            if (drop) drop.querySelectorAll('.chip-loc').forEach(function(b){ b.classList.remove('active'); });
+            chipBtn.classList.add('active');
+
+            // Atualiza label e visual do toggle
+            var toggleBtn = document.getElementById('bairro-slicer-btn');
+            var labelEl = document.getElementById('bairro-slicer-label-text');
+            if (labelEl) labelEl.textContent = bairro || 'Todos';
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('has-active', !!bairro);
+                // Fecha o dropdown
+                toggleBtn.classList.remove('open');
+            }
+            if (drop) drop.classList.remove('open');
+
+            // Aplica filtro
+            idxBairroSel = bairro || null;
+            idxAplicarFiltros();
         }
 
         function idxSelecionarBairro(btn, bairro) {
-            idxBairroSel = bairro || null;
-            document.querySelectorAll('#idx-filtros-bairro .chip-loc').forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
-            idxAplicarFiltros();
+            idxSlicerBairro(btn, bairro);
         }
 
         function idxSelecionarRegiao(btn, regiao) {
