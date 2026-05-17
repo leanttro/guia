@@ -3,10 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ══ SEO Básico ══ -->
     <title>{{ post.titulo }} | Blog Guia do Rodízio</title>
-    <meta name="description" content="{{ post.subtitulo or post.conteudo | truncate(155) }}">
+    <meta name="description" content="{{ post.subtitulo or post.conteudo | striptags | truncate(155) }}">
+    <meta name="author" content="{{ post.autor or 'Redação Guia do Rodízio' }}">
+    <link rel="canonical" href="https://guiadorodizio.com.br/blog/{{ post.slug }}">
+
+    <!-- ══ Open Graph (Facebook / WhatsApp / LinkedIn) ══ -->
+    <meta property="og:type"               content="article">
+    <meta property="og:site_name"          content="Guia do Rodízio SP">
+    <meta property="og:title"              content="{{ post.titulo }}">
+    <meta property="og:description"        content="{{ post.subtitulo or post.conteudo | striptags | truncate(155) }}">
+    <meta property="og:url"                content="https://guiadorodizio.com.br/blog/{{ post.slug }}">
+    <meta property="og:image"              content="{{ post.imagem_url or 'https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png' }}">
+    <meta property="og:image:width"        content="1200">
+    <meta property="og:image:height"       content="630">
+    <meta property="og:locale"             content="pt_BR">
+    <meta property="article:published_time" content="{{ post.criado_em }}">
+    <meta property="article:author"        content="{{ post.autor or 'Redação Guia do Rodízio' }}">
+    <meta property="article:section"       content="Gastronomia">
+
+    <!-- ══ Twitter Card ══ -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="{{ post.titulo }}">
+    <meta name="twitter:description" content="{{ post.subtitulo or post.conteudo | striptags | truncate(155) }}">
+    <meta name="twitter:image"       content="{{ post.imagem_url or 'https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png' }}">
+
+    <!-- ══ JSON-LD — Article Schema (Google) ══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "{{ post.titulo }}",
+      "description": "{{ post.subtitulo or '' }}",
+      "image": "{{ post.imagem_url or '' }}",
+      "datePublished": "{{ post.criado_em }}",
+      "dateModified": "{{ post.atualizado_em or post.criado_em }}",
+      "author": {
+        "@type": "Person",
+        "name": "{{ post.autor or 'Redação Guia do Rodízio' }}"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Guia do Rodízio SP",
+        "url": "https://guiadorodizio.com.br",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+        }
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://guiadorodizio.com.br/blog/{{ post.slug }}"
+      }
+    }
+    </script>
+
+    <!-- ══ Fonts & Icons ══ -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
     <style>
         :root {
             --primary: #C0392B; --dark: #922B21; --light: #FADBD8;
@@ -18,8 +75,8 @@
         body { font-family: 'Roboto', sans-serif; background: var(--light-gray); color: var(--text-color); line-height: 1.7; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
-        /* ── Header ── */
-        header {
+        /* ── Site Header (seletor específico para não vazar no post-header) ── */
+        body > header {
             background-color: var(--primary);
             padding: 18px 20px;
             display: flex;
@@ -29,22 +86,22 @@
             gap: 14px;
             position: relative;
         }
-        header .logo { display: flex; align-items: center; }
-        header .logo a { display: block; }
-        header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
-        header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
-        header nav.desktop-nav ul li a {
+        body > header .logo { display: flex; align-items: center; }
+        body > header .logo a { display: block; }
+        body > header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
+        body > header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        body > header nav.desktop-nav ul li a {
             text-decoration: none; color: var(--white); font-weight: 500;
             position: relative; padding-bottom: 5px; transition: color 0.3s;
         }
-        header nav.desktop-nav ul li a::after {
+        body > header nav.desktop-nav ul li a::after {
             content: ''; position: absolute; width: 0; height: 2px;
             bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
         }
-        header nav.desktop-nav ul li a.active { font-weight: 700; }
-        header nav.desktop-nav ul li a.active::after { width: 100%; }
-        header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
-        header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
+        body > header nav.desktop-nav ul li a.active { font-weight: 700; }
+        body > header nav.desktop-nav ul li a.active::after { width: 100%; }
+        body > header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
+        body > header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
         .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
         .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
         .mobile-nav-overlay.active { display: flex; opacity: 1; }
@@ -62,8 +119,10 @@
         .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 500; }
         .breadcrumb a:hover { text-decoration: underline; }
 
-        .post-header h1 { font-size: 2.6em; margin: 0 0 12px; color: var(--dark-gray); line-height: 1.25; }
-        .post-header .subtitulo { font-size: 1.25em; color: #6c757d; margin-bottom: 0; }
+        /* ── Post Header: sem fundo, título preto, subtítulo vermelho ── */
+        .post-header { background: none; padding: 0; }
+        .post-header h1 { font-size: 2.6em; margin: 0 0 12px; color: #111111; line-height: 1.25; }
+        .post-header .subtitulo { font-size: 1.25em; color: var(--primary); margin-bottom: 0; }
 
         .post-imagem { width: 100%; height: 400px; object-fit: cover; border-radius: 8px; margin: 28px 0 12px; }
 
@@ -195,9 +254,9 @@
             .f-btn { flex: 1; justify-content: center; font-size: 12px; padding: 9px 10px; }
         }
         @media (max-width: 768px) {
-            header nav.desktop-nav { display: none; }
+            body > header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
-            header .logo img { height: 60px; }
+            body > header .logo img { height: 60px; }
             .post-container { margin: 15px 10px; padding: 15px 20px 24px; }
             .post-header h1 { font-size: 1.9em; }
             .post-imagem { height: 220px; }
@@ -219,7 +278,7 @@
                 />
             </a>
         </div>
-        <nav class="desktop-nav">
+        <nav class="desktop-nav" aria-label="Navegação principal">
             <ul>
                 <li><a href="/">Início</a></li>
                 <li><a href="/japones">Japonês</a></li>
@@ -227,15 +286,15 @@
                 <li><a href="/pizza">Pizza</a></li>
                 <li><a href="/mexicano">Mexicano</a></li>
                 <li><a href="/vagas">Empregos</a></li>
-                <li><a href="/blog">Blog</a></li>
+                <li><a href="/blog" class="active">Blog</a></li>
             </ul>
         </nav>
-        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+        <div class="hamburger-menu" id="hamburger-btn" aria-label="Abrir menu" role="button" tabindex="0"><i class="fas fa-bars"></i></div>
     </header>
 
-    <div class="mobile-nav-overlay" id="mobile-nav">
+    <div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true" aria-label="Menu de navegação">
         <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;left:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
-        <nav>
+        <nav aria-label="Navegação mobile">
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
                 <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
@@ -249,14 +308,20 @@
     </div>
 
     <main>
-        <article class="post-container">
-            <div class="breadcrumb">
+        <article class="post-container" itemscope itemtype="https://schema.org/BlogPosting">
+            <meta itemprop="datePublished" content="{{ post.criado_em }}">
+            <meta itemprop="dateModified"  content="{{ post.atualizado_em or post.criado_em }}">
+            <meta itemprop="image"         content="{{ post.imagem_url or '' }}">
+            <meta itemprop="url"           content="https://guiadorodizio.com.br/blog/{{ post.slug }}">
+
+            <nav class="breadcrumb" aria-label="Navegação estrutural">
                 <a href="/blog">❮ Voltar para o Blog</a>
-            </div>
+            </nav>
+
             <header class="post-header">
-                <h1>{{ post.titulo }}</h1>
+                <h1 itemprop="headline">{{ post.titulo }}</h1>
                 {% if post.subtitulo %}
-                    <p class="subtitulo">{{ post.subtitulo }}</p>
+                    <p class="subtitulo" itemprop="description">{{ post.subtitulo }}</p>
                 {% endif %}
             </header>
 
@@ -264,12 +329,17 @@
                 <img class="post-imagem"
                      src="{{ post.imagem_url }}"
                      alt="{{ post.titulo }}"
+                     itemprop="image"
                      onerror="this.onerror=null;this.src='https://placehold.co/800x400/f8f9fa/343a40?text=Imagem+Indisponível';">
             {% endif %}
 
-            <p class="post-meta">Por <strong>{{ post.autor or 'Redação' }}</strong> em {{ post.criado_em }}</p>
+            <p class="post-meta">
+                Por <strong itemprop="author" itemscope itemtype="https://schema.org/Person">
+                    <span itemprop="name">{{ post.autor or 'Redação' }}</span>
+                </strong> em <time itemprop="datePublished" datetime="{{ post.criado_em }}">{{ post.criado_em }}</time>
+            </p>
 
-            <section class="post-conteudo">
+            <section class="post-conteudo" itemprop="articleBody">
                 {{ post.conteudo | safe }}
             </section>
         </article>
