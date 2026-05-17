@@ -1122,12 +1122,13 @@ def api_admin_blog():
             return jsonify(rows)
         data = request.get_json()
         cur.execute("""
-            INSERT INTO posts (titulo, slug, autor, conteudo, foto_url, ativo)
-            VALUES (%s,%s,%s,%s,%s,%s) RETURNING id
+            INSERT INTO posts (titulo, slug, subtitulo, autor, conteudo, imagem_url, ativo)
+            VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id
         """, (
             data.get('titulo',''), data.get('slug',''),
+            data.get('subtitulo',''),
             data.get('autor',''), data.get('conteudo',''),
-            data.get('foto_url',''), data.get('ativo', True)
+            data.get('imagem_url',''), data.get('ativo', True)
         ))
         new_id = cur.fetchone()['id']
         conn.commit()
@@ -1153,12 +1154,13 @@ def api_admin_post(post_id):
             return jsonify({'ok': True})
         data = request.get_json()
         cur.execute("""
-            UPDATE posts SET titulo=%s, slug=%s, autor=%s, conteudo=%s, foto_url=%s, ativo=%s
+            UPDATE posts SET titulo=%s, slug=%s, subtitulo=%s, autor=%s, conteudo=%s, imagem_url=%s, ativo=%s
             WHERE id=%s
         """, (
             data.get('titulo',''), data.get('slug',''),
+            data.get('subtitulo',''),
             data.get('autor',''), data.get('conteudo',''),
-            data.get('foto_url',''), data.get('ativo', True), post_id
+            data.get('imagem_url',''), data.get('ativo', True), post_id
         ))
         conn.commit()
         cur.close()
