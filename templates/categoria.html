@@ -12,18 +12,22 @@
     <!-- ═══════════════════════════════════════════════════════
          SEO — Canonical + Robots
     ═══════════════════════════════════════════════════════ -->
-    <link rel="canonical" href="https://guiadorodizio.com.br/{{ categoria_slug }}">
+    <link rel="canonical" href="https://www.guiadorodizio.com.br/{{ categoria_slug }}">
     <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#C0392B">
 
     <!-- ═══════════════════════════════════════════════════════
          SEO — Open Graph
     ═══════════════════════════════════════════════════════ -->
-    <meta property="og:type"        content="website">
-    <meta property="og:site_name"   content="Guia do Rodízio SP">
-    <meta property="og:url"         content="https://guiadorodizio.com.br/{{ categoria_slug }}">
-    <meta property="og:title"       content="Rodízio de {{ categoria_slug | title }} em São Paulo | Guia do Rodízio">
-    <meta property="og:description" content="Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo. Pratos, avaliações e restaurantes perto de você.">
-    <meta property="og:locale"      content="pt_BR">
+    <meta property="og:type"         content="website">
+    <meta property="og:site_name"    content="Guia do Rodízio SP">
+    <meta property="og:url"          content="https://www.guiadorodizio.com.br/{{ categoria_slug }}">
+    <meta property="og:title"        content="Rodízio de {{ categoria_slug | title }} em São Paulo | Guia do Rodízio">
+    <meta property="og:description"  content="Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo. Pratos, avaliações e restaurantes perto de você.">
+    <meta property="og:image"        content="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale"       content="pt_BR">
 
     <!-- ═══════════════════════════════════════════════════════
          SEO — Twitter Card
@@ -31,6 +35,7 @@
     <meta name="twitter:card"        content="summary_large_image">
     <meta name="twitter:title"       content="Rodízio de {{ categoria_slug | title }} em São Paulo | Guia do Rodízio">
     <meta name="twitter:description" content="Encontre os melhores rodízios de {{ categoria_slug }} em SP. Pratos, avaliações e localização.">
+    <meta name="twitter:image"       content="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png">
 
     <!-- ═══════════════════════════════════════════════════════
          SEO — Schema.org JSON-LD (CollectionPage + BreadcrumbList)
@@ -41,12 +46,12 @@
       "@graph": [
         {
           "@type": "CollectionPage",
-          "@id": "https://guiadorodizio.com.br/{{ categoria_slug }}#page",
+          "@id": "https://www.guiadorodizio.com.br/{{ categoria_slug }}#page",
           "name": "Rodízio de {{ categoria_slug | title }} em São Paulo",
           "description": "Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo por bairro e região.",
-          "url": "https://guiadorodizio.com.br/{{ categoria_slug }}",
+          "url": "https://www.guiadorodizio.com.br/{{ categoria_slug }}",
           "inLanguage": "pt-BR",
-          "isPartOf": { "@id": "https://guiadorodizio.com.br/#website" }
+          "isPartOf": { "@id": "https://www.guiadorodizio.com.br/#website" }
         },
         {
           "@type": "BreadcrumbList",
@@ -55,13 +60,13 @@
               "@type": "ListItem",
               "position": 1,
               "name": "Início",
-              "item": "https://guiadorodizio.com.br/"
+              "item": "https://www.guiadorodizio.com.br/"
             },
             {
               "@type": "ListItem",
               "position": 2,
               "name": "Rodízio de {{ categoria_slug | title }}",
-              "item": "https://guiadorodizio.com.br/{{ categoria_slug }}"
+              "item": "https://www.guiadorodizio.com.br/{{ categoria_slug }}"
             }
           ]
         }
@@ -83,7 +88,7 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
         /* ── Header ── */
-        header {
+        body > header {
             background-color: var(--primary);
             padding: 18px 20px;
             display: flex;
@@ -93,22 +98,22 @@
             gap: 14px;
             position: relative;
         }
-        header .logo { display: flex; align-items: center; }
-        header .logo a { display: block; }
-        header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
-        header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
-        header nav.desktop-nav ul li a {
+        body > header .logo { display: flex; align-items: center; }
+        body > header .logo a { display: block; }
+        body > header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
+        body > header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        body > header nav.desktop-nav ul li a {
             text-decoration: none; color: var(--white); font-weight: 500;
             position: relative; padding-bottom: 5px; transition: color 0.3s;
         }
-        header nav.desktop-nav ul li a::after {
+        body > header nav.desktop-nav ul li a::after {
             content: ''; position: absolute; width: 0; height: 2px;
             bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
         }
-        header nav.desktop-nav ul li a.active { font-weight: 700; }
-        header nav.desktop-nav ul li a.active::after { width: 100%; }
-        header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
-        header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
+        body > header nav.desktop-nav ul li a.active { font-weight: 700; }
+        body > header nav.desktop-nav ul li a.active::after { width: 100%; }
+        body > header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
+        body > header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
         .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
         .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
         .mobile-nav-overlay.active { display: flex; opacity: 1; }
@@ -522,9 +527,9 @@
         }
 
         @media (max-width: 768px) {
-            header nav.desktop-nav { display: none; }
+            body > header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
-            header .logo img { height: 60px; }
+            body > header .logo img { height: 60px; }
             .hero-categoria h1 { font-size: 1.9em; }
             .section-title { font-size: 1.6em; }
 
@@ -701,23 +706,23 @@
                 />
             </a>
         </div>
-        <nav class="desktop-nav">
+        <nav class="desktop-nav" aria-label="Navegação principal">
             <ul>
                 <li><a href="/">Início</a></li>
-                <li><a href="/japones" {% if categoria_slug == 'japones' %}class="active"{% endif %}>Japonês</a></li>
-                <li><a href="/carnes" {% if categoria_slug == 'carnes' %}class="active"{% endif %}>Carnes</a></li>
-                <li><a href="/pizza" {% if categoria_slug == 'pizza' %}class="active"{% endif %}>Pizza</a></li>
-                <li><a href="/mexicano" {% if categoria_slug == 'mexicano' %}class="active"{% endif %}>Mexicano</a></li>
+                <li><a href="/japones" {% if categoria_slug == 'japones' %}class="active" aria-current="page"{% endif %}>Japonês</a></li>
+                <li><a href="/carnes" {% if categoria_slug == 'carnes' %}class="active" aria-current="page"{% endif %}>Carnes</a></li>
+                <li><a href="/pizza" {% if categoria_slug == 'pizza' %}class="active" aria-current="page"{% endif %}>Pizza</a></li>
+                <li><a href="/mexicano" {% if categoria_slug == 'mexicano' %}class="active" aria-current="page"{% endif %}>Mexicano</a></li>
                 <li><a href="/vagas">Empregos</a></li>
                 <li><a href="/blog">Blog</a></li>
             </ul>
         </nav>
-        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+        <div class="hamburger-menu" id="hamburger-btn" aria-label="Abrir menu de navegação" role="button" tabindex="0"><i class="fas fa-bars"></i></div>
     </header>
 
-    <div class="mobile-nav-overlay" id="mobile-nav">
+    <div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true" aria-label="Menu de navegação">
         <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;left:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
-        <nav>
+        <nav aria-label="Navegação mobile">
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
                 <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
