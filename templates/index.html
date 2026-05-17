@@ -116,19 +116,69 @@
         }
         .categoria-card:hover .btn-ver { background: var(--dark); }
 
-        /* ── Como funciona ── */
+        /* ── Como funciona — carrossel de features ── */
         .como-funciona { background: var(--white); }
-        .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; }
-        .step { text-align: center; padding: 20px; }
-        .step .num {
-            width: 60px; height: 60px; border-radius: 50%;
-            background: var(--primary); color: var(--white);
-            font-size: 1.5em; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 15px;
+        .features-carousel-wrap {
+            position: relative;
+            overflow: hidden;
         }
-        .step h3 { font-size: 1.15em; color: var(--dark-gray); margin-bottom: 8px; }
-        .step p { font-size: 0.95em; color: #6c757d; }
+        .features-track {
+            display: flex;
+            gap: 20px;
+            transition: transform 0.4s ease;
+            will-change: transform;
+            cursor: grab;
+            user-select: none;
+        }
+        .feature-card {
+            flex: 0 0 calc(25% - 15px);
+            min-width: 0;
+            background: var(--light-gray);
+            border-radius: 14px;
+            padding: 28px 22px 24px;
+            text-align: center;
+            border: 1px solid var(--medium-gray);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .feature-card:hover { box-shadow: 0 6px 20px var(--shadow-medium); transform: translateY(-3px); }
+        .feature-card .feat-icon {
+            font-size: 2em;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .feature-card .feat-num {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--primary); color: var(--white);
+            font-size: 0.9em; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 14px;
+        }
+        .feature-card h3 { font-size: 1em; font-weight: 700; color: var(--dark-gray); margin-bottom: 8px; line-height: 1.3; }
+        .feature-card p { font-size: 0.83em; color: #6c757d; line-height: 1.55; }
+        .feature-card a { color: var(--primary); font-weight: 700; text-decoration: none; font-size: 0.82em; margin-top: 10px; display: inline-block; }
+        .feature-card a:hover { text-decoration: underline; }
+        .features-nav {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-top: 20px;
+        }
+        .features-arrow {
+            background: var(--white); border: 2px solid var(--medium-gray);
+            border-radius: 50%; width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.9em; color: var(--dark-gray);
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .features-arrow:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .features-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .features-progress-bar { flex: 1; max-width: 200px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
+        .features-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
+
+        @media (max-width: 768px) {
+            .feature-card { flex: 0 0 calc(50% - 10px); }
+        }
+        @media (max-width: 480px) {
+            .feature-card { flex: 0 0 80%; }
+        }
 
         /* ── Restaurantes próximos ── */
         .busca-section { background: var(--light-gray); }
@@ -212,14 +262,62 @@
 
         /* ── Blog ── */
         .blog-section { background: var(--white); }
-        .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
-        .blog-card { background: var(--light-gray); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; transition: transform 0.3s, box-shadow 0.3s; }
+        .blog-card { background: var(--light-gray); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; transition: transform 0.3s, box-shadow 0.3s; display: flex; flex-direction: column; }
         .blog-card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px var(--shadow-medium); }
         .blog-card img { width: 100%; height: 200px; object-fit: cover; }
-        .blog-card .card-body { padding: 18px; }
+        .blog-card .card-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
         .blog-card h3 { font-size: 1.1em; color: var(--dark-gray); margin-bottom: 8px; }
-        .blog-card p { font-size: 0.9em; color: #6c757d; margin-bottom: 12px; }
+        .blog-card p { font-size: 0.9em; color: #6c757d; margin-bottom: 12px; flex: 1; }
         .blog-card .leia-mais { color: var(--primary); font-weight: 700; font-size: 0.9em; }
+
+        /* carrossel do blog */
+        .blog-carousel-wrapper { position: relative; }
+        .blog-carousel-outer { overflow: hidden; border-radius: 12px; }
+        .blog-carousel-track {
+            display: flex; gap: 25px;
+            transition: transform 0.4s ease;
+            will-change: transform; cursor: grab; user-select: none;
+        }
+        .blog-carousel-track .blog-card {
+            flex: 0 0 calc(33.333% - 17px); min-width: 0;
+        }
+        .blog-carousel-nav {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-top: 20px;
+        }
+        .blog-carousel-nav .carousel-arrow {
+            background: var(--white); border: 2px solid var(--medium-gray);
+            border-radius: 50%; width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1em; color: var(--dark-gray);
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .blog-carousel-nav .carousel-arrow:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .blog-carousel-nav .carousel-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .blog-progress-bar { flex: 1; max-width: 200px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
+        .blog-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
+
+        /* grade do blog */
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+
+        /* botão ver todos os posts */
+        .blog-ver-todos {
+            text-align: center; margin-top: 32px;
+        }
+        .blog-ver-todos a {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--primary); color: var(--white);
+            padding: 12px 28px; border-radius: 8px; font-weight: 700;
+            font-size: 0.97em; text-decoration: none; transition: background 0.3s, transform 0.2s;
+        }
+        .blog-ver-todos a:hover { background: var(--dark); transform: translateY(-2px); }
+
+        @media (max-width: 768px) {
+            .blog-carousel-track .blog-card { flex: 0 0 calc(50% - 13px); }
+        }
+        @media (max-width: 520px) {
+            .blog-carousel-track .blog-card { flex: 0 0 100%; }
+        }
 
         /* ── Footer ── */
         footer {
@@ -517,32 +615,78 @@
         </div>
     </section>
 
-    <!-- Como funciona -->
+    <!-- Como funciona — carrossel de features -->
     <section class="section como-funciona">
         <div class="container">
             <h2 class="section-title">Como usar o guia</h2>
-            <p class="section-subtitle">Simples assim</p>
-            <div class="steps-grid">
-                <div class="step">
-                    <div class="num">1</div>
-                    <h3>Escolha a categoria</h3>
-                    <p>Japonês, carnes, pizza, mexicano — você decide qual tipo de rodízio quer ir.</p>
+            <p class="section-subtitle">Tudo que você precisa antes, durante e depois do rodízio</p>
+
+            <div class="features-carousel-wrap" id="features-carousel-wrap">
+                <div class="features-track" id="features-track">
+
+                    <div class="feature-card">
+                        <span class="feat-num">1</span>
+                        <h3>Escolha a categoria de rodízio</h3>
+                        <p>Japonês, carnes, pizza ou mexicano — explore cada tipo com pratos, fotos e ingredientes detalhados. Saiba o que pedir no rodízio antes de chegar.</p>
+                        <a href="/japones">Ver rodízio japonês →</a>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feat-num">2</span>
+                        <h3>Conheça cada prato do cardápio</h3>
+                        <p>Foto, nome, ingredientes e descrição completa de cada item. Não chegue sem saber o que é sashimi, picanha, hot roll ou quesadilla.</p>
+                        <a href="/carnes">Ver cortes de carne →</a>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feat-num">3</span>
+                        <h3>Avalie pratos com estrelas</h3>
+                        <p>Dê nota de 1 a 5 estrelas para qualquer prato do cardápio. Veja a média de avaliações da comunidade e descubra os favoritos de quem já foi.</p>
+                        <a href="/japones">Avaliar pratos →</a>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feat-num">4</span>
+                        <h3>Encontre rodízios perto de você</h3>
+                        <p>Use sua localização para ordenar os restaurantes por distância. Encontre o rodízio mais próximo em São Paulo agora mesmo.</p>
+                        <a href="#busca-local">Usar minha localização →</a>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feat-num">5</span>
+                        <h3>Comente e avalie restaurantes</h3>
+                        <p>Deixe sua opinião sobre o restaurante, qualidade, atendimento e custo-benefício. Ajude outros clientes a escolher o melhor rodízio.</p>
+                        <a href="#busca-local">Ver restaurantes →</a>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feat-num">6</span>
+                        <h3>Batalha de pratos — vote no favorito</h3>
+                        <p>Participe da disputa entre pratos e eleja o campeão da categoria. Sushi vs hot roll? Picanha vs costela? Você decide quem é o melhor.</p>
+                        <a href="/japones">Entrar na batalha →</a>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feat-num">7</span>
+                        <h3>Dicas e guias no blog</h3>
+                        <p>Artigos sobre o que pedir, como aproveitar melhor o rodízio, diferença entre cortes de carne, tipos de sushi e muito mais conteúdo útil.</p>
+                        <a href="/blog">Ler o blog →</a>
+                    </div>
+
+                    <div class="feature-card">
+                        <span class="feat-num">8</span>
+                        <h3>Vagas de emprego na gastronomia</h3>
+                        <p>Sushiman, churrasqueiro, garçom, pizzaiolo — veja vagas abertas em rodízios de São Paulo ou cadastre seu currículo gratuitamente.</p>
+                        <a href="/vagas">Ver vagas →</a>
+                    </div>
+
                 </div>
-                <div class="step">
-                    <div class="num">2</div>
-                    <h3>Conheça os pratos</h3>
-                    <p>Veja foto, nome, ingredientes e descrição de cada item do cardápio.</p>
-                </div>
-                <div class="step">
-                    <div class="num">3</div>
-                    <h3>Encontre o mais próximo</h3>
-                    <p>Use sua localização para encontrar o rodízio mais perto de você agora.</p>
-                </div>
-                <div class="step">
-                    <div class="num">4</div>
-                    <h3>Vá e aproveite!</h3>
-                    <p>Chegue sabendo o que pedir e impressione a mesa toda.</p>
-                </div>
+            </div>
+
+            <div class="features-nav" id="features-nav">
+                <button class="features-arrow" id="feat-prev" onclick="moveFeatures(-1)"><i class="fas fa-chevron-left"></i></button>
+                <div class="features-progress-bar"><div class="features-progress-fill" id="feat-progress-fill"></div></div>
+                <button class="features-arrow" id="feat-next" onclick="moveFeatures(1)"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
     </section>
@@ -616,10 +760,40 @@
     <!-- Blog -->
     <section class="section blog-section">
         <div class="container">
-            <h2 class="section-title">Dicas & Guias</h2>
+            <h2 class="section-title">Dicas &amp; Guias</h2>
             <p class="section-subtitle">Tudo que você precisa saber antes de ir ao rodízio</p>
-            <div class="blog-grid" id="blog-grid">
+
+            <!-- Controles de visualização do blog -->
+            <div class="view-controls" id="blog-view-controls" style="display:none;">
+                <span>Ver como:</span>
+                <button class="view-btn active" id="btn-blog-carousel" title="Carrossel" onclick="setBlogView('carousel')">
+                    <i class="fas fa-grip-lines"></i>
+                </button>
+                <button class="view-btn" id="btn-blog-grade" title="Grade" onclick="setBlogView('grade')">
+                    <i class="fas fa-th"></i>
+                </button>
+            </div>
+
+            <!-- Carrossel do blog -->
+            <div id="blog-carousel-wrapper" class="blog-carousel-wrapper">
+                <div class="blog-carousel-outer">
+                    <div class="blog-carousel-track" id="blog-carousel-track"></div>
+                </div>
+                <div class="blog-carousel-nav" id="blog-carousel-nav">
+                    <button class="carousel-arrow" id="blog-prev" onclick="moveBlogCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <div class="blog-progress-bar"><div class="blog-progress-fill" id="blog-progress-fill"></div></div>
+                    <button class="carousel-arrow" id="blog-next" onclick="moveBlogCarousel(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Grade do blog (oculta inicialmente) -->
+            <div class="blog-grid" id="blog-grid" style="display:none;">
                 <p class="info-message">Carregando posts...</p>
+            </div>
+
+            <!-- Botão ver todos -->
+            <div class="blog-ver-todos" id="blog-ver-todos" style="display:none;">
+                <a href="/blog"><i class="fas fa-newspaper"></i> Ver todos os posts do blog</a>
             </div>
         </div>
     </section>
@@ -878,6 +1052,8 @@
             idxRestCarousel.index = 0;
             renderIdxCarouselNav();
             updateIdxCarouselPosition();
+            updateFeaturesPosition();
+            updateBlogCarouselPosition();
         });
 
         // ── Carrossel destaque ──
@@ -1132,26 +1308,220 @@
             });
         });
 
+        // ── Carrossel de features (Como usar o guia) ──
+        var featState = { index: 0, visibleCount: 4, total: 8 };
+
+        function getFeatVisibleCount() {
+            var w = window.innerWidth;
+            if (w <= 480) return 1;
+            if (w <= 768) return 2;
+            return 4;
+        }
+
+        function updateFeaturesPosition() {
+            var track = document.getElementById('features-track');
+            var outer = document.getElementById('features-carousel-wrap');
+            var containerWidth = outer ? outer.offsetWidth : 0;
+            var vis = getFeatVisibleCount();
+            featState.visibleCount = vis;
+            var gap = 20;
+            var cardW = (containerWidth - gap * (vis - 1)) / vis;
+            var stepPx = cardW + gap;
+            var max = Math.max(0, featState.total - vis);
+            if (featState.index > max) featState.index = max;
+
+            track.style.transform = 'translateX(-' + (featState.index * stepPx) + 'px)';
+
+            var fill = document.getElementById('feat-progress-fill');
+            if (fill) {
+                var pct = featState.total <= vis ? 100 : Math.round(((featState.index + vis) / featState.total) * 100);
+                fill.style.width = Math.min(100, pct) + '%';
+            }
+
+            var prevBtn = document.getElementById('feat-prev');
+            var nextBtn = document.getElementById('feat-next');
+            if (prevBtn) prevBtn.disabled = featState.index === 0;
+            if (nextBtn) nextBtn.disabled = featState.index >= max;
+
+            var navEl = document.getElementById('features-nav');
+            if (navEl) navEl.style.display = featState.total <= vis ? 'none' : 'flex';
+        }
+
+        function moveFeatures(dir) {
+            var vis = featState.visibleCount;
+            var max = Math.max(0, featState.total - vis);
+            featState.index = Math.max(0, Math.min(featState.index + dir, max));
+            updateFeaturesPosition();
+        }
+
+        // Drag/touch no carrossel de features
+        (function() {
+            var track = document.getElementById('features-track');
+            var startX = 0, isDragging = false;
+            function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; track.style.cursor = 'grabbing'; }
+            function onMove(x) {
+                if (!isDragging) return;
+                var outer = document.getElementById('features-carousel-wrap');
+                var containerWidth = outer ? outer.offsetWidth : 0;
+                var gap = 20;
+                var vis = featState.visibleCount;
+                var cardW = (containerWidth - gap * (vis - 1)) / vis;
+                var stepPx = cardW + gap;
+                var base = -(featState.index * stepPx);
+                track.style.transform = 'translateX(' + (base + (x - startX)) + 'px)';
+            }
+            function onEnd(x) {
+                if (!isDragging) return;
+                isDragging = false; track.style.cursor = ''; track.style.transition = '';
+                var diff = x - startX;
+                if (Math.abs(diff) > 40) moveFeatures(diff < 0 ? 1 : -1);
+                else updateFeaturesPosition();
+            }
+            track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
+            window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
+            window.addEventListener('mouseup',   function(e){ if (isDragging) onEnd(e.clientX); });
+            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove',  function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchend',   function(e){ onEnd(e.changedTouches[0].clientX); });
+        })();
+
+        // Inicializa features após renderizar
+        window.addEventListener('load', function() {
+            updateFeaturesPosition();
+        });
+
         // ── Blog ──
+        var blogState = { index: 0, visibleCount: 3, total: 0 };
+        var blogPosts = [];
+        var blogView = 'carousel';
+
+        function getBlogVisibleCount() {
+            var w = window.innerWidth;
+            if (w <= 520) return 1;
+            if (w <= 768) return 2;
+            return 3;
+        }
+
+        function renderBlogCard(p) {
+            var sub = (p.subtitulo || '').length > 100 ? p.subtitulo.substring(0, 97) + '...' : (p.subtitulo || '');
+            var img = p.imagem_url || 'https://placehold.co/600x300/f8f9fa/343a40?text=Post';
+            return '<a href="/blog/' + p.slug + '" class="blog-card">' +
+                '<img src="' + img + '" alt="' + p.titulo + '" onerror="this.src=\'https://placehold.co/600x300/f8f9fa/343a40?text=Post\'">' +
+                '<div class="card-body">' +
+                '<h3>' + p.titulo + '</h3>' +
+                '<p>' + sub + '</p>' +
+                '<span class="leia-mais">Leia mais →</span>' +
+                '</div></a>';
+        }
+
+        function buildBlogCarousel(posts) {
+            var track = document.getElementById('blog-carousel-track');
+            track.innerHTML = posts.map(function(p){ return renderBlogCard(p); }).join('');
+            blogState.total = posts.length;
+            blogState.index = 0;
+            blogState.visibleCount = getBlogVisibleCount();
+            updateBlogCarouselPosition();
+            addBlogDragSupport();
+        }
+
+        function updateBlogCarouselPosition() {
+            var track = document.getElementById('blog-carousel-track');
+            var outer = track.parentElement;
+            var containerWidth = outer ? outer.offsetWidth : 0;
+            var vis = blogState.visibleCount;
+            var gap = 25;
+            var cardW = (containerWidth - gap * (vis - 1)) / vis;
+            var stepPx = cardW + gap;
+            var max = Math.max(0, blogState.total - vis);
+            if (blogState.index > max) blogState.index = max;
+
+            track.style.transform = 'translateX(-' + (blogState.index * stepPx) + 'px)';
+
+            var fill = document.getElementById('blog-progress-fill');
+            if (fill) {
+                var pct = blogState.total <= vis ? 100 : Math.round(((blogState.index + vis) / blogState.total) * 100);
+                fill.style.width = Math.min(100, pct) + '%';
+            }
+
+            var prevBtn = document.getElementById('blog-prev');
+            var nextBtn = document.getElementById('blog-next');
+            if (prevBtn) prevBtn.disabled = blogState.index === 0;
+            if (nextBtn) nextBtn.disabled = blogState.index >= max;
+
+            var navEl = document.getElementById('blog-carousel-nav');
+            if (navEl) navEl.style.display = blogState.total <= vis ? 'none' : 'flex';
+        }
+
+        function moveBlogCarousel(dir) {
+            var max = Math.max(0, blogState.total - blogState.visibleCount);
+            blogState.index = Math.max(0, Math.min(blogState.index + dir, max));
+            updateBlogCarouselPosition();
+        }
+
+        function addBlogDragSupport() {
+            var track = document.getElementById('blog-carousel-track');
+            if (!track) return;
+            var startX = 0, isDragging = false;
+            function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; track.style.cursor = 'grabbing'; }
+            function onMove(x) {
+                if (!isDragging) return;
+                var outer = track.parentElement;
+                var containerWidth = outer ? outer.offsetWidth : 0;
+                var gap = 25;
+                var vis = blogState.visibleCount;
+                var cardW = (containerWidth - gap * (vis - 1)) / vis;
+                var stepPx = cardW + gap;
+                var base = -(blogState.index * stepPx);
+                track.style.transform = 'translateX(' + (base + (x - startX)) + 'px)';
+            }
+            function onEnd(x) {
+                if (!isDragging) return;
+                isDragging = false; track.style.cursor = ''; track.style.transition = '';
+                var diff = x - startX;
+                if (Math.abs(diff) > 40) moveBlogCarousel(diff < 0 ? 1 : -1);
+                else updateBlogCarouselPosition();
+            }
+            track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
+            window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
+            window.addEventListener('mouseup',   function(e){ if (isDragging) onEnd(e.clientX); });
+            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove',  function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchend',   function(e){ onEnd(e.changedTouches[0].clientX); });
+        }
+
+        function setBlogView(mode) {
+            blogView = mode;
+            document.getElementById('btn-blog-carousel').classList.toggle('active', mode === 'carousel');
+            document.getElementById('btn-blog-grade').classList.toggle('active', mode === 'grade');
+            document.getElementById('blog-carousel-wrapper').style.display = mode === 'carousel' ? '' : 'none';
+            document.getElementById('blog-grid').style.display = mode === 'grade' ? 'grid' : 'none';
+            if (mode === 'carousel') updateBlogCarouselPosition();
+        }
+
         async function loadBlog() {
             try {
                 var res = await fetch('/api/blog');
                 var posts = await res.json();
-                var grid = document.getElementById('blog-grid');
-                if (!posts.length) { grid.innerHTML = '<p class="info-message">Em breve novos posts!</p>'; return; }
-                grid.innerHTML = posts.slice(0, 3).map(function(p) {
-                    var sub = (p.subtitulo || '').length > 100 ? p.subtitulo.substring(0, 97) + '...' : (p.subtitulo || '');
-                    var img = p.imagem_url || 'https://placehold.co/600x300/f8f9fa/343a40?text=Post';
-                    return '<a href="/blog/' + p.slug + '" class="blog-card">' +
-                        '<img src="' + img + '" alt="' + p.titulo + '" onerror="this.src=\'https://placehold.co/600x300/f8f9fa/343a40?text=Post\'">' +
-                        '<div class="card-body">' +
-                        '<h3>' + p.titulo + '</h3>' +
-                        '<p>' + sub + '</p>' +
-                        '<span class="leia-mais">Leia mais →</span>' +
-                        '</div></a>';
-                }).join('');
+                blogPosts = posts.slice(0, 6);
+
+                if (!blogPosts.length) {
+                    document.getElementById('blog-carousel-track').innerHTML = '<p class="info-message">Em breve novos posts!</p>';
+                    return;
+                }
+
+                // Popula carrossel
+                buildBlogCarousel(blogPosts);
+
+                // Popula grade
+                document.getElementById('blog-grid').innerHTML = blogPosts.map(function(p){ return renderBlogCard(p); }).join('');
+
+                // Exibe controles e botão ver todos
+                document.getElementById('blog-view-controls').style.display = 'flex';
+                document.getElementById('blog-ver-todos').style.display = 'block';
+
+                setBlogView(blogView);
             } catch(e) {
-                document.getElementById('blog-grid').innerHTML = '<p class="info-message">Erro ao carregar posts.</p>';
+                document.getElementById('blog-carousel-track').innerHTML = '<p class="info-message">Erro ao carregar posts.</p>';
             }
         }
 
