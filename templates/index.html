@@ -160,7 +160,7 @@
         .destaque-section { margin-bottom: 30px; }
         .destaque-section h3 { font-size: 1.1em; color: var(--dark-gray); font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
         .carrossel-wrap { position: relative; overflow: hidden; }
-        .carrossel-track { display: flex; gap: 20px; transition: transform 0.4s ease; }
+        .carrossel-track { display: flex; gap: 20px; transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
         .carrossel-track .restaurante-card { min-width: 280px; flex-shrink: 0; }
         .carrossel-track .restaurante-card img { height: 200px; }
         .carr-btn {
@@ -174,6 +174,8 @@
         .carr-btn:hover { background: var(--light); }
         .carr-btn.prev { left: 4px; }
         .carr-btn.next { right: 4px; }
+        .carr-progress-bar { margin-top: 14px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
+        .carr-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
         .restaurante-card .card-body { padding: 15px; }
         .restaurante-card h3 { font-size: 1.1em; color: var(--dark-gray); margin-bottom: 5px; }
         .restaurante-card .bairro { font-size: 0.9em; color: #6c757d; }
@@ -381,6 +383,9 @@
             transition: background 0.2s, transform 0.2s; border: none; padding: 0;
         }
         .carousel-dot.active { background: var(--primary); transform: scale(1.3); }
+        /* barra de progresso carrossel principal — substitui pontos */
+        .carousel-progress-bar { flex: 1; max-width: 200px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
+        .carousel-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
         .badge-destaque-rest {
             display: inline-block; background: #F39C12; color: var(--white);
             font-size: 0.75em; font-weight: 700; padding: 2px 8px;
@@ -446,7 +451,7 @@
 
     <!-- Mobile Nav -->
     <div class="mobile-nav-overlay" id="mobile-nav">
-        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
+        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;left:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
         <nav>
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
@@ -575,6 +580,7 @@
                     <div class="carrossel-track" id="carrossel-track"></div>
                     <button class="carr-btn next" id="carr-next"><i class="fas fa-chevron-right"></i></button>
                 </div>
+                <div class="carr-progress-bar"><div class="carr-progress-fill" id="carr-progress-fill"></div></div>
             </div>
 
             <!-- Controles de visualização -->
@@ -595,7 +601,7 @@
                 </div>
                 <div class="carousel-nav" id="idx-rest-carousel-nav">
                     <button class="carousel-arrow" id="idx-rest-prev" onclick="moveIdxCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
-                    <div class="carousel-dots" id="idx-rest-dots"></div>
+                    <div class="carousel-progress-bar"><div class="carousel-progress-fill" id="idx-rest-progress-fill"></div></div>
                     <button class="carousel-arrow" id="idx-rest-next" onclick="moveIdxCarousel(1)"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
@@ -756,79 +762,93 @@
                 wrapper.innerHTML = html;
                 track.appendChild(wrapper.firstElementChild);
             });
-            renderIdxCarouselNav();
             updateIdxCarouselPosition();
             addIdxDragSupport();
         }
 
         function renderIdxCarouselNav() {
-            var dotsEl = document.getElementById('idx-rest-dots');
-            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
-            dotsEl.innerHTML = '';
-            for (var i = 0; i < pageCount; i++) {
-                var dot = document.createElement('button');
-                dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-                dot.setAttribute('aria-label', 'Página ' + (i + 1));
-                (function(page){ dot.onclick = function(){ goIdxCarouselPage(page); }; })(i);
-                dotsEl.appendChild(dot);
-            }
+            /* não usa mais pontos — só atualiza a barra de progresso */
+            updateIdxCarouselPosition();
         }
 
         function goIdxCarouselPage(page) {
-            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
-            idxRestCarousel.index = Math.max(0, Math.min(page, pageCount - 1));
+            var max = Math.max(0, idxRestCarousel.total - 1);
+            idxRestCarousel.index = Math.max(0, Math.min(page, max));
             updateIdxCarouselPosition();
         }
 
         function moveIdxCarousel(dir) {
-            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
-            idxRestCarousel.index = Math.max(0, Math.min(idxRestCarousel.index + dir, pageCount - 1));
+            var max = Math.max(0, idxRestCarousel.total - 1);
+            idxRestCarousel.index = Math.max(0, Math.min(idxRestCarousel.index + dir, max));
             updateIdxCarouselPosition();
         }
 
         function updateIdxCarouselPosition() {
             var track = document.getElementById('idx-rest-track');
-            var pageCount = Math.max(1, Math.ceil(idxRestCarousel.total / idxRestCarousel.visibleCount));
+            var total = idxRestCarousel.total;
+            var idx   = idxRestCarousel.index;
             var outer = track.parentElement;
             var containerWidth = outer ? outer.offsetWidth : 0;
-            var gapPx = 25;
-            var totalGapPx = gapPx * (idxRestCarousel.visibleCount - 1);
-            var cardWidthPx = (containerWidth - totalGapPx) / idxRestCarousel.visibleCount;
-            var stepPx = (cardWidthPx + gapPx) * idxRestCarousel.visibleCount;
-            track.style.transform = 'translateX(-' + (idxRestCarousel.index * stepPx) + 'px)';
-            document.querySelectorAll('#idx-rest-dots .carousel-dot').forEach(function(dot, i) {
-                dot.classList.toggle('active', i === idxRestCarousel.index);
-            });
+            var vis  = idxRestCarousel.visibleCount;
+            var gap  = 25;
+            var cardW = (containerWidth - gap * (vis - 1)) / vis;
+            var stepPx = cardW + gap;
+
+            /* limita para não ultrapassar o último card visível */
+            var maxIndex = Math.max(0, total - vis);
+            if (idx > maxIndex) { idx = maxIndex; idxRestCarousel.index = idx; }
+
+            track.style.transform = 'translateX(-' + (idx * stepPx) + 'px)';
+
+            /* barra de progresso */
+            var fill = document.getElementById('idx-rest-progress-fill');
+            if (fill) {
+                var pct = total <= vis ? 100 : Math.round(((idx + vis) / total) * 100);
+                fill.style.width = Math.min(100, pct) + '%';
+            }
+
             var prevBtn = document.getElementById('idx-rest-prev');
             var nextBtn = document.getElementById('idx-rest-next');
-            if (prevBtn) prevBtn.disabled = idxRestCarousel.index === 0;
-            if (nextBtn) nextBtn.disabled = idxRestCarousel.index >= pageCount - 1;
+            if (prevBtn) prevBtn.disabled = idx === 0;
+            if (nextBtn) nextBtn.disabled = idx >= maxIndex;
+
             var navEl = document.getElementById('idx-rest-carousel-nav');
-            if (navEl) navEl.style.display = pageCount <= 1 ? 'none' : 'flex';
+            if (navEl) navEl.style.display = total <= vis ? 'none' : 'flex';
         }
 
         function addIdxDragSupport() {
             var track = document.getElementById('idx-rest-track');
             if (!track) return;
-            var startX = 0, isDragging = false;
-            function getCurrentTranslate() {
-                var style = window.getComputedStyle(track);
-                var matrix = new DOMMatrix(style.transform);
-                return matrix.m41;
+            var startX = 0, isDragging = false, moved = false;
+            function onStart(x) { isDragging = true; moved = false; startX = x; track.style.transition = 'none'; track.style.cursor = 'grabbing'; }
+            function onMove(x) {
+                if (!isDragging) return;
+                moved = true;
+                var dx = x - startX;
+                var vis  = idxRestCarousel.visibleCount;
+                var gap  = 25;
+                var containerWidth = track.parentElement ? track.parentElement.offsetWidth : 0;
+                var cardW = (containerWidth - gap * (vis - 1)) / vis;
+                var stepPx = cardW + gap;
+                var base = -idxRestCarousel.index * stepPx;
+                track.style.transform = 'translateX(' + (base + dx) + 'px)';
             }
-            function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; track.style.cursor = 'grabbing'; }
-            function onMove(x) { if (!isDragging) return; track.style.transform = 'translateX(' + (getCurrentTranslate() + (x - startX)) + 'px)'; }
             function onEnd(x) {
                 if (!isDragging) return;
                 isDragging = false; track.style.cursor = ''; track.style.transition = '';
                 var diff = x - startX;
-                if (Math.abs(diff) > 50) { moveIdxCarousel(diff < 0 ? 1 : -1); } else { updateIdxCarouselPosition(); }
+                var threshold = 40;
+                if (Math.abs(diff) > threshold) {
+                    moveIdxCarousel(diff < 0 ? 1 : -1);
+                } else {
+                    updateIdxCarouselPosition();
+                }
             }
             track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
             window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
             window.addEventListener('mouseup', function(e){ if (isDragging) onEnd(e.clientX); });
             track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchmove', function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove', function(e){ if (isDragging) { onMove(e.touches[0].clientX); } }, { passive: true });
             track.addEventListener('touchend', function(e){ onEnd(e.changedTouches[0].clientX); });
         }
 
@@ -867,13 +887,51 @@
                     '<span class="btn-ver-rest">Ver restaurante &amp; avaliar →</span>' +
                     '</div></a>';
             }).join('');
-            moverCarrossel(0);
+            atualizarCarrossel();
+            addCarrDragSupport();
         }
 
         function moverCarrossel(dir) {
-            var track = document.getElementById('carrossel-track');
             carrIndex = Math.max(0, Math.min(carrIndex + dir, carrItems.length - 1));
-            track.style.transform = 'translateX(-' + (carrIndex * 300) + 'px)';
+            atualizarCarrossel();
+        }
+
+        function atualizarCarrossel() {
+            var track = document.getElementById('carrossel-track');
+            var wrap  = track.parentElement; /* .carrossel-wrap */
+            var cardW = 280 + 20; /* min-width + gap */
+            track.style.transform = 'translateX(-' + (carrIndex * cardW) + 'px)';
+            var fill = document.getElementById('carr-progress-fill');
+            if (fill) {
+                var pct = carrItems.length <= 1 ? 100 : Math.round(((carrIndex + 1) / carrItems.length) * 100);
+                fill.style.width = pct + '%';
+            }
+        }
+
+        function addCarrDragSupport() {
+            var track = document.getElementById('carrossel-track');
+            if (!track) return;
+            var startX = 0, isDragging = false;
+            var cardW = 280 + 20;
+            function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; }
+            function onMove(x) {
+                if (!isDragging) return;
+                var base = -(carrIndex * cardW);
+                track.style.transform = 'translateX(' + (base + (x - startX)) + 'px)';
+            }
+            function onEnd(x) {
+                if (!isDragging) return;
+                isDragging = false; track.style.transition = '';
+                var diff = x - startX;
+                if (Math.abs(diff) > 40) moverCarrossel(diff < 0 ? 1 : -1);
+                else atualizarCarrossel();
+            }
+            track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
+            window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
+            window.addEventListener('mouseup', function(e){ if (isDragging) onEnd(e.clientX); });
+            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove', function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchend', function(e){ onEnd(e.changedTouches[0].clientX); });
         }
 
         document.getElementById('carr-prev').addEventListener('click', function(){ moverCarrossel(-1); });
