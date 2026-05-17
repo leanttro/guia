@@ -493,6 +493,151 @@
         .footer-bottom a { color: #555; text-decoration: none; }
         .footer-bottom a:hover { color: #888; text-decoration: underline; }
         .footer-logo img { filter: brightness(0) invert(1); }
+        /* ── Banner Social (Instagram + Compartilhar) ── */
+        .social-banner {
+            background: linear-gradient(135deg, #1a0a0a 0%, #2d0d0d 100%);
+            padding: 48px 20px;
+            text-align: center;
+        }
+        .social-banner-title {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: 0.01em;
+        }
+        .social-banner-sub {
+            font-size: 0.95em;
+            color: #c0a0a0;
+            margin-bottom: 28px;
+        }
+        .social-btns {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn-ig-seguir {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: #fff;
+            font-size: 1em;
+            font-weight: 700;
+            padding: 13px 26px;
+            border-radius: 50px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(220,39,67,0.45);
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            white-space: nowrap;
+        }
+        .btn-ig-seguir:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(220,39,67,0.55); opacity: 0.93; }
+        .btn-ig-seguir svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .btn-share {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 1em;
+            font-weight: 600;
+            padding: 13px 24px;
+            border-radius: 50px;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            white-space: nowrap;
+            font-family: 'Roboto', sans-serif;
+            letter-spacing: 0.01em;
+        }
+        .btn-share:hover { background: rgba(255,255,255,0.16); transform: translateY(-2px); }
+        .btn-share svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .share-modal-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            align-items: flex-end;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #1c1c1e;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 480px;
+            padding: 28px 24px 36px;
+            animation: slideUp 0.28s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .share-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 22px;
+        }
+        .share-modal-header h3 { color: #fff; font-size: 1.05em; font-weight: 700; }
+        .share-modal-close {
+            background: #3a3a3c; border: none; color: #fff;
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1em; flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .share-modal-close:hover { background: #555; }
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .share-opt {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            text-decoration: none; cursor: pointer; border: none; background: none;
+            padding: 0; font-family: 'Roboto', sans-serif;
+            transition: transform 0.18s;
+        }
+        .share-opt:hover { transform: scale(1.08); }
+        .share-opt .share-icon {
+            width: 52px; height: 52px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5em;
+        }
+        .share-opt span { font-size: 0.72em; color: #aeaeb2; font-weight: 500; text-align: center; }
+        .share-icon-wpp  { background: #25D366; }
+        .share-icon-ig   { background: linear-gradient(135deg, #f09433, #dc2743, #bc1888); }
+        .share-icon-tk   { background: #000; border: 1px solid #333; }
+        .share-icon-tw   { background: #000; border: 1px solid #333; }
+        .share-copy-row {
+            display: flex; gap: 10px; align-items: center;
+            background: #2c2c2e; border-radius: 12px; padding: 12px 14px;
+        }
+        .share-copy-url {
+            flex: 1; color: #aeaeb2; font-size: 0.83em;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-family: 'Roboto', sans-serif;
+        }
+        .share-copy-btn {
+            background: var(--primary); color: #fff; border: none;
+            padding: 7px 16px; border-radius: 8px; font-size: 0.82em;
+            font-weight: 700; cursor: pointer; flex-shrink: 0;
+            transition: background 0.2s;
+            font-family: 'Roboto', sans-serif;
+        }
+        .share-copy-btn:hover { background: var(--dark); }
+        @media (max-width: 600px) {
+            .social-btns { flex-direction: column; align-items: stretch; }
+            .btn-ig-seguir, .btn-share { justify-content: center; }
+            .share-options { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+            .share-opt .share-icon { width: 46px; height: 46px; border-radius: 12px; }
+        }
+
         /* ── Banner Vagas ── */
         .vagas-banner {
             background: #1a0a0a;
@@ -893,6 +1038,62 @@
             </div>
         </div>
     </section>
+
+    <!-- Banner Social: Instagram + Compartilhar -->
+    <section class="social-banner" aria-label="Siga no Instagram e compartilhe">
+        <div class="social-banner-title">📸 Siga o Guia do Rodízio no Instagram</div>
+        <div class="social-banner-sub">Dicas, novidades e os melhores rodízios de SP todo dia!</div>
+        <div class="social-btns">
+            <a href="https://www.instagram.com/guiadorodizio.com.br/" target="_blank" rel="noopener noreferrer" class="btn-ig-seguir" aria-label="Seguir @guiadorodizio.com.br no Instagram">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
+                Seguir no Instagram
+            </a>
+            <button class="btn-share" onclick="openShareModal()" aria-label="Compartilhar o Guia do Rodízio">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Compartilhar
+            </button>
+        </div>
+    </section>
+
+    <!-- Modal de Compartilhamento -->
+    <div class="share-modal-overlay" id="share-modal-overlay" role="dialog" aria-modal="true" aria-label="Compartilhar o site" onclick="handleShareOverlayClick(event)">
+        <div class="share-modal">
+            <div class="share-modal-header">
+                <h3>Compartilhar</h3>
+                <button class="share-modal-close" onclick="closeShareModal()" aria-label="Fechar">&#x2715;</button>
+            </div>
+            <div class="share-options">
+                <a class="share-opt" id="share-wpp" href="#" target="_blank" rel="noopener noreferrer" aria-label="Compartilhar no WhatsApp">
+                    <span class="share-icon share-icon-wpp">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                    </span>
+                    <span>WhatsApp</span>
+                </a>
+                <a class="share-opt" href="https://www.instagram.com/direct/inbox/" target="_blank" rel="noopener noreferrer" aria-label="Compartilhar pelo Instagram Direct">
+                    <span class="share-icon share-icon-ig">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="#fff" stroke="none"/></svg>
+                    </span>
+                    <span>Instagram</span>
+                </a>
+                <a class="share-opt" href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" aria-label="Compartilhar no TikTok">
+                    <span class="share-icon share-icon-tk">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.04a4.85 4.85 0 01-1.06-.35z"/></svg>
+                    </span>
+                    <span>TikTok</span>
+                </a>
+                <a class="share-opt" id="share-tw" href="#" target="_blank" rel="noopener noreferrer" aria-label="Compartilhar no X (Twitter)">
+                    <span class="share-icon share-icon-tw">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.734-8.835L2 2.25h6.946l4.25 5.621 5.048-5.621zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </span>
+                    <span>X (Twitter)</span>
+                </a>
+            </div>
+            <div class="share-copy-row">
+                <span class="share-copy-url" id="share-copy-url">https://www.guiadorodizio.com.br/</span>
+                <button class="share-copy-btn" id="share-copy-btn" onclick="copyShareLink()">Copiar link</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Banner Vagas -->
     <section class="vagas-banner" aria-label="Trabalhe em rodízios em São Paulo">
@@ -1937,6 +2138,51 @@
             document.getElementById('disputa-feedback').style.display = 'none';
             document.getElementById('btn-reiniciar').style.display   = 'inline-block';
         }
+
+        // ── Modal de Compartilhamento ──
+        var SHARE_URL = 'https://www.guiadorodizio.com.br/';
+        var SHARE_TEXT = 'Encontrei o melhor guia de rodízios de SP! 🍣🥩🍕 Confere lá:';
+
+        function openShareModal() {
+            document.getElementById('share-modal-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('share-wpp').href =
+                'https://wa.me/?text=' + encodeURIComponent(SHARE_TEXT + ' ' + SHARE_URL);
+            document.getElementById('share-tw').href =
+                'https://twitter.com/intent/tweet?text=' + encodeURIComponent(SHARE_TEXT) + '&url=' + encodeURIComponent(SHARE_URL);
+            document.getElementById('share-copy-url').textContent = SHARE_URL;
+            document.getElementById('share-copy-btn').textContent = 'Copiar link';
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal-overlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function handleShareOverlayClick(e) {
+            if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+        }
+
+        function copyShareLink() {
+            var btn = document.getElementById('share-copy-btn');
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(SHARE_URL).then(function() {
+                    btn.textContent = 'Copiado! ✓';
+                    setTimeout(function(){ btn.textContent = 'Copiar link'; }, 2500);
+                });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = SHARE_URL; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.focus(); ta.select();
+                try { document.execCommand('copy'); btn.textContent = 'Copiado! ✓'; } catch(e) {}
+                document.body.removeChild(ta);
+                setTimeout(function(){ btn.textContent = 'Copiar link'; }, 2500);
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeShareModal();
+        });
 
         // Init
         loadPratos();
