@@ -467,6 +467,16 @@
         }
         .btn-enviar-coment:hover { background: var(--dark); }
         .coment-aviso { font-size: 0.8em; color: #6c757d; text-align: center; }
+
+        /* ── Aviso de endereço por IA ── */
+        .endereco-aviso {
+            display: inline-flex; align-items: center; gap: 5px;
+            margin-top: 6px; font-size: 0.74em; color: #8a9bae;
+            line-height: 1.4;
+        }
+        .endereco-aviso i { font-size: 0.85em; color: #a8c5da; flex-shrink: 0; }
+        .endereco-aviso a { color: #6fafd4; text-decoration: none; font-weight: 600; white-space: nowrap; }
+        .endereco-aviso a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -640,6 +650,15 @@
                                 {% if restaurante.cidade %}<br><small itemprop="name">{{ restaurante.cidade }}</small>{% endif %}
                                 <meta itemprop="addressRegion" content="SP">
                                 <meta itemprop="addressCountry" content="BR">
+                                <div class="endereco-aviso">
+                                    <i class="fas fa-circle-check"></i>
+                                    Endereço preenchido com IA — confirme no
+                                    {% if restaurante.lat and restaurante.lng %}
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ restaurante.lat }},{{ restaurante.lng }}" target="_blank" rel="noopener">Google Maps</a>
+                                    {% elif restaurante.endereco %}
+                                    <a href="https://www.google.com/maps/search/{{ restaurante.nome ~ ' ' ~ restaurante.endereco | urlencode }}" target="_blank" rel="noopener">Google Maps</a>
+                                    {% endif %}
+                                </div>
                             </div>
                         </li>
                         {% endif %}
