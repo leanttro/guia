@@ -1031,9 +1031,24 @@
             const t = document.getElementById('idx-rest-track');
 
             t.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
-            t.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+            let _touchStartY1 = 0, _isHoriz1 = false, _horizDetermined1 = false;
+            t.addEventListener('touchstart', e => {
+                _touchStartY1 = e.touches[0].clientY;
+                _isHoriz1 = false; _horizDetermined1 = false;
+                onStart(e.touches[0].clientX);
+            }, { passive: true });
+            t.addEventListener('touchmove', e => {
+                if (!isDragging) return;
+                if (!_horizDetermined1) {
+                    const dx = Math.abs(e.touches[0].clientX - startX);
+                    const dy = Math.abs(e.touches[0].clientY - _touchStartY1);
+                    if (dx > 5 || dy > 5) { _isHoriz1 = dx >= dy; _horizDetermined1 = true; }
+                }
+                if (!_horizDetermined1 || !_isHoriz1) return;
+                e.preventDefault();
+                onMove(e.touches[0].clientX);
+            }, { passive: false });
+            t.addEventListener('touchend', e => { if (_isHoriz1) onEnd(e.changedTouches[0].clientX); else { isDragging = false; } });
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup',   onMouseUp);
@@ -1134,9 +1149,20 @@
             var t = document.getElementById('carrossel-track');
 
             t.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
-            t.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchmove',  function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchend',   function(e){ onEnd(e.changedTouches[0].clientX); });
+            var _touchStartY2 = 0, _isHoriz2 = false, _horizDetermined2 = false;
+            t.addEventListener('touchstart', function(e){ _touchStartY2 = e.touches[0].clientY; _isHoriz2 = false; _horizDetermined2 = false; onStart(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchmove', function(e){
+                if (!isDragging) return;
+                if (!_horizDetermined2) {
+                    var dx = Math.abs(e.touches[0].clientX - startX);
+                    var dy = Math.abs(e.touches[0].clientY - _touchStartY2);
+                    if (dx > 5 || dy > 5) { _isHoriz2 = dx >= dy; _horizDetermined2 = true; }
+                }
+                if (!_horizDetermined2 || !_isHoriz2) return;
+                e.preventDefault();
+                onMove(e.touches[0].clientX);
+            }, { passive: false });
+            t.addEventListener('touchend', function(e){ if (_isHoriz2) onEnd(e.changedTouches[0].clientX); else { isDragging = false; } });
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup',   onMouseUp);
@@ -1380,9 +1406,20 @@
             track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
             window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
             window.addEventListener('mouseup',   function(e){ if (isDragging) onEnd(e.clientX); });
-            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchmove',  function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchend',   function(e){ onEnd(e.changedTouches[0].clientX); });
+            var _touchStartY3 = 0, _isHoriz3 = false, _horizDetermined3 = false;
+            track.addEventListener('touchstart', function(e){ _touchStartY3 = e.touches[0].clientY; _isHoriz3 = false; _horizDetermined3 = false; onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove', function(e){
+                if (!isDragging) return;
+                if (!_horizDetermined3) {
+                    var dx = Math.abs(e.touches[0].clientX - startX);
+                    var dy = Math.abs(e.touches[0].clientY - _touchStartY3);
+                    if (dx > 5 || dy > 5) { _isHoriz3 = dx >= dy; _horizDetermined3 = true; }
+                }
+                if (!_horizDetermined3 || !_isHoriz3) return;
+                e.preventDefault();
+                onMove(e.touches[0].clientX);
+            }, { passive: false });
+            track.addEventListener('touchend', function(e){ if (_isHoriz3) onEnd(e.changedTouches[0].clientX); else { isDragging = false; } });
         })();
 
         // Inicializa features após renderizar
@@ -1484,9 +1521,20 @@
             track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
             window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
             window.addEventListener('mouseup',   function(e){ if (isDragging) onEnd(e.clientX); });
-            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchmove',  function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchend',   function(e){ onEnd(e.changedTouches[0].clientX); });
+            var _touchStartY4 = 0, _isHoriz4 = false, _horizDetermined4 = false;
+            track.addEventListener('touchstart', function(e){ _touchStartY4 = e.touches[0].clientY; _isHoriz4 = false; _horizDetermined4 = false; onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove', function(e){
+                if (!isDragging) return;
+                if (!_horizDetermined4) {
+                    var dx = Math.abs(e.touches[0].clientX - startX);
+                    var dy = Math.abs(e.touches[0].clientY - _touchStartY4);
+                    if (dx > 5 || dy > 5) { _isHoriz4 = dx >= dy; _horizDetermined4 = true; }
+                }
+                if (!_horizDetermined4 || !_isHoriz4) return;
+                e.preventDefault();
+                onMove(e.touches[0].clientX);
+            }, { passive: false });
+            track.addEventListener('touchend', function(e){ if (_isHoriz4) onEnd(e.changedTouches[0].clientX); else { isDragging = false; } });
         }
 
         function setBlogView(mode) {
