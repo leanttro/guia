@@ -3,8 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ restaurante.nome }} | Guia do Rodízio</title>
-    <meta name="description" content="{{ restaurante.descricao or restaurante.nome ~ ' - rodízio em ' ~ restaurante.cidade }}">
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Title & Description dinâmicos por restaurante
+    ═══════════════════════════════════════════════════════ -->
+    <title>{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %}, {{ restaurante.cidade }}{% endif %} | Guia do Rodízio</title>
+    <meta name="description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ restaurante.nome }}, rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %} em {{ restaurante.cidade }}{% endif %}. Veja cardápio, localização, contato e avaliações no Guia do Rodízio.{% endif %}">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Canonical
+    ═══════════════════════════════════════════════════════ -->
+    <link rel="canonical" href="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Open Graph (WhatsApp, Facebook, LinkedIn)
+    ═══════════════════════════════════════════════════════ -->
+    <meta property="og:type"        content="restaurant">
+    <meta property="og:site_name"   content="Guia do Rodízio SP">
+    <meta property="og:url"         content="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
+    <meta property="og:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %} | Guia do Rodízio">
+    <meta property="og:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ restaurante.nome }}, rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %} em {{ restaurante.cidade }}{% endif %}. Cardápio, localização e contato.{% endif %}">
+    {% if restaurante.foto_url %}
+    <meta property="og:image"       content="{{ restaurante.foto_url }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    {% endif %}
+    <meta property="og:locale"      content="pt_BR">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Twitter Card
+    ═══════════════════════════════════════════════════════ -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}">
+    <meta name="twitter:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %}, {{ restaurante.cidade }}{% endif %}. Veja cardápio e localização.{% endif %}">
+    {% if restaurante.foto_url %}
+    <meta name="twitter:image"       content="{{ restaurante.foto_url }}">
+    {% endif %}
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Schema.org JSON-LD (Restaurant + BreadcrumbList)
+    ═══════════════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Restaurant",
+          "@id": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}#restaurant",
+          "name": {{ restaurante.nome | tojson }},
+          "description": {{ (restaurante.descricao or '') | tojson }},
+          "servesCuisine": {{ (restaurante.categoria_nome or '') | tojson }},
+          "url": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}",
+          {% if restaurante.foto_url %}
+          "image": {{ restaurante.foto_url | tojson }},
+          {% endif %}
+          {% if restaurante.telefone %}
+          "telephone": {{ restaurante.telefone | tojson }},
+          {% endif %}
+          {% if restaurante.website %}
+          "sameAs": {{ restaurante.website | tojson }},
+          {% endif %}
+          "address": {
+            "@type": "PostalAddress",
+            {% if restaurante.endereco %}
+            "streetAddress": {{ restaurante.endereco | tojson }},
+            {% endif %}
+            {% if restaurante.bairro %}
+            "addressLocality": {{ restaurante.bairro | tojson }},
+            {% endif %}
+            "addressRegion": "SP",
+            "addressCountry": "BR"
+            {% if restaurante.cidade %}
+            ,"name": {{ restaurante.cidade | tojson }}
+            {% endif %}
+          }
+          {% if restaurante.lat and restaurante.lng %}
+          ,"geo": {
+            "@type": "GeoCoordinates",
+            "latitude": {{ restaurante.lat }},
+            "longitude": {{ restaurante.lng }}
+          }
+          {% endif %}
+          {% if restaurante.media_nota and restaurante.total_votos and restaurante.total_votos > 0 %}
+          ,"aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "{{ restaurante.media_nota }}",
+            "reviewCount": "{{ restaurante.total_votos }}",
+            "bestRating": "5",
+            "worstRating": "1"
+          }
+          {% endif %}
+          ,"priceRange": "$$",
+          "currenciesAccepted": "BRL",
+          "paymentAccepted": "Cash, Credit Card, Debit Card, Pix"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Início",
+              "item": "https://guiadorodizio.com.br/"
+            }
+            {% if restaurante.categoria_slug and restaurante.categoria_nome %}
+            ,{
+              "@type": "ListItem",
+              "position": 2,
+              "name": {{ restaurante.categoria_nome | tojson }},
+              "item": "https://guiadorodizio.com.br/{{ restaurante.categoria_slug }}"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": {{ restaurante.nome | tojson }},
+              "item": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}"
+            }
+            {% else %}
+            ,{
+              "@type": "ListItem",
+              "position": 2,
+              "name": {{ restaurante.nome | tojson }},
+              "item": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}"
+            }
+            {% endif %}
+          ]
+        }
+      ]
+    }
+    </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -392,7 +518,11 @@
         <div class="cat-hero-foto">
             <img
                 src="{{ restaurante.foto_url }}"
-                alt="{{ restaurante.nome }}"
+                alt="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %}, {{ restaurante.cidade }}{% endif %}"
+                width="560"
+                height="320"
+                loading="eager"
+                decoding="async"
                 onerror="this.onerror=null;this.closest('.cat-hero-foto').outerHTML='<div class=\'cat-hero-slim\'></div>';"
             >
         </div>
@@ -409,7 +539,7 @@
         const REST_ID = {{ restaurante.id }};
     </script>
 
-    <main>
+    <main itemscope itemtype="https://schema.org/Restaurant">
         <div class="page-wrap">
 
             <!-- ── Coluna principal ── -->
@@ -427,9 +557,9 @@
                     {% if restaurante.categoria_nome %}
                         <span class="rest-categoria-badge">{{ restaurante.categoria_nome }}</span>
                     {% endif %}
-                    <h1 class="rest-nome">{{ restaurante.nome }}</h1>
+                    <h1 class="rest-nome" itemprop="name">{{ restaurante.nome }}</h1>
                     {% if restaurante.descricao %}
-                        <p class="rest-descricao">{{ restaurante.descricao }}</p>
+                        <p class="rest-descricao" itemprop="description">{{ restaurante.descricao }}</p>
                     {% endif %}
                 </div>
 
@@ -441,7 +571,11 @@
                         {% for prato in pratos %}
                         <div class="prato-card">
                             <img src="{{ prato.foto_url or 'https://placehold.co/400x260/f8f9fa/343a40?text=' ~ prato.nome }}"
-                                 alt="{{ prato.nome }}"
+                                 alt="{{ prato.nome }} — prato do rodízio {{ restaurante.nome }}"
+                                 width="400"
+                                 height="130"
+                                 loading="lazy"
+                                 decoding="async"
                                  onerror="this.src='https://placehold.co/400x260/f8f9fa/343a40?text={{ prato.nome }}'">
                             <div class="prato-info">
                                 <h3>{{ prato.nome }}</h3>
@@ -500,10 +634,12 @@
                         {% if restaurante.endereco %}
                         <li>
                             <span class="icon-wrap"><i class="fas fa-map-pin"></i></span>
-                            <div>
-                                {{ restaurante.endereco }}
-                                {% if restaurante.bairro %} — {{ restaurante.bairro }}{% endif %}
-                                {% if restaurante.cidade %}<br><small>{{ restaurante.cidade }}</small>{% endif %}
+                            <div itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+                                <span itemprop="streetAddress">{{ restaurante.endereco }}</span>
+                                {% if restaurante.bairro %} — <span itemprop="addressLocality">{{ restaurante.bairro }}</span>{% endif %}
+                                {% if restaurante.cidade %}<br><small itemprop="name">{{ restaurante.cidade }}</small>{% endif %}
+                                <meta itemprop="addressRegion" content="SP">
+                                <meta itemprop="addressCountry" content="BR">
                             </div>
                         </li>
                         {% endif %}
@@ -512,7 +648,7 @@
                         <li>
                             <span class="icon-wrap"><i class="fas fa-phone"></i></span>
                             <div>
-                                <a href="tel:{{ restaurante.telefone }}">{{ restaurante.telefone }}</a>
+                                <a href="tel:{{ restaurante.telefone }}" itemprop="telephone">{{ restaurante.telefone }}</a>
                             </div>
                         </li>
                         {% endif %}
