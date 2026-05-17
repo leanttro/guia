@@ -17,16 +17,14 @@
     <!-- ═══════════════════════════════════════════════════════
          SEO — Open Graph (WhatsApp, Facebook, LinkedIn)
     ═══════════════════════════════════════════════════════ -->
-    <meta property="og:type"        content="restaurant">
+    <meta property="og:type"        content="website">
     <meta property="og:site_name"   content="Guia do Rodízio SP">
     <meta property="og:url"         content="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
     <meta property="og:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %} | Guia do Rodízio">
     <meta property="og:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ restaurante.nome }}, rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %} em {{ restaurante.cidade }}{% endif %}. Cardápio, localização e contato.{% endif %}">
-    {% if restaurante.foto_url %}
-    <meta property="og:image"       content="{{ restaurante.foto_url }}">
+    <meta property="og:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png' }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    {% endif %}
     <meta property="og:locale"      content="pt_BR">
 
     <!-- ═══════════════════════════════════════════════════════
@@ -35,9 +33,7 @@
     <meta name="twitter:card"        content="summary_large_image">
     <meta name="twitter:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}">
     <meta name="twitter:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %}, {{ restaurante.cidade }}{% endif %}. Veja cardápio e localização.{% endif %}">
-    {% if restaurante.foto_url %}
-    <meta name="twitter:image"       content="{{ restaurante.foto_url }}">
-    {% endif %}
+    <meta name="twitter:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png' }}">
 
     <!-- ═══════════════════════════════════════════════════════
          SEO — Schema.org JSON-LD (Restaurant + BreadcrumbList)
@@ -65,16 +61,11 @@
           "address": {
             "@type": "PostalAddress",
             {% if restaurante.endereco %}
-            "streetAddress": {{ restaurante.endereco | tojson }},
+            "streetAddress": "{{ restaurante.endereco }}{% if restaurante.bairro %}, {{ restaurante.bairro }}{% endif %}",
             {% endif %}
-            {% if restaurante.bairro %}
-            "addressLocality": {{ restaurante.bairro | tojson }},
-            {% endif %}
+            "addressLocality": "{{ restaurante.cidade or 'São Paulo' }}",
             "addressRegion": "SP",
             "addressCountry": "BR"
-            {% if restaurante.cidade %}
-            ,"name": {{ restaurante.cidade | tojson }}
-            {% endif %}
           }
           {% if restaurante.lat and restaurante.lng %}
           ,"geo": {
@@ -82,6 +73,7 @@
             "latitude": {{ restaurante.lat }},
             "longitude": {{ restaurante.lng }}
           }
+          ,"hasMap": "https://www.google.com/maps/dir/?api=1&destination={{ restaurante.lat }},{{ restaurante.lng }}"
           {% endif %}
           {% if restaurante.media_nota and restaurante.total_votos and restaurante.total_votos > 0 %}
           ,"aggregateRating": {
@@ -149,7 +141,7 @@
         .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
 
         /* ── Header ── */
-        header {
+        body > header {
             background-color: var(--primary);
             padding: 18px 20px;
             display: flex;
@@ -159,22 +151,22 @@
             gap: 14px;
             position: relative;
         }
-        header .logo { display: flex; align-items: center; }
-        header .logo a { display: block; }
-        header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
-        header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
-        header nav.desktop-nav ul li a {
+        body > header .logo { display: flex; align-items: center; }
+        body > header .logo a { display: block; }
+        body > header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
+        body > header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        body > header nav.desktop-nav ul li a {
             text-decoration: none; color: var(--white); font-weight: 500;
             position: relative; padding-bottom: 5px; transition: color 0.3s;
         }
-        header nav.desktop-nav ul li a::after {
+        body > header nav.desktop-nav ul li a::after {
             content: ''; position: absolute; width: 0; height: 2px;
             bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
         }
-        header nav.desktop-nav ul li a.active { font-weight: 700; }
-        header nav.desktop-nav ul li a.active::after { width: 100%; }
-        header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
-        header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
+        body > header nav.desktop-nav ul li a.active { font-weight: 700; }
+        body > header nav.desktop-nav ul li a.active::after { width: 100%; }
+        body > header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
+        body > header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
         .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
         .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
         .mobile-nav-overlay.active { display: flex; opacity: 1; }
@@ -435,9 +427,9 @@
             .sidebar { order: -1; }
         }
         @media (max-width: 768px) {
-            header nav.desktop-nav { display: none; }
+            body > header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
-            header .logo img { height: 60px; }
+            body > header .logo img { height: 60px; }
             .rest-nome { font-size: 1.6em; }
             #map { height: 230px; }
         }
@@ -494,7 +486,7 @@
                 />
             </a>
         </div>
-        <nav class="desktop-nav">
+        <nav class="desktop-nav" aria-label="Navegação principal">
             <ul>
                 <li><a href="/">Início</a></li>
                 <li><a href="/japones">Japonês</a></li>
@@ -505,12 +497,12 @@
                 <li><a href="/blog">Blog</a></li>
             </ul>
         </nav>
-        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+        <div class="hamburger-menu" id="hamburger-btn" aria-label="Abrir menu de navegação" role="button" tabindex="0"><i class="fas fa-bars"></i></div>
     </header>
 
-    <div class="mobile-nav-overlay" id="mobile-nav">
+    <div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true" aria-label="Menu de navegação">
         <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
-        <nav>
+        <nav aria-label="Navegação mobile">
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
                 <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
@@ -533,6 +525,7 @@
                 height="320"
                 loading="eager"
                 decoding="async"
+                itemprop="image"
                 onerror="this.onerror=null;this.closest('.cat-hero-foto').outerHTML='<div class=\'cat-hero-slim\'></div>';"
             >
         </div>
@@ -550,6 +543,8 @@
     </script>
 
     <main itemscope itemtype="https://schema.org/Restaurant">
+        <meta itemprop="url" content="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
+        <meta itemprop="priceRange" content="$$">
         <div class="page-wrap">
 
             <!-- ── Coluna principal ── -->
@@ -557,13 +552,13 @@
 
                 <!-- Cabeçalho -->
                 <div class="rest-title-block">
-                    <div class="breadcrumb">
+                <nav class="breadcrumb" aria-label="Navegação estrutural">
                         <a href="/">Início</a> &rsaquo;
                         {% if restaurante.categoria_slug %}
                             <a href="/{{ restaurante.categoria_slug }}">{{ restaurante.categoria_nome }}</a> &rsaquo;
                         {% endif %}
                         {{ restaurante.nome }}
-                    </div>
+                    </nav>
                     {% if restaurante.categoria_nome %}
                         <span class="rest-categoria-badge">{{ restaurante.categoria_nome }}</span>
                     {% endif %}
@@ -701,13 +696,13 @@
                         {% if restaurante.lat and restaurante.lng %}
                         <a class="btn-action btn-maps"
                            href="https://www.google.com/maps/dir/?api=1&destination={{ restaurante.lat }},{{ restaurante.lng }}"
-                           target="_blank" rel="noopener">
+                           target="_blank" rel="noopener noreferrer">
                             <i class="fas fa-map-marker-alt"></i> Abrir no Google Maps
                         </a>
                         {% elif restaurante.endereco %}
                         <a class="btn-action btn-maps"
                            href="https://www.google.com/maps/search/{{ restaurante.nome ~ ' ' ~ restaurante.endereco | urlencode }}"
-                           target="_blank" rel="noopener">
+                           target="_blank" rel="noopener noreferrer">
                             <i class="fas fa-map-marker-alt"></i> Ver no Google Maps
                         </a>
                         {% endif %}
@@ -715,7 +710,7 @@
                         {% if restaurante.telefone %}
                         <a class="btn-action btn-wpp"
                            href="https://wa.me/55{{ restaurante.telefone | replace('(','') | replace(')','') | replace('-','') | replace(' ','') }}"
-                           target="_blank" rel="noopener">
+                           target="_blank" rel="noopener noreferrer">
                             <i class="fab fa-whatsapp"></i> Chamar no WhatsApp
                         </a>
                         {% endif %}
@@ -723,7 +718,7 @@
                         {% if restaurante.instagram %}
                         <a class="btn-action btn-insta"
                            href="https://instagram.com/{{ restaurante.instagram | replace('@','') }}"
-                           target="_blank" rel="noopener">
+                           target="_blank" rel="noopener noreferrer">
                             <i class="fab fa-instagram"></i> Ver Instagram
                         </a>
                         {% endif %}
@@ -731,7 +726,7 @@
                         {% if restaurante.website %}
                         <a class="btn-action btn-site"
                            href="{{ restaurante.website }}"
-                           target="_blank" rel="noopener">
+                           target="_blank" rel="noopener noreferrer">
                             <i class="fas fa-external-link-alt"></i> Acessar site
                         </a>
                         {% endif %}
