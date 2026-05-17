@@ -375,13 +375,31 @@
             .modal-body { padding: 18px 20px 24px; }
             .modal-header { padding: 18px 20px 14px; }
             .fab-curriculo { bottom: 16px; right: 16px; padding: 13px 18px; }
-            .carousel-track .vaga-card { flex: 0 0 calc(50% - 13px); }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
             .footer-divider { display: none; }
             .footer-logo img { height: 38px; }
             .footer-text { min-width: unset; }
             .footer-actions { width: 100%; justify-content: center; }
             .f-btn { flex: 1; justify-content: center; font-size: 12px; padding: 9px 10px; }
+
+            /* ── Carrossel: scroll-snap nativo ── */
+            .carousel-track-outer {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .carousel-track-outer::-webkit-scrollbar { display: none; }
+            .carousel-track {
+                transform: none !important;
+                transition: none !important;
+                cursor: default;
+            }
+            .carousel-track .vaga-card {
+                flex: 0 0 calc(50% - 13px);
+                scroll-snap-align: start;
+            }
         }
         @media (max-width: 520px) {
             .carousel-track .vaga-card { flex: 0 0 100%; }
@@ -823,7 +841,12 @@
             const max = Math.max(0, state.total - state.visibleCount);
             if (state.index > max) state.index = max;
 
-            track.style.transform = `translateX(-${state.index * stepPx}px)`;
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                outer.scrollTo({ left: state.index * stepPx, behavior: 'smooth' });
+            } else {
+                track.style.transform = `translateX(-${state.index * stepPx}px)`;
+            }
 
             const fill = document.getElementById('vagas-progress-fill');
             if (fill) {
@@ -876,12 +899,13 @@
                 else updateCarouselPosition();
             }
 
-            track.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
+            // Apenas mouse drag no desktop — touch é tratado pelo scroll-snap nativo CSS
+            track.addEventListener('mousedown', e => {
+                if (window.innerWidth <= 768) return;
+                onStart(e.clientX); e.preventDefault();
+            });
             window.addEventListener('mousemove', e => { if (isDragging) onMove(e.clientX); });
             window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientX); });
-            track.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
         }
 
         window.addEventListener('resize', () => {
