@@ -5,6 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog | Dicas e Guias de Rodízio | Guia do Rodízio</title>
     <meta name="description" content="Dicas, guias e curiosidades sobre rodízios em São Paulo. Aprenda o que pedir, os melhores cortes e muito mais.">
+    <link rel="canonical" href="https://www.guiadorodizio.com.br/blog" />
+    <meta name="theme-color" content="#C0392B" />
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://www.guiadorodizio.com.br/blog" />
+    <meta property="og:title"       content="Blog | Dicas e Guias de Rodízio | Guia do Rodízio" />
+    <meta property="og:description" content="Dicas, guias e curiosidades sobre rodízios em São Paulo. Aprenda o que pedir, os melhores cortes e muito mais." />
+    <meta property="og:image"       content="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png" />
+    <meta property="og:image:width"  content="2000" />
+    <meta property="og:image:height" content="1200" />
+    <meta property="og:locale"      content="pt_BR" />
+    <meta property="og:site_name"   content="Guia do Rodízio SP" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Blog | Dicas e Guias de Rodízio | Guia do Rodízio" />
+    <meta name="twitter:description" content="Dicas, guias e curiosidades sobre rodízios em São Paulo. Aprenda o que pedir, os melhores cortes e muito mais." />
+    <meta name="twitter:image"       content="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png" />
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "Blog | Guia do Rodízio SP",
+      "url": "https://www.guiadorodizio.com.br/blog",
+      "description": "Dicas, guias e curiosidades sobre rodízios em São Paulo.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Guia do Rodízio SP",
+        "url": "https://www.guiadorodizio.com.br",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+        }
+      }
+    }
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -19,7 +59,7 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
         /* ── Header ── */
-        header {
+        body > header {
             background-color: var(--primary);
             padding: 18px 20px;
             display: flex;
@@ -29,22 +69,22 @@
             gap: 14px;
             position: relative;
         }
-        header .logo { display: flex; align-items: center; }
-        header .logo a { display: block; }
-        header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
-        header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
-        header nav.desktop-nav ul li a {
+        body > header .logo { display: flex; align-items: center; }
+        body > header .logo a { display: block; }
+        body > header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
+        body > header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        body > header nav.desktop-nav ul li a {
             text-decoration: none; color: var(--white); font-weight: 500;
             position: relative; padding-bottom: 5px; transition: color 0.3s;
         }
-        header nav.desktop-nav ul li a::after {
+        body > header nav.desktop-nav ul li a::after {
             content: ''; position: absolute; width: 0; height: 2px;
             bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
         }
-        header nav.desktop-nav ul li a.active { font-weight: 700; }
-        header nav.desktop-nav ul li a.active::after { width: 100%; }
-        header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
-        header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
+        body > header nav.desktop-nav ul li a.active { font-weight: 700; }
+        body > header nav.desktop-nav ul li a.active::after { width: 100%; }
+        body > header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
+        body > header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
         .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
         .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
         .mobile-nav-overlay.active { display: flex; opacity: 1; }
@@ -163,9 +203,9 @@
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
-            header nav.desktop-nav { display: none; }
+            body > header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
-            header .logo img { height: 60px; }
+            body > header .logo img { height: 60px; }
             .hero-section h1 { font-size: 1.9em; }
             .section-title { font-size: 1.6em; }
             .carousel-track .blog-card { flex: 0 0 calc(50% - 13px); }
@@ -203,7 +243,7 @@
                 />
             </a>
         </div>
-        <nav class="desktop-nav">
+        <nav class="desktop-nav" aria-label="Navegação principal">
             <ul>
                 <li><a href="/">Início</a></li>
                 <li><a href="/japones">Japonês</a></li>
@@ -211,14 +251,14 @@
                 <li><a href="/pizza">Pizza</a></li>
                 <li><a href="/mexicano">Mexicano</a></li>
                 <li><a href="/vagas">Empregos</a></li>
-                <li><a href="/blog" class="active">Blog</a></li>
+                <li><a href="/blog" class="active" aria-current="page">Blog</a></li>
             </ul>
         </nav>
-        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+        <div class="hamburger-menu" id="hamburger-btn" role="button" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="mobile-nav" tabindex="0"><i class="fas fa-bars"></i></div>
     </header>
 
     <!-- Mobile Nav -->
-    <div class="mobile-nav-overlay" id="mobile-nav">
+    <div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true" aria-label="Menu de navegação">
         <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;left:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
         <nav>
             <ul>
@@ -350,11 +390,18 @@
 
     <script>
         // ── Mobile nav ──
-        document.getElementById('hamburger-btn').addEventListener('click', () => {
-            document.getElementById('mobile-nav').classList.toggle('active');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const mobileNav = document.getElementById('mobile-nav');
+        hamburgerBtn.addEventListener('click', () => {
+            const isOpen = mobileNav.classList.toggle('active');
+            hamburgerBtn.setAttribute('aria-expanded', isOpen);
+        });
+        hamburgerBtn.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hamburgerBtn.click(); }
         });
         function closeMobileNav() {
-            document.getElementById('mobile-nav').classList.remove('active');
+            mobileNav.classList.remove('active');
+            hamburgerBtn.setAttribute('aria-expanded', 'false');
         }
 
         // ── Estado do carrossel ──
