@@ -1347,8 +1347,9 @@
             idxBairroSel = null;
             document.querySelectorAll('#idx-filtros-cidade .chip-loc').forEach(function(b){ b.classList.remove('active'); });
             btn.classList.add('active');
-            idxCarregarFiltrosBairro();
+            if (!idxCidadeSel) { document.getElementById('idx-filtros-bairro-wrap').style.display = 'none'; }
             await idxCarregarFiltrosRegiao();
+            if (idxCidadeSel) idxCarregarFiltrosBairro();
             idxAplicarFiltros();
         }
 
@@ -1414,7 +1415,6 @@
                 idxTodosRestaurantes = await res.json();
                 if (idxTodosRestaurantes.length) {
                     await idxCarregarFiltrosCidade();
-                    idxCarregarFiltrosBairro();
                     idxAplicarFiltros();
                 } else {
                     document.getElementById('restaurantes-resultado').innerHTML =
@@ -1446,7 +1446,6 @@
                         return;
                     }
                     await idxCarregarFiltrosCidade();
-                    idxCarregarFiltrosBairro();
                     idxAplicarFiltros();
                 } catch(e) {
                     document.getElementById('restaurantes-resultado').innerHTML =
