@@ -3,8 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guia do Rodízio SP | Japonês, Carnes, Pizza e mais | GuiaDoRodizio</title>
-    <meta name="description" content="Guia completo de rodízios em São Paulo. Saiba o que pedir, conheça os pratos e encontre o rodízio mais próximo de você.">
+
+    <!-- ══ SEO Básico ══ -->
+    <title>Guia do Rodízio SP — Encontre Rodízios de Japonês, Carnes, Pizza e Mexicano em São Paulo</title>
+    <meta name="description" content="Guia completo de rodízios em São Paulo. Encontre o melhor rodízio perto de você, conheça os pratos, leia avaliações e descubra dicas de japonês, carnes, pizza e mexicano.">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#C0392B">
+    <link rel="canonical" href="https://www.guiadorodizio.com.br/">
+
+    <!-- ══ Open Graph (WhatsApp, Facebook, LinkedIn) ══ -->
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Guia do Rodízio SP">
+    <meta property="og:url"         content="https://www.guiadorodizio.com.br/">
+    <meta property="og:title"       content="Guia do Rodízio SP — Japonês, Carnes, Pizza e Mexicano em São Paulo">
+    <meta property="og:description" content="Encontre o melhor rodízio perto de você em São Paulo. Conheça os pratos, leia avaliações e descubra dicas de japonês, carnes, pizza e mexicano.">
+    <meta property="og:image"       content="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778889104/guiadorodizio_c5dr0a.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale"      content="pt_BR">
+
+    <!-- ══ Twitter Card ══ -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Guia do Rodízio SP — Japonês, Carnes, Pizza e Mexicano">
+    <meta name="twitter:description" content="Encontre o melhor rodízio perto de você em São Paulo. Pratos, avaliações e dicas de japonês, carnes, pizza e mexicano.">
+    <meta name="twitter:image"       content="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778889104/guiadorodizio_c5dr0a.png">
+
+    <!-- ══ JSON-LD — WebSite + SearchAction + Organization ══ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://www.guiadorodizio.com.br/#website",
+          "url": "https://www.guiadorodizio.com.br/",
+          "name": "Guia do Rodízio SP",
+          "description": "Guia completo de rodízios em São Paulo — Japonês, Carnes, Pizza e Mexicano",
+          "inLanguage": "pt-BR",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.guiadorodizio.com.br/busca?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://www.guiadorodizio.com.br/#organization",
+          "name": "Guia do Rodízio SP",
+          "url": "https://www.guiadorodizio.com.br/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png",
+            "width": 2000,
+            "height": 1200
+          },
+          "sameAs": [],
+          "areaServed": {
+            "@type": "City",
+            "name": "São Paulo",
+            "addressRegion": "SP",
+            "addressCountry": "BR"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://www.guiadorodizio.com.br/#webpage",
+          "url": "https://www.guiadorodizio.com.br/",
+          "name": "Guia do Rodízio SP — Encontre Rodízios em São Paulo",
+          "description": "Guia completo de rodízios em São Paulo. Encontre o melhor rodízio perto de você, conheça os pratos e leia avaliações.",
+          "inLanguage": "pt-BR",
+          "isPartOf": { "@id": "https://www.guiadorodizio.com.br/#website" },
+          "about": { "@id": "https://www.guiadorodizio.com.br/#organization" },
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Início",
+                "item": "https://www.guiadorodizio.com.br/"
+              }
+            ]
+          }
+        }
+      ]
+    }
+    </script>
+
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-HKSQLE7TR1"></script>
     <script>
@@ -36,7 +124,7 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
         /* ── Header ── */
-        header {
+        body > header {
             background-color: var(--primary);
             padding: 18px 20px;
             display: flex;
@@ -46,21 +134,21 @@
             gap: 14px;
             position: relative;
         }
-        header .logo { display: flex; align-items: center; }
-        header .logo a { display: block; }
-        header .logo img { height: 160px; width: auto; display: block; filter: brightness(0) invert(1); }
-        header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
-        header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
-        header nav.desktop-nav ul li a {
+        body > header .logo { display: flex; align-items: center; }
+        body > header .logo a { display: block; }
+        body > header .logo img { height: 160px; width: auto; display: block; filter: brightness(0) invert(1); }
+        body > header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
+        body > header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        body > header nav.desktop-nav ul li a {
             text-decoration: none; color: var(--white); font-weight: 500;
             position: relative; padding-bottom: 5px; transition: color 0.3s;
         }
-        header nav.desktop-nav ul li a::after {
+        body > header nav.desktop-nav ul li a::after {
             content: ''; position: absolute; width: 0; height: 2px;
             bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
         }
-        header nav.desktop-nav ul li a:hover { color: var(--light); }
-        header nav.desktop-nav ul li a:hover::after { width: 100%; }
+        body > header nav.desktop-nav ul li a:hover { color: var(--light); }
+        body > header nav.desktop-nav ul li a:hover::after { width: 100%; }
         .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
         .mobile-nav-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -620,9 +708,9 @@
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
-            header nav.desktop-nav { display: none; }
+            body > header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
-            header .logo img { height: 60px; }
+            body > header .logo img { height: 60px; }
             .hero-section { height: 480px; }
             .hero-section h1 { font-size: 2em; }
             .hero-section p { font-size: 1.05em; }
@@ -648,9 +736,9 @@
                 />
             </a>
         </div>
-        <nav class="desktop-nav">
+        <nav class="desktop-nav" aria-label="Navegação principal">
             <ul>
-                <li><a href="/">Início</a></li>
+                <li><a href="/" aria-current="page">Início</a></li>
                 <li><a href="/japones">Japonês</a></li>
                 <li><a href="/carnes">Carnes</a></li>
                 <li><a href="/pizza">Pizza</a></li>
@@ -659,13 +747,13 @@
                 <li><a href="/blog">Blog</a></li>
             </ul>
         </nav>
-        <div class="hamburger-menu" id="hamburger-btn"><i class="fas fa-bars"></i></div>
+        <div class="hamburger-menu" id="hamburger-btn" aria-label="Abrir menu de navegação" role="button" tabindex="0"><i class="fas fa-bars"></i></div>
     </header>
 
     <!-- Mobile Nav -->
-    <div class="mobile-nav-overlay" id="mobile-nav">
+    <div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true" aria-label="Menu de navegação">
         <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;left:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
-        <nav>
+        <nav aria-label="Navegação mobile">
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
                 <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
@@ -679,16 +767,16 @@
     </div>
 
     <!-- Hero -->
-    <section class="hero-section">
+    <section class="hero-section" aria-label="Bem-vindo ao Guia do Rodízio SP">
         <div class="container">
             <h1>Tudo sobre rodízios em São Paulo</h1>
             <p>Aprenda o que pedir, conheça os pratos e encontre o melhor perto de você</p>
-            <a href="#categorias" class="btn-hero"><i class="fas fa-utensils"></i> Explorar categorias</a>
+            <a href="#categorias" class="btn-hero"><i class="fas fa-utensils" aria-hidden="true"></i> Explorar categorias</a>
         </div>
     </section>
 
     <!-- Categorias -->
-    <section class="section" id="categorias">
+    <section class="section" id="categorias" aria-label="Categorias de rodízio em São Paulo">
         <div class="container">
             <p style="text-align:center;font-size:1em;color:var(--primary);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px;">Guia de Rodízios de São Paulo e região: Pratos, Endereços, Dicas e Avaliações!</p>
             <h2 class="section-title">Escolha sua categoria</h2>
@@ -732,7 +820,7 @@
     </section>
 
     <!-- Como funciona — carrossel de features -->
-    <section class="section como-funciona">
+    <section class="section como-funciona" aria-label="Como usar o Guia do Rodízio">
         <div class="container">
             <h2 class="section-title">Como usar o guia</h2>
             <p class="section-subtitle">Tudo que você precisa antes, durante e depois do rodízio</p>
@@ -800,7 +888,7 @@
     </section>
 
     <!-- Restaurantes próximos -->
-    <section class="section busca-section" id="busca-local">
+    <section class="section busca-section" id="busca-local" aria-label="Encontre rodízios perto de você">
         <div class="container">
             <h2 class="section-title">Rodízios perto de mim</h2>
             <p class="section-subtitle">Use sua localização para encontrar o mais próximo agora</p>
@@ -869,7 +957,7 @@
     </section>
 
     <!-- Blog -->
-    <section class="section blog-section">
+    <section class="section blog-section" aria-label="Dicas e guias sobre rodízios">
         <div class="container">
             <h2 class="section-title">Dicas &amp; Guias</h2>
             <p class="section-subtitle">Tudo que você precisa saber antes de ir ao rodízio</p>
@@ -920,12 +1008,11 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer itemscope itemtype="https://schema.org/WPFooter">
         <div class="container">
             <div class="footer-inner">
 
-                <!-- Logo Leanttro -->
+                <!-- Logo -->
                 <a href="/" aria-label="Guia do Rodízio SP — Página inicial" class="footer-logo" itemprop="url">
                     <img
                         src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
