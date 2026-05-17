@@ -18,18 +18,36 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Roboto', sans-serif; background: var(--light-gray); color: var(--text-color); line-height: 1.6; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
-        /* ── Header ── */
-        header { background: var(--primary); padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-        header .logo { padding-left: 20px; }
-        header .logo a { text-decoration: none; }
-        header .logo span { color: var(--white); font-size: 1.4em; font-weight: 700; }
-        header nav.desktop-nav ul { list-style: none; display: flex; padding-right: 20px; gap: 35px; }
-        header nav.desktop-nav ul li a { text-decoration: none; color: var(--white); font-weight: 500; transition: color 0.3s; }
-        header nav.desktop-nav ul li a:hover { color: var(--light); }
-        header nav.desktop-nav ul li a.active { font-weight: 700; border-bottom: 2px solid var(--white); padding-bottom: 5px; }
-        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; }
+        /* ── Header igual ao categoria.html ── */
+        header {
+            background-color: var(--primary);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+        }
+        header .logo { display: flex; align-items: center; }
+        header .logo a { display: block; }
+        header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
+        header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        header nav.desktop-nav ul li a {
+            text-decoration: none; color: var(--white); font-weight: 500;
+            position: relative; padding-bottom: 5px; transition: color 0.3s;
+        }
+        header nav.desktop-nav ul li a::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
+        }
+        header nav.desktop-nav ul li a.active { font-weight: 700; }
+        header nav.desktop-nav ul li a.active::after { width: 100%; }
+        header nav.desktop-nav ul li a:not(.active):hover { color: var(--light); }
+        header nav.desktop-nav ul li a:not(.active):hover::after { width: 100%; }
+        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
         .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
         .mobile-nav-overlay.active { display: flex; opacity: 1; }
         .mobile-nav-overlay nav ul { list-style: none; flex-direction: column; text-align: center; padding: 0; }
@@ -57,7 +75,7 @@
 
         /* ── Tabs ── */
         .tabs-wrap { background: var(--white); border-bottom: 1px solid var(--medium-gray); position: sticky; top: 0; z-index: 50; }
-        .tabs { display: flex; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        .tabs { display: flex; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         .tab-btn {
             padding: 18px 28px; font-size: 1em; font-weight: 600;
             font-family: inherit; background: none; border: none;
@@ -76,17 +94,80 @@
 
         /* ── Seções ── */
         .section { padding: 48px 0 60px; }
-        .section-header { margin-bottom: 28px; }
+        .section-header { margin-bottom: 16px; }
         .section-header h2 { font-size: 1.5em; font-weight: 700; color: var(--dark-gray); margin-bottom: 6px; }
         .section-header p { color: var(--text-color); font-size: 0.95em; }
 
+        /* ── Controles de visualização ── */
+        .view-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+            gap: 8px;
+        }
+        .view-controls span { font-size: 0.85em; color: #6c757d; margin-right: 4px; }
+        .view-btn {
+            background: var(--white);
+            border: 2px solid var(--medium-gray);
+            border-radius: 8px;
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+            color: #6c757d; font-size: 1em;
+        }
+        .view-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .view-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+        /* ── Carrossel ── */
+        .carousel-wrapper { position: relative; }
+        .carousel-track-outer { overflow: hidden; border-radius: 12px; }
+        .carousel-track {
+            display: flex;
+            gap: 20px;
+            transition: transform 0.4s ease;
+            will-change: transform;
+            cursor: grab;
+            user-select: none;
+        }
+        .carousel-track .vaga-card {
+            flex: 0 0 calc(25% - 15px);
+            min-width: 0;
+        }
+        .carousel-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .carousel-arrow {
+            background: var(--white);
+            border: 2px solid var(--medium-gray);
+            border-radius: 50%;
+            width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1em; color: var(--dark-gray);
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .carousel-arrow:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: var(--white); }
+        .carousel-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+        .carousel-dots { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
+        .carousel-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--medium-gray); cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            border: none; padding: 0;
+        }
+        .carousel-dot.active { background: var(--primary); transform: scale(1.3); }
+
         /* ── Grid de vagas ── */
-        .vagas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .vagas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .vaga-card {
             background: var(--white); border-radius: 12px;
             border: 1px solid var(--medium-gray);
             padding: 22px; transition: box-shadow 0.2s, transform 0.2s;
-            display: flex; flex-direction: column; gap: 14px;
+            display: flex; flex-direction: column; gap: 12px;
             position: relative;
         }
         .vaga-card:hover { box-shadow: 0 6px 20px var(--shadow-medium); transform: translateY(-3px); }
@@ -97,60 +178,39 @@
             font-size: 0.72em; font-weight: 700;
             padding: 3px 10px; border-radius: 0 0 8px 8px;
         }
-        .vaga-cargo { font-size: 1.15em; font-weight: 700; color: var(--dark-gray); }
-        .vaga-restaurante { font-size: 0.88em; color: var(--primary); font-weight: 600; }
+        .vaga-cargo { font-size: 1.1em; font-weight: 700; color: var(--dark-gray); }
+        .vaga-restaurante { font-size: 0.85em; color: var(--primary); font-weight: 600; }
         .vaga-tags { display: flex; flex-wrap: wrap; gap: 6px; }
         .tag {
             display: inline-flex; align-items: center; gap: 5px;
             background: var(--light-gray); color: var(--dark-gray);
-            font-size: 0.8em; padding: 4px 10px; border-radius: 20px;
+            font-size: 0.78em; padding: 4px 10px; border-radius: 20px;
         }
         .tag i { color: var(--primary); font-size: 0.85em; }
-        .vaga-descricao { font-size: 0.9em; color: var(--text-color); flex: 1; }
+        .vaga-descricao-preview {
+            font-size: 0.88em; color: var(--text-color);
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden; flex: 1;
+        }
+        .btn-ver-mais {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: var(--primary); font-size: 0.85em; font-weight: 600;
+            background: none; border: none; cursor: pointer;
+            font-family: inherit; padding: 0; text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .btn-ver-mais:hover { color: var(--dark); }
         .btn-candidatar {
             display: flex; align-items: center; justify-content: center; gap: 7px;
             background: var(--primary); color: #fff;
             padding: 11px; border-radius: 8px;
             font-weight: 700; font-size: 0.9em;
             text-decoration: none; transition: background 0.2s;
+            border: none; cursor: pointer; font-family: inherit;
         }
         .btn-candidatar:hover { background: var(--dark); }
 
-        /* ── Grid de candidatos ── */
-        .candidatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
-        .candidato-card {
-            background: var(--white); border-radius: 12px;
-            border: 1px solid var(--medium-gray);
-            padding: 20px; transition: box-shadow 0.2s;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .candidato-card:hover { box-shadow: 0 4px 16px var(--shadow-light); }
-        .candidato-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--dark));
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4em; flex-shrink: 0;
-        }
-        .candidato-top { display: flex; align-items: center; gap: 12px; }
-        .candidato-nome { font-weight: 700; font-size: 1em; color: var(--dark-gray); }
-        .candidato-cargo { font-size: 0.88em; color: var(--primary); font-weight: 600; }
-        .candidato-desc { font-size: 0.88em; color: var(--text-color); }
-        .candidato-meta { display: flex; flex-wrap: wrap; gap: 6px; }
-
-        /* ── Botão "Cadastrar currículo" fixo ── */
-        .fab-curriculo {
-            position: fixed; bottom: 28px; right: 28px;
-            background: var(--primary); color: #fff;
-            padding: 15px 22px; border-radius: 50px;
-            font-weight: 700; font-size: 0.95em;
-            display: flex; align-items: center; gap: 9px;
-            box-shadow: 0 6px 24px rgba(192,57,43,0.45);
-            cursor: pointer; border: none; font-family: inherit;
-            transition: background 0.2s, transform 0.2s; z-index: 100;
-        }
-        .fab-curriculo:hover { background: var(--dark); transform: translateY(-2px); }
-
-        /* ── Modal cadastro candidato ── */
+        /* ── Modal de detalhes da vaga ── */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.55);
             z-index: 200; display: none;
@@ -159,17 +219,30 @@
         .modal-overlay.open { display: flex; }
         .modal {
             background: var(--white); border-radius: 16px;
-            width: 100%; max-width: 540px; max-height: 92vh;
+            width: 100%; max-width: 600px; max-height: 92vh;
             overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.25);
         }
         .modal-header {
             padding: 22px 28px 16px; border-bottom: 1px solid var(--medium-gray);
-            display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 1;
+            display: flex; align-items: flex-start; justify-content: space-between;
+            position: sticky; top: 0; background: var(--white); z-index: 1; gap: 12px;
         }
-        .modal-header h3 { font-size: 1.1em; font-weight: 700; color: var(--dark-gray); }
-        .modal-close { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #999; line-height: 1; }
+        .modal-header-info { flex: 1; }
+        .modal-header h3 { font-size: 1.2em; font-weight: 700; color: var(--dark-gray); margin-bottom: 4px; }
+        .modal-header .modal-restaurante { font-size: 0.9em; color: var(--primary); font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.5em; cursor: pointer; color: #999; line-height: 1; flex-shrink: 0; }
         .modal-close:hover { color: var(--dark-gray); }
         .modal-body { padding: 24px 28px 28px; }
+        .modal-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .modal-descricao { font-size: 0.93em; color: var(--text-color); line-height: 1.75; white-space: pre-wrap; margin-bottom: 24px; }
+        .modal-destaque-tag {
+            display: inline-block; background: #f59e0b; color: #fff;
+            font-size: 0.75em; font-weight: 700;
+            padding: 3px 12px; border-radius: 20px; margin-bottom: 16px;
+        }
+
+        /* ── Modal cadastro candidato ── */
+        #modal-curriculo { z-index: 300; }
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 0.82em; font-weight: 700; color: var(--dark-gray); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
         .form-group input,
@@ -207,23 +280,117 @@
             font-size: 0.9em; margin-top: 10px; display: none;
         }
 
+        /* ── Grid de candidatos ── */
+        .candidatos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+        .candidato-card {
+            background: var(--white); border-radius: 12px;
+            border: 1px solid var(--medium-gray);
+            padding: 20px; transition: box-shadow 0.2s;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .candidato-card:hover { box-shadow: 0 4px 16px var(--shadow-light); }
+        .candidato-avatar {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4em; flex-shrink: 0;
+        }
+        .candidato-top { display: flex; align-items: center; gap: 12px; }
+        .candidato-nome { font-weight: 700; font-size: 1em; color: var(--dark-gray); }
+        .candidato-cargo { font-size: 0.88em; color: var(--primary); font-weight: 600; }
+        .candidato-desc { font-size: 0.88em; color: var(--text-color); }
+        .candidato-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        /* ── Botão flutuante ── */
+        .fab-curriculo {
+            position: fixed; bottom: 28px; right: 28px;
+            background: var(--primary); color: #fff;
+            padding: 15px 22px; border-radius: 50px;
+            font-weight: 700; font-size: 0.95em;
+            display: flex; align-items: center; gap: 9px;
+            box-shadow: 0 6px 24px rgba(192,57,43,0.45);
+            cursor: pointer; border: none; font-family: inherit;
+            transition: background 0.2s, transform 0.2s; z-index: 100;
+        }
+        .fab-curriculo:hover { background: var(--dark); transform: translateY(-2px); }
+
         /* ── Estados vazios / loading ── */
         .info-msg { text-align: center; color: #6c757d; padding: 50px 0; grid-column: 1/-1; font-size: 0.95em; }
 
-        /* ── Footer ── */
-        footer { background: var(--dark-gray); color: #adb5bd; padding: 30px 0; text-align: center; font-size: 0.9em; }
-        footer a { color: var(--light); text-decoration: none; }
+        /* ── Footer igual ao categoria.html ── */
+        footer {
+            background: #0d0d0d;
+            border-top: 1px solid #1e1e1e;
+            padding: 40px 0 28px;
+            font-family: 'Roboto', sans-serif;
+        }
+        .footer-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .footer-logo img {
+            height: 48px; width: auto; display: block;
+            filter: brightness(0) invert(1);
+        }
+        .footer-divider {
+            width: 1px; height: 48px;
+            background: #2a2a2a; flex-shrink: 0;
+        }
+        .footer-text { flex: 1; min-width: 200px; }
+        .footer-text strong {
+            display: block; color: #ffffff;
+            font-size: 14px; font-weight: 700; margin-bottom: 3px;
+        }
+        .footer-text span { color: #707070; font-size: 12.5px; line-height: 1.5; }
+        .footer-actions {
+            display: flex; align-items: center;
+            gap: 10px; flex-shrink: 0; flex-wrap: wrap;
+        }
+        .f-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            font-size: 13px; font-weight: 600; text-decoration: none;
+            padding: 9px 17px; border-radius: 6px; white-space: nowrap;
+            letter-spacing: 0.02em;
+            transition: opacity 0.2s, transform 0.15s;
+            border: none; cursor: pointer;
+        }
+        .f-btn:hover { opacity: 0.82; transform: translateY(-1px); }
+        .f-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+        .f-btn-site { background: #ffffff; color: #0d0d0d; }
+        .f-btn-wpp  { background: #25D366; color: #fff; }
+        .f-btn-ig   { background: #7c5cfc; color: #fff; }
+        .footer-bottom {
+            margin-top: 28px; padding-top: 18px;
+            border-top: 1px solid #1a1a1a;
+            text-align: center; color: #3a3a3a; font-size: 11.5px;
+        }
+        .footer-bottom a { color: #555; text-decoration: none; }
+        .footer-bottom a:hover { color: #888; text-decoration: underline; }
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
             header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
+            header .logo img { height: 60px; }
             .hero h1 { font-size: 1.8em; }
             .tab-btn { padding: 14px 16px; font-size: 0.88em; }
             .form-row { grid-template-columns: 1fr; }
             .modal-body { padding: 18px 20px 24px; }
             .modal-header { padding: 18px 20px 14px; }
             .fab-curriculo { bottom: 16px; right: 16px; padding: 13px 18px; }
+            .carousel-track .vaga-card { flex: 0 0 calc(50% - 10px); }
+            .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+            .footer-divider { display: none; }
+            .footer-logo img { height: 38px; }
+            .footer-text { min-width: unset; }
+            .footer-actions { width: 100%; justify-content: center; }
+            .f-btn { flex: 1; justify-content: center; font-size: 12px; padding: 9px 10px; }
+        }
+        @media (max-width: 520px) {
+            .carousel-track .vaga-card { flex: 0 0 100%; }
         }
     </style>
 </head>
@@ -231,7 +398,16 @@
 
     <header>
         <div class="logo">
-            <a href="/"><span>🥩 Guia do Rodízio</span></a>
+            <a href="/" aria-label="Guia do Rodízio SP — Página inicial">
+                <img
+                    src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+                    alt="Guia do Rodízio SP"
+                    height="90"
+                    width="auto"
+                    loading="eager"
+                    decoding="async"
+                />
+            </a>
         </div>
         <nav class="desktop-nav">
             <ul>
@@ -248,6 +424,7 @@
     </header>
 
     <div class="mobile-nav-overlay" id="mobile-nav">
+        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
         <nav>
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
@@ -267,7 +444,7 @@
             <h1>👨‍🍳 Empregos em Rodízio</h1>
             <p>Sushiman, churrasqueiro, garçom, pizzaiolo e muito mais — conectando profissionais e restaurantes.</p>
             <div class="hero-btns">
-                <button class="btn-hero btn-hero-primary" onclick="openModal()">
+                <button class="btn-hero btn-hero-primary" onclick="openCurriculo()">
                     <i class="fas fa-user-plus"></i> Cadastrar meu currículo
                 </button>
                 <button class="btn-hero btn-hero-outline" onclick="switchTab('vagas')">
@@ -300,7 +477,35 @@
                     <h2>Vagas abertas agora</h2>
                     <p>Restaurantes parceiros do Guia do Rodízio buscando profissionais</p>
                 </div>
-                <div class="vagas-grid" id="vagas-grid">
+
+                <!-- Controles de visualização -->
+                <div class="view-controls" id="vagas-view-controls" style="display:none;">
+                    <span>Ver como:</span>
+                    <button class="view-btn active" id="btn-vagas-carousel" title="Carrossel" onclick="setVagasView('carousel')">
+                        <i class="fas fa-grip-lines"></i>
+                    </button>
+                    <button class="view-btn" id="btn-vagas-grade" title="Grade" onclick="setVagasView('grade')">
+                        <i class="fas fa-th"></i>
+                    </button>
+                </div>
+
+                <!-- Carrossel -->
+                <div id="vagas-carousel-wrapper" class="carousel-wrapper">
+                    <div class="carousel-track-outer">
+                        <div class="carousel-track" id="vagas-track"></div>
+                    </div>
+                    <div class="carousel-nav" id="vagas-carousel-nav">
+                        <button class="carousel-arrow" id="vagas-prev" onclick="moveCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <div class="carousel-dots" id="vagas-dots"></div>
+                        <button class="carousel-arrow" id="vagas-next" onclick="moveCarousel(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Grade (oculta inicialmente) -->
+                <div class="vagas-grid" id="vagas-grid" style="display:none;"></div>
+
+                <!-- Loading -->
+                <div id="vagas-loading">
                     <p class="info-msg"><i class="fas fa-spinner fa-spin"></i> Carregando vagas...</p>
                 </div>
             </section>
@@ -320,16 +525,35 @@
     </main>
 
     <!-- Botão flutuante -->
-    <button class="fab-curriculo" onclick="openModal()">
+    <button class="fab-curriculo" onclick="openCurriculo()">
         <i class="fas fa-plus"></i> Cadastrar currículo
     </button>
 
+    <!-- Modal detalhes da vaga -->
+    <div class="modal-overlay" id="modal-vaga-detalhe">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-header-info">
+                    <div id="md-destaque-tag"></div>
+                    <h3 id="md-cargo"></h3>
+                    <div class="modal-restaurante" id="md-restaurante"></div>
+                </div>
+                <button class="modal-close" onclick="closeVagaDetalhe()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-tags" id="md-tags"></div>
+                <div class="modal-descricao" id="md-descricao"></div>
+                <a id="md-btn-link" href="#" target="_blank" class="btn-candidatar" style="display:none;"></a>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal cadastro candidato -->
-    <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-overlay" id="modal-curriculo">
         <div class="modal">
             <div class="modal-header">
                 <h3>📋 Cadastrar meu currículo</h3>
-                <button class="modal-close" onclick="closeModal()">×</button>
+                <button class="modal-close" onclick="closeCurriculo()">×</button>
             </div>
             <div class="modal-body">
                 <p style="font-size:0.9em;color:var(--text-color);margin-bottom:20px;">
@@ -404,10 +628,71 @@
         </div>
     </div>
 
-    <footer>
+    <!-- Footer igual ao categoria.html -->
+    <footer itemscope itemtype="https://schema.org/WPFooter">
         <div class="container">
-            <p>© 2025 - GuiaDoRodizio.com.br - Todos os direitos reservados.</p>
-            <p style="margin-top:8px;">Desenvolvido por <a href="https://www.linkedin.com/in/leanttro" target="_blank">Leandro Andrade</a></p>
+            <div class="footer-inner">
+
+                <a href="/" aria-label="Guia do Rodízio SP — Página inicial" class="footer-logo" itemprop="url">
+                    <img
+                        src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+                        alt="Guia do Rodízio SP — Guia completo de rodízios em São Paulo"
+                        width="160"
+                        height="48"
+                        loading="lazy"
+                        decoding="async"
+                        itemprop="logo"
+                    />
+                </a>
+
+                <div class="footer-divider" aria-hidden="true"></div>
+
+                <div class="footer-text" itemscope itemtype="https://schema.org/Organization">
+                    <meta itemprop="name" content="Leanttro" />
+                    <meta itemprop="url" content="https://www.leanttro.com" />
+                    <meta itemprop="telephone" content="+5511913324827" />
+                    <meta itemprop="areaServed" content="São Paulo, SP, Brasil" />
+                    <strong itemprop="description">Você tem uma feira ou negócio local em SP?</strong>
+                    <span>Criação de Sites e Blogs · Automações · Otimização de Tráfego</span>
+                </div>
+
+                <nav class="footer-actions" aria-label="Contato com a Leanttro">
+                    <img
+                        src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png"
+                        alt="Leanttro"
+                        height="32"
+                        width="auto"
+                        loading="lazy"
+                        decoding="async"
+                        style="height:32px;width:auto;display:block;flex-shrink:0;"
+                    />
+
+                    <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-site" aria-label="Conhecer o site da Leanttro">
+                        Quero meu site
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+
+                    <a href="https://wa.me/5511913324827" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-wpp" aria-label="Falar com a Leanttro pelo WhatsApp">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                        WhatsApp
+                    </a>
+
+                    <a href="https://instagram.com/leanttro" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-ig" aria-label="Seguir a Leanttro no Instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+                        Instagram
+                    </a>
+                </nav>
+            </div>
+
+            <div class="footer-bottom">
+                <p>
+                    <span itemprop="copyrightYear">© 2025</span>
+                    <a href="/" title="Guia do Rodízio SP — Guia completo de rodízios em São Paulo">GuiaDoRodizio.com.br</a>
+                    · Todos os direitos reservados ·
+                    Site criado por
+                    <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" title="Leanttro — Criação de Sites e Marketing Digital em São Paulo">Leanttro</a>
+                </p>
+            </div>
         </div>
     </footer>
 
@@ -441,42 +726,172 @@
             return key ? map[key] : '👤';
         }
 
+        // ── Link inteligente ─────────────────────
+        function buildLink(whatsapp) {
+            if (!whatsapp) return null;
+            const w = whatsapp.trim();
+            if (w.startsWith('http://') || w.startsWith('https://')) return { href: w, icon: 'fas fa-external-link-alt', label: 'Ver vaga completa' };
+            const nums = w.replace(/\D/g, '');
+            if (nums.length >= 10) return { href: 'https://wa.me/55' + nums, icon: 'fab fa-whatsapp', label: 'Falar pelo WhatsApp' };
+            return { href: w, icon: 'fas fa-external-link-alt', label: 'Ver vaga completa' };
+        }
+
+        // ── Renderizar card de vaga ──────────────
+        function renderVagaCard(v) {
+            const link = buildLink(v.whatsapp || v.contato);
+            const descPreview = v.descricao ? v.descricao.substring(0, 120) + (v.descricao.length > 120 ? '…' : '') : '';
+            return `
+                <div class="vaga-card ${v.destaque ? 'destaque' : ''}">
+                    ${v.destaque ? '<span class="destaque-tag">⭐ Destaque</span>' : ''}
+                    <div>
+                        <div class="vaga-cargo">${cargoEmoji(v.cargo)} ${v.cargo}</div>
+                        ${v.restaurante_nome ? `<div class="vaga-restaurante"><i class="fas fa-store"></i> ${v.restaurante_nome}</div>` : ''}
+                    </div>
+                    <div class="vaga-tags">
+                        ${v.regime  ? `<span class="tag"><i class="fas fa-clock"></i>${v.regime}</span>` : ''}
+                        ${v.salario ? `<span class="tag"><i class="fas fa-dollar-sign"></i>${v.salario}</span>` : ''}
+                        ${v.bairro  ? `<span class="tag"><i class="fas fa-map-pin"></i>${v.bairro}</span>` : (v.cidade ? `<span class="tag"><i class="fas fa-map-pin"></i>${v.cidade}</span>` : '')}
+                    </div>
+                    ${descPreview ? `<p class="vaga-descricao-preview">${descPreview}</p>` : ''}
+                    <button class="btn-ver-mais" onclick='abrirVagaDetalhe(${JSON.stringify(v).replace(/'/g,"&#39;")})'>
+                        Ver detalhes completos <i class="fas fa-chevron-right" style="font-size:0.8em;"></i>
+                    </button>
+                    ${link ? `<a href="${link.href}" target="_blank" class="btn-candidatar"><i class="${link.icon}"></i> ${link.label}</a>` : ''}
+                </div>`;
+        }
+
+        // ── Modal de detalhes da vaga ────────────
+        function abrirVagaDetalhe(v) {
+            document.getElementById('md-destaque-tag').innerHTML = v.destaque ? '<span class="modal-destaque-tag">⭐ Destaque</span>' : '';
+            document.getElementById('md-cargo').textContent = cargoEmoji(v.cargo) + ' ' + v.cargo;
+            document.getElementById('md-restaurante').innerHTML = v.restaurante_nome ? `<i class="fas fa-store"></i> ${v.restaurante_nome}` : '';
+
+            let tags = '';
+            if (v.regime)  tags += `<span class="tag"><i class="fas fa-clock"></i>${v.regime}</span>`;
+            if (v.salario) tags += `<span class="tag"><i class="fas fa-dollar-sign"></i>${v.salario}</span>`;
+            if (v.bairro)  tags += `<span class="tag"><i class="fas fa-map-pin"></i>${v.bairro}</span>`;
+            else if (v.cidade) tags += `<span class="tag"><i class="fas fa-map-pin"></i>${v.cidade}</span>`;
+            document.getElementById('md-tags').innerHTML = tags;
+
+            document.getElementById('md-descricao').textContent = v.descricao || '';
+
+            const link = buildLink(v.whatsapp || v.contato);
+            const btnLink = document.getElementById('md-btn-link');
+            if (link) {
+                btnLink.href = link.href;
+                btnLink.innerHTML = `<i class="${link.icon}"></i> ${link.label}`;
+                btnLink.style.display = 'flex';
+            } else {
+                btnLink.style.display = 'none';
+            }
+
+            document.getElementById('modal-vaga-detalhe').classList.add('open');
+        }
+        function closeVagaDetalhe() {
+            document.getElementById('modal-vaga-detalhe').classList.remove('open');
+        }
+        document.getElementById('modal-vaga-detalhe').addEventListener('click', e => {
+            if (e.target === document.getElementById('modal-vaga-detalhe')) closeVagaDetalhe();
+        });
+
+        // ── Carrossel ────────────────────────────
+        let vagasData = [];
+        let carouselIndex = 0;
+        const ITEMS_PER_PAGE = 4;
+
+        function buildCarousel(data) {
+            const track = document.getElementById('vagas-track');
+            const dots  = document.getElementById('vagas-dots');
+            track.innerHTML = data.map(v => renderVagaCard(v)).join('');
+            const pages = Math.ceil(data.length / ITEMS_PER_PAGE);
+            dots.innerHTML = Array.from({length: pages}, (_, i) =>
+                `<button class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="goToPage(${i})"></button>`
+            ).join('');
+            carouselIndex = 0;
+            updateCarousel();
+        }
+
+        function updateCarousel() {
+            const track = document.getElementById('vagas-track');
+            const cards = track.querySelectorAll('.vaga-card');
+            if (!cards.length) return;
+            const cardWidth = cards[0].offsetWidth + 20;
+            track.style.transform = `translateX(-${carouselIndex * ITEMS_PER_PAGE * cardWidth}px)`;
+            document.querySelectorAll('.carousel-dot').forEach((d, i) => {
+                d.classList.toggle('active', i === Math.floor(carouselIndex));
+            });
+            const pages = Math.ceil(vagasData.length / ITEMS_PER_PAGE);
+            document.getElementById('vagas-prev').disabled = carouselIndex === 0;
+            document.getElementById('vagas-next').disabled = carouselIndex >= pages - 1;
+        }
+
+        function moveCarousel(dir) {
+            const pages = Math.ceil(vagasData.length / ITEMS_PER_PAGE);
+            carouselIndex = Math.max(0, Math.min(pages - 1, carouselIndex + dir));
+            updateCarousel();
+        }
+
+        function goToPage(i) {
+            carouselIndex = i;
+            updateCarousel();
+        }
+
+        // ── Toggle carrossel / grade ─────────────
+        function setVagasView(mode) {
+            const carouselWrap = document.getElementById('vagas-carousel-wrapper');
+            const grade        = document.getElementById('vagas-grid');
+            document.getElementById('btn-vagas-carousel').classList.toggle('active', mode === 'carousel');
+            document.getElementById('btn-vagas-grade').classList.toggle('active',    mode === 'grade');
+            if (mode === 'carousel') {
+                carouselWrap.style.display = 'block';
+                grade.style.display        = 'none';
+                updateCarousel();
+            } else {
+                carouselWrap.style.display = 'none';
+                grade.style.display        = 'grid';
+                grade.innerHTML = vagasData.map(v => renderVagaCard(v)).join('');
+            }
+        }
+
         // ── Carregar vagas ───────────────────────
         async function loadVagas() {
-            const grid = document.getElementById('vagas-grid');
+            document.getElementById('vagas-loading').style.display = 'block';
+            document.getElementById('vagas-carousel-wrapper').style.display = 'none';
+            document.getElementById('vagas-view-controls').style.display = 'none';
             try {
                 const res  = await fetch('/api/vagas');
-                const data = await res.json();
-                document.getElementById('count-vagas').textContent = data.length;
+                vagasData  = await res.json();
+                document.getElementById('count-vagas').textContent = vagasData.length;
+                document.getElementById('vagas-loading').style.display = 'none';
 
-                if (!data.length) {
-                    grid.innerHTML = '<p class="info-msg">Em breve vagas de restaurantes parceiros! 🍽️</p>';
+                if (!vagasData.length) {
+                    document.getElementById('vagas-track').innerHTML = '<p class="info-msg">Em breve vagas de restaurantes parceiros! 🍽️</p>';
+                    document.getElementById('vagas-carousel-wrapper').style.display = 'block';
                     return;
                 }
 
-                grid.innerHTML = data.map(v => `
-                    <div class="vaga-card ${v.destaque ? 'destaque' : ''}">
-                        ${v.destaque ? '<span class="destaque-tag">⭐ Destaque</span>' : ''}
-                        <div>
-                            <div class="vaga-cargo">${cargoEmoji(v.cargo)} ${v.cargo}</div>
-                            ${v.restaurante_nome ? `<div class="vaga-restaurante"><i class="fas fa-store"></i> ${v.restaurante_nome}</div>` : ''}
-                        </div>
-                        <div class="vaga-tags">
-                            ${v.regime    ? `<span class="tag"><i class="fas fa-clock"></i>${v.regime}</span>` : ''}
-                            ${v.salario   ? `<span class="tag"><i class="fas fa-dollar-sign"></i>${v.salario}</span>` : ''}
-                            ${v.bairro    ? `<span class="tag"><i class="fas fa-map-pin"></i>${v.bairro}</span>` : (v.cidade ? `<span class="tag"><i class="fas fa-map-pin"></i>${v.cidade}</span>` : '')}
-                        </div>
-                        ${v.descricao ? `<p class="vaga-descricao">${v.descricao}</p>` : ''}
-                        ${(v.whatsapp || v.contato) ? `
-                            <a href="https://wa.me/55${(v.whatsapp || v.contato).replace(/\D/g,'')}" target="_blank" class="btn-candidatar">
-                                <i class="fab fa-whatsapp"></i> Tenho interesse
-                            </a>` : ''}
-                    </div>
-                `).join('');
+                document.getElementById('vagas-view-controls').style.display = 'flex';
+                document.getElementById('vagas-carousel-wrapper').style.display = 'block';
+                buildCarousel(vagasData);
             } catch(e) {
-                grid.innerHTML = '<p class="info-msg">Erro ao carregar vagas.</p>';
+                document.getElementById('vagas-loading').innerHTML = '<p class="info-msg">Erro ao carregar vagas.</p>';
             }
         }
+
+        // ── Drag no carrossel ────────────────────
+        (function() {
+            const track = document.getElementById('vagas-track');
+            let startX = 0, isDragging = false;
+            track.addEventListener('mousedown',  e => { isDragging = true; startX = e.clientX; track.style.cursor = 'grabbing'; });
+            track.addEventListener('mousemove',  e => { if (!isDragging) return; });
+            track.addEventListener('mouseup',    e => {
+                if (!isDragging) return;
+                isDragging = false; track.style.cursor = 'grab';
+                const diff = e.clientX - startX;
+                if (Math.abs(diff) > 50) moveCarousel(diff < 0 ? 1 : -1);
+            });
+            track.addEventListener('mouseleave', () => { isDragging = false; track.style.cursor = 'grab'; });
+        })();
 
         // ── Carregar candidatos ──────────────────
         async function loadCandidatos() {
@@ -517,15 +932,15 @@
             }
         }
 
-        // ── Modal ────────────────────────────────
-        function openModal() {
-            document.getElementById('modal-overlay').classList.add('open');
+        // ── Modal currículo ──────────────────────
+        function openCurriculo() {
+            document.getElementById('modal-curriculo').classList.add('open');
         }
-        function closeModal() {
-            document.getElementById('modal-overlay').classList.remove('open');
+        function closeCurriculo() {
+            document.getElementById('modal-curriculo').classList.remove('open');
         }
-        document.getElementById('modal-overlay').addEventListener('click', e => {
-            if (e.target === document.getElementById('modal-overlay')) closeModal();
+        document.getElementById('modal-curriculo').addEventListener('click', e => {
+            if (e.target === document.getElementById('modal-curriculo')) closeCurriculo();
         });
 
         // ── Salvar candidato ─────────────────────
