@@ -199,6 +199,18 @@
         #toast.success { background: #15803d; }
         #toast.error   { background: #dc2626; }
 
+        /* ── Bulk actions bar ── */
+        .bulk-bar {
+            display: none; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: 10px; padding: 10px 16px; margin-bottom: 14px;
+        }
+        .bulk-bar.visible { display: flex; }
+        .bulk-bar .bulk-count { font-size: 0.9em; font-weight: 600; color: var(--danger); flex: 1; }
+        .bulk-bar .bulk-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        th.col-check, td.col-check { width: 36px; padding: 8px 10px; text-align: center; }
+        th.col-check input, td.col-check input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+
         /* Responsive */
         @media (max-width: 900px) {
             .sidebar { transform: translateX(-100%); }
@@ -333,13 +345,25 @@
                     <select id="filtro-rest-cat" onchange="renderRestaurantesFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
                         <option value="">Todas as categorias</option>
                     </select>
+                    <select id="filtro-rest-bairro" onchange="renderRestaurantesFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
+                        <option value="">Todos os bairros</option>
+                    </select>
                     <button class="btn btn-primary" onclick="openModal('restaurante')"><i class="fas fa-plus"></i> Novo restaurante</button>
                 </div>
             </div>
+            <!-- Barra de ações em massa -->
+            <div class="bulk-bar" id="bulk-bar-rest">
+                <span class="bulk-count" id="bulk-count-rest">0 selecionados</span>
+                <div class="bulk-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="bulkRenameBairro()"><i class="fas fa-map-marker-alt"></i> Alterar bairro</button>
+                    <button class="btn btn-danger btn-sm" onclick="bulkDeleteRestaurantes()"><i class="fas fa-trash"></i> Excluir selecionados</button>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="clearRestSelection()"><i class="fas fa-times"></i> Cancelar</button>
+            </div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Nome</th><th>Categoria</th><th>Bairro</th><th>Plano</th><th>Status</th><th>Ações</th></tr></thead>
-                    <tbody id="tb-restaurantes"><tr class="empty-row"><td colspan="6">Carregando...</td></tr></tbody>
+                    <thead><tr><th class="col-check"><input type="checkbox" id="chk-all-rest" onclick="toggleAllRest(this)"></th><th>Nome</th><th>Categoria</th><th>Bairro</th><th>Plano</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody id="tb-restaurantes"><tr class="empty-row"><td colspan="7">Carregando...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -445,6 +469,24 @@
 </div><!-- /main -->
 
 <div id="toast"></div>
+
+<!-- Modal Alteração em Massa de Bairro -->
+<div class="modal-overlay" id="modal-bulk-bairro">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <h3>Alterar bairro em massa</h3>
+            <button class="modal-close" onclick="closeModal('bulk-bairro')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.9em;color:var(--muted);margin-bottom:16px">O novo bairro será aplicado a todos os <strong id="bulk-bairro-count">0</strong> restaurante(s) selecionado(s).</p>
+            <div class="field"><label>Novo bairro *</label><input type="text" id="bulk-bairro-novo" placeholder="Ex: Pinheiros"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('bulk-bairro')">Cancelar</button>
+            <button class="btn btn-primary" onclick="confirmBulkBairro()"><i class="fas fa-save"></i> Aplicar</button>
+        </div>
+    </div>
+</div>
 
 <!-- ════════════════ MODAIS ════════════════ -->
 
@@ -903,7 +945,7 @@ let restaurantes = [];
 let planos = [];
 async function loadRestaurantes() {
     const tb = document.getElementById('tb-restaurantes');
-    tb.innerHTML = '<tr class="empty-row"><td colspan="6">Carregando...</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
     await loadCatSelectsIfNeeded();
     await loadPlanosIfNeeded();
     // popula filtro de categoria
@@ -912,19 +954,27 @@ async function loadRestaurantes() {
         cats.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
     try {
         restaurantes = await fetch('/api/admin/restaurantes').then(r => r.json());
+        // popula filtro de bairro com valores únicos
+        const bairros = [...new Set(restaurantes.map(r => r.bairro).filter(Boolean))].sort();
+        const filtroBairro = document.getElementById('filtro-rest-bairro');
+        filtroBairro.innerHTML = '<option value="">Todos os bairros</option>' +
+            bairros.map(b => `<option value="${b}">${b}</option>`).join('');
         renderRestaurantesFiltrados();
-    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Erro ao carregar.</td></tr>'; }
+    } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar.</td></tr>'; }
 }
 
 function renderRestaurantesFiltrados() {
     const tb = document.getElementById('tb-restaurantes');
-    const catFiltro = document.getElementById('filtro-rest-cat').value;
-    const lista = catFiltro ? restaurantes.filter(r => String(r.categoria_id) === catFiltro) : restaurantes;
-    if (!lista.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum restaurante encontrado.</td></tr>'; return; }
+    const catFiltro   = document.getElementById('filtro-rest-cat').value;
+    const bairroFiltro = document.getElementById('filtro-rest-bairro').value;
+    let lista = catFiltro ? restaurantes.filter(r => String(r.categoria_id) === catFiltro) : restaurantes;
+    if (bairroFiltro) lista = lista.filter(r => r.bairro === bairroFiltro);
+    if (!lista.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum restaurante encontrado.</td></tr>'; clearRestSelection(); return; }
     tb.innerHTML = lista.map(r => {
         const cat = cats.find(c => c.id === r.categoria_id);
         const pl  = planos.find(p => p.id === r.plano_id);
         return `<tr>
+            <td class="col-check"><input type="checkbox" class="chk-rest" value="${r.id}" onchange="onRestCheckChange()"></td>
             <td><strong>${r.nome}</strong></td>
             <td>${cat ? cat.nome : '—'}</td>
             <td>${r.bairro || '—'}</td>
@@ -936,6 +986,84 @@ function renderRestaurantesFiltrados() {
             </div></td>
         </tr>`;
     }).join('');
+    clearRestSelection();
+}
+
+// ── Seleção em massa de restaurantes ──
+function getSelectedRestIds() {
+    return [...document.querySelectorAll('.chk-rest:checked')].map(c => parseInt(c.value));
+}
+
+function onRestCheckChange() {
+    const ids = getSelectedRestIds();
+    const bar = document.getElementById('bulk-bar-rest');
+    const count = document.getElementById('bulk-count-rest');
+    const chkAll = document.getElementById('chk-all-rest');
+    const total = document.querySelectorAll('.chk-rest').length;
+    count.textContent = ids.length + ' selecionado' + (ids.length !== 1 ? 's' : '');
+    bar.classList.toggle('visible', ids.length > 0);
+    chkAll.indeterminate = ids.length > 0 && ids.length < total;
+    chkAll.checked = ids.length === total;
+}
+
+function toggleAllRest(chk) {
+    document.querySelectorAll('.chk-rest').forEach(c => c.checked = chk.checked);
+    onRestCheckChange();
+}
+
+function clearRestSelection() {
+    document.querySelectorAll('.chk-rest').forEach(c => c.checked = false);
+    const chkAll = document.getElementById('chk-all-rest');
+    if (chkAll) { chkAll.checked = false; chkAll.indeterminate = false; }
+    const bar = document.getElementById('bulk-bar-rest');
+    if (bar) bar.classList.remove('visible');
+}
+
+async function bulkDeleteRestaurantes() {
+    const ids = getSelectedRestIds();
+    if (!ids.length) return;
+    if (!confirm(`Excluir ${ids.length} restaurante(s) permanentemente? Esta ação não pode ser desfeita.`)) return;
+    let erros = 0;
+    for (const id of ids) {
+        try {
+            const res = await api('DELETE', `/api/admin/restaurantes/${id}`);
+            if (res.error) erros++;
+        } catch(e) { erros++; }
+    }
+    if (erros) toast(`${ids.length - erros} excluído(s), ${erros} com erro.`, 'error');
+    else toast(`${ids.length} restaurante(s) excluído(s)!`);
+    loadRestaurantes();
+}
+
+function bulkRenameBairro() {
+    const ids = getSelectedRestIds();
+    if (!ids.length) return;
+    document.getElementById('bulk-bairro-count').textContent = ids.length;
+    document.getElementById('bulk-bairro-novo').value = '';
+    openModal('bulk-bairro');
+}
+
+async function confirmBulkBairro() {
+    const ids = getSelectedRestIds();
+    const novo = document.getElementById('bulk-bairro-novo').value.trim();
+    if (!novo) { toast('Informe o novo bairro.', 'error'); return; }
+    let erros = 0;
+    for (const id of ids) {
+        const r = restaurantes.find(x => x.id === id);
+        if (!r) continue;
+        const body = { nome: r.nome, slug: r.slug, categoria_id: r.categoria_id, plano_id: r.plano_id,
+            foto_url: r.foto_url, descricao: r.descricao, endereco: r.endereco,
+            bairro: novo, cidade: r.cidade, regiao: r.regiao, lat: r.lat, lng: r.lng,
+            telefone: r.telefone, website: r.website, instagram: r.instagram, ativo: r.ativo };
+        try {
+            const res = await api('PUT', `/api/admin/restaurantes/${id}`, body);
+            if (res.error) erros++;
+        } catch(e) { erros++; }
+    }
+    closeModal('bulk-bairro');
+    if (erros) toast(`${ids.length - erros} atualizado(s), ${erros} com erro.`, 'error');
+    else toast(`Bairro atualizado em ${ids.length} restaurante(s)!`);
+    loadRestaurantes();
 }
 
 function editRestaurante(id) {
