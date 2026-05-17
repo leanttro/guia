@@ -171,6 +171,38 @@
             .filtros-localidade::-webkit-scrollbar { display: none; }
             .chip-cidade, .chip-regiao { flex-shrink: 0; }
         }
+        /* ── Slicer de bairro (categoria) ── */
+        .bairro-slicer-wrap { display: flex; align-items: flex-start; gap: 10px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+        .bairro-slicer-label { font-size: 0.82em; color: #6c757d; font-weight: 500; align-self: center; white-space: nowrap; }
+        .bairro-slicer-toggle {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 14px; border-radius: 20px; border: 2px solid var(--medium-gray);
+            background: var(--white); color: var(--text-color); font-family: inherit;
+            font-size: 0.82em; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .bairro-slicer-toggle:hover { border-color: var(--primary); color: var(--primary); }
+        .bairro-slicer-toggle.has-active { background: var(--dark); border-color: var(--dark); color: var(--white); }
+        .bairro-slicer-toggle .slicer-arrow { font-size: 0.75em; transition: transform 0.25s; display: inline-block; }
+        .bairro-slicer-toggle.open .slicer-arrow { transform: rotate(180deg); }
+        .bairro-slicer-dropdown {
+            display: none; flex-wrap: wrap; gap: 7px;
+            background: var(--white); border: 1.5px solid var(--medium-gray);
+            border-radius: 14px; padding: 14px 16px;
+            box-shadow: 0 4px 16px var(--shadow-light);
+            justify-content: center; width: 100%; max-width: 780px;
+            margin-top: 6px;
+        }
+        .bairro-slicer-dropdown.open { display: flex; }
+        .bairro-slicer-outer { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .chip-bairro {
+            padding: 5px 14px; border-radius: 20px; border: 2px solid var(--medium-gray);
+            background: var(--white); color: var(--text-color); font-family: inherit;
+            font-size: 0.82em; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .chip-bairro:hover { border-color: var(--primary); color: var(--primary); }
+        .chip-bairro.active { background: var(--dark); border-color: var(--dark); color: var(--white); }
+
         /* badge cidade/região no card de restaurante */
         .restaurante-card .cidade-badge {
             display: inline-block; background: rgba(192,57,43,0.08); color: var(--primary);
@@ -815,6 +847,11 @@
                 </div>
             </div>
 
+            <!-- Slicer de bairro -->
+            <div id="filtros-bairro-wrap" style="display:none; margin-bottom:16px;">
+                <div id="filtros-bairro"></div>
+            </div>
+
             <!-- Controles de visualização dos restaurantes -->
             <div class="view-controls" id="rest-view-controls" style="display:none">
                 <span>Ver como:</span>
@@ -1295,6 +1332,7 @@
         // ── Estado de filtros de localidade ──
         let cidadeSelecionada = null;
         let regiaoSelecionada = null;
+        let bairroSelecionado = null;
         let todosOsRestaurantes = [];
 
         async function carregarFiltrosCidade() {
@@ -1313,9 +1351,11 @@
         async function selecionarCidade(btn, cidade) {
             cidadeSelecionada = cidade || null;
             regiaoSelecionada = null;
+            bairroSelecionado = null;
             document.querySelectorAll('.chip-cidade').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             await carregarFiltrosRegiao();
+            carregarFiltrosBairro();
             aplicarFiltrosLocalidade();
         }
 
@@ -1336,8 +1376,10 @@
 
         function selecionarRegiao(btn, regiao) {
             regiaoSelecionada = regiao || null;
+            bairroSelecionado = null;
             document.querySelectorAll('.chip-regiao').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            carregarFiltrosBairro();
             aplicarFiltrosLocalidade();
         }
 
@@ -1425,10 +1467,74 @@
         document.getElementById('carr-prev').addEventListener('click', () => moverCarrDestaque(-1));
         document.getElementById('carr-next').addEventListener('click', () => moverCarrDestaque(1));
 
+        function carregarFiltrosBairro() {
+            var wrap = document.getElementById('filtros-bairro-wrap');
+            var el   = document.getElementById('filtros-bairro');
+            var lista = todosOsRestaurantes;
+            if (cidadeSelecionada) lista = lista.filter(function(r){ return r.cidade === cidadeSelecionada; });
+            if (regiaoSelecionada) lista = lista.filter(function(r){ return r.regiao === regiaoSelecionada; });
+            var bairros = [];
+            lista.forEach(function(r){ if (r.bairro && bairros.indexOf(r.bairro) === -1) bairros.push(r.bairro); });
+            bairros.sort();
+            if (!bairros.length) { wrap.style.display = 'none'; return; }
+            wrap.style.display = '';
+
+            var chips = '<button class="chip-bairro active" onclick="slicerSelecionarBairro(this,\'\')">Todos</button>';
+            bairros.forEach(function(b) {
+                var safe = b.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                chips += '<button class="chip-bairro" onclick="slicerSelecionarBairro(this,\'' + safe + '\')">' + b + '</button>';
+            });
+
+            var labelAtivo = bairroSelecionado ? bairroSelecionado : 'Todos';
+            var hasActive = !!bairroSelecionado;
+
+            el.innerHTML =
+                '<div class="bairro-slicer-outer">' +
+                '<div class="bairro-slicer-wrap">' +
+                '<span class="bairro-slicer-label">&#127968; Bairro:</span>' +
+                '<button class="bairro-slicer-toggle' + (hasActive ? ' has-active' : '') + '" id="cat-bairro-slicer-btn" onclick="toggleBairroSlicerCat()">' +
+                '<span id="cat-bairro-slicer-label">' + labelAtivo + '</span>' +
+                '<span class="slicer-arrow">&#9660;</span>' +
+                '</button>' +
+                '</div>' +
+                '<div class="bairro-slicer-dropdown" id="cat-bairro-slicer-dropdown">' +
+                chips +
+                '</div>' +
+                '</div>';
+        }
+
+        function toggleBairroSlicerCat() {
+            var btn  = document.getElementById('cat-bairro-slicer-btn');
+            var drop = document.getElementById('cat-bairro-slicer-dropdown');
+            if (!btn || !drop) return;
+            var isOpen = drop.classList.contains('open');
+            drop.classList.toggle('open', !isOpen);
+            btn.classList.toggle('open', !isOpen);
+        }
+
+        function slicerSelecionarBairro(chipBtn, bairro) {
+            var drop = document.getElementById('cat-bairro-slicer-dropdown');
+            if (drop) drop.querySelectorAll('.chip-bairro').forEach(function(b){ b.classList.remove('active'); });
+            chipBtn.classList.add('active');
+
+            var toggleBtn = document.getElementById('cat-bairro-slicer-btn');
+            var labelEl   = document.getElementById('cat-bairro-slicer-label');
+            if (labelEl) labelEl.textContent = bairro || 'Todos';
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('has-active', !!bairro);
+                toggleBtn.classList.remove('open');
+            }
+            if (drop) drop.classList.remove('open');
+
+            bairroSelecionado = bairro || null;
+            aplicarFiltrosLocalidade();
+        }
+
         function aplicarFiltrosLocalidade() {
             let lista = todosOsRestaurantes;
             if (cidadeSelecionada) lista = lista.filter(r => r.cidade === cidadeSelecionada);
             if (regiaoSelecionada) lista = lista.filter(r => r.regiao === regiaoSelecionada);
+            if (bairroSelecionado) lista = lista.filter(r => r.bairro === bairroSelecionado);
 
             // Carrossel destaque com os que têm foto
             renderCarrDestaque(lista);
@@ -1481,6 +1587,7 @@
 
                 await carregarFiltrosCidade();
                 if (cidadeSelecionada) await carregarFiltrosRegiao();
+                carregarFiltrosBairro();
 
                 aplicarFiltrosLocalidade();
 
