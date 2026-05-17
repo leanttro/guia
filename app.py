@@ -674,6 +674,7 @@ def api_admin_vagas():
             data.get('destaque', False),
         ))
         new_id = cur.fetchone()['id']
+        conn.commit()
         cur.close()
         return jsonify({'ok': True, 'id': new_id})
     except Exception as e:
@@ -693,6 +694,7 @@ def api_admin_vaga(vaga_id):
 
         if request.method == 'DELETE':
             cur.execute("DELETE FROM vagas WHERE id = %s", (vaga_id,))
+            conn.commit()
             cur.close()
             return jsonify({'ok': True})
 
@@ -717,6 +719,7 @@ def api_admin_vaga(vaga_id):
             data.get('destaque', False),
             vaga_id,
         ))
+        conn.commit()
         cur.close()
         return jsonify({'ok': True})
     except Exception as e:
