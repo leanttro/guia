@@ -509,6 +509,7 @@
                 transform: none !important;
                 transition: none !important;
                 cursor: default;
+                will-change: auto;
             }
             .carousel-track .prato-card,
             .carousel-track .restaurante-card {
@@ -1195,7 +1196,7 @@
             return `
                 <div class="prato-card" data-subcat="${primeirasPalavras(p.nome)}">
                     <img src="${p.foto_url || 'https://placehold.co/400x250/f8f9fa/343a40?text=' + encodeURIComponent(p.nome)}"
-                         alt="${p.nome}"
+                         alt="${p.nome}" loading="lazy" decoding="async"
                          onerror="this.src='https://placehold.co/400x250/f8f9fa/343a40?text=Sem+Foto'">
                     <div class="card-body">
                         ${p.destaque ? '<span class="badge-destaque">⭐ Destaque</span>' : ''}
@@ -1275,7 +1276,7 @@
         // ── Gera HTML de um card de restaurante ──
         function restCardHTML(r) {
             const fotoHTML = r.foto_url
-                ? `<img src="${r.foto_url}" alt="${r.nome}" onerror="this.parentElement.innerHTML='<div class=\\'rest-card-sem-foto\\'>${r.categoria_nome || ''}</div>'">`
+                ? `<img src="${r.foto_url}" alt="${r.nome}" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML='<div class=\\'rest-card-sem-foto\\'>${r.categoria_nome || ''}</div>'">`
                 : `<div class="rest-card-sem-foto">${r.categoria_nome || ''}</div>`;
             return `
                 <div class="restaurante-card">
@@ -1677,7 +1678,7 @@
                 `https://placehold.co/240x170/2d0a0a/ffffff?text=${encodeURIComponent(p.nome.split(' ')[0])}`;
             return `
                 <div class="disputa-prato" onclick="votar(${p.id})">
-                    <img src="${foto}" alt="${p.nome}"
+                    <img src="${foto}" alt="${p.nome}" loading="lazy" decoding="async"
                          onerror="this.src='https://placehold.co/240x170/2d0a0a/ffffff?text=Prato'">
                     <div class="dp-nome">${p.nome}</div>
                     ${p.ingredientes ? `<div class="dp-ing">${p.ingredientes}</div>` : ''}
