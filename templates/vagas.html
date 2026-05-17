@@ -124,14 +124,14 @@
         .carousel-track-outer { overflow: hidden; border-radius: 12px; }
         .carousel-track {
             display: flex;
-            gap: 20px;
+            gap: 25px;
             transition: transform 0.4s ease;
             will-change: transform;
             cursor: grab;
             user-select: none;
         }
         .carousel-track .vaga-card {
-            flex: 0 0 calc(25% - 15px);
+            flex: 0 0 calc(25% - 19px);
             min-width: 0;
         }
         .carousel-nav {
@@ -152,14 +152,8 @@
         }
         .carousel-arrow:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: var(--white); }
         .carousel-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
-        .carousel-dots { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: center; }
-        .carousel-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--medium-gray); cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-            border: none; padding: 0;
-        }
-        .carousel-dot.active { background: var(--primary); transform: scale(1.3); }
+        .carousel-progress-bar { flex: 1; max-width: 200px; height: 4px; background: var(--medium-gray); border-radius: 4px; overflow: hidden; }
+        .carousel-progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
 
         /* ── Grid de vagas ── */
         .vagas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -381,7 +375,7 @@
             .modal-body { padding: 18px 20px 24px; }
             .modal-header { padding: 18px 20px 14px; }
             .fab-curriculo { bottom: 16px; right: 16px; padding: 13px 18px; }
-            .carousel-track .vaga-card { flex: 0 0 calc(50% - 10px); }
+            .carousel-track .vaga-card { flex: 0 0 calc(50% - 13px); }
             .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
             .footer-divider { display: none; }
             .footer-logo img { height: 38px; }
@@ -424,7 +418,7 @@
     </header>
 
     <div class="mobile-nav-overlay" id="mobile-nav">
-        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
+        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;left:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
         <nav>
             <ul>
                 <li><a href="/" onclick="closeMobileNav()">Início</a></li>
@@ -496,7 +490,7 @@
                     </div>
                     <div class="carousel-nav" id="vagas-carousel-nav">
                         <button class="carousel-arrow" id="vagas-prev" onclick="moveCarousel(-1)"><i class="fas fa-chevron-left"></i></button>
-                        <div class="carousel-dots" id="vagas-dots"></div>
+                        <div class="carousel-progress-bar"><div class="carousel-progress-fill" id="vagas-progress-fill"></div></div>
                         <button class="carousel-arrow" id="vagas-next" onclick="moveCarousel(1)"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
@@ -794,47 +788,107 @@
             if (e.target === document.getElementById('modal-vaga-detalhe')) closeVagaDetalhe();
         });
 
-        // ── Carrossel ────────────────────────────
+        // ── Carrossel (igual ao categoria.html) ──
         let vagasData = [];
-        let carouselIndex = 0;
-        const ITEMS_PER_PAGE = 4;
+
+        const carouselState = { vagas: { index: 0, visibleCount: 4, total: 0 } };
+
+        function getVisibleCount() {
+            const w = window.innerWidth;
+            if (w <= 520) return 1;
+            if (w <= 768) return 2;
+            return 4;
+        }
 
         function buildCarousel(data) {
             const track = document.getElementById('vagas-track');
-            const dots  = document.getElementById('vagas-dots');
+            const state = carouselState.vagas;
+            state.index = 0;
+            state.total = data.length;
+            state.visibleCount = getVisibleCount();
             track.innerHTML = data.map(v => renderVagaCard(v)).join('');
-            const pages = Math.ceil(data.length / ITEMS_PER_PAGE);
-            dots.innerHTML = Array.from({length: pages}, (_, i) =>
-                `<button class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="goToPage(${i})"></button>`
-            ).join('');
-            carouselIndex = 0;
-            updateCarousel();
+            updateCarouselPosition();
+            addDragSupport();
         }
 
-        function updateCarousel() {
+        function updateCarouselPosition() {
+            const state = carouselState.vagas;
             const track = document.getElementById('vagas-track');
-            const cards = track.querySelectorAll('.vaga-card');
-            if (!cards.length) return;
-            const cardWidth = cards[0].offsetWidth + 20;
-            track.style.transform = `translateX(-${carouselIndex * ITEMS_PER_PAGE * cardWidth}px)`;
-            document.querySelectorAll('.carousel-dot').forEach((d, i) => {
-                d.classList.toggle('active', i === Math.floor(carouselIndex));
-            });
-            const pages = Math.ceil(vagasData.length / ITEMS_PER_PAGE);
-            document.getElementById('vagas-prev').disabled = carouselIndex === 0;
-            document.getElementById('vagas-next').disabled = carouselIndex >= pages - 1;
+            const outer = track.parentElement;
+            const containerWidth = outer ? outer.offsetWidth : 0;
+            const gap = 25;
+            const cardW = (containerWidth - gap * (state.visibleCount - 1)) / state.visibleCount;
+            const stepPx = cardW + gap;
+
+            const max = Math.max(0, state.total - state.visibleCount);
+            if (state.index > max) state.index = max;
+
+            track.style.transform = `translateX(-${state.index * stepPx}px)`;
+
+            const fill = document.getElementById('vagas-progress-fill');
+            if (fill) {
+                const pct = state.total <= state.visibleCount ? 100
+                    : Math.round(((state.index + state.visibleCount) / state.total) * 100);
+                fill.style.width = Math.min(100, pct) + '%';
+            }
+
+            const prevBtn = document.getElementById('vagas-prev');
+            const nextBtn = document.getElementById('vagas-next');
+            if (prevBtn) prevBtn.disabled = state.index === 0;
+            if (nextBtn) nextBtn.disabled = state.index >= max;
+
+            const navEl = document.getElementById('vagas-carousel-nav');
+            if (navEl) navEl.style.display = state.total <= state.visibleCount ? 'none' : 'flex';
         }
 
         function moveCarousel(dir) {
-            const pages = Math.ceil(vagasData.length / ITEMS_PER_PAGE);
-            carouselIndex = Math.max(0, Math.min(pages - 1, carouselIndex + dir));
-            updateCarousel();
+            const state = carouselState.vagas;
+            const max = Math.max(0, state.total - state.visibleCount);
+            state.index = Math.max(0, Math.min(state.index + dir, max));
+            updateCarouselPosition();
         }
 
-        function goToPage(i) {
-            carouselIndex = i;
-            updateCarousel();
+        function addDragSupport() {
+            const track = document.getElementById('vagas-track');
+            if (!track) return;
+            let startX = 0, isDragging = false;
+
+            function onStart(x) {
+                isDragging = true; startX = x;
+                track.style.transition = 'none'; track.style.cursor = 'grabbing';
+            }
+            function onMove(x) {
+                if (!isDragging) return;
+                const state = carouselState.vagas;
+                const outer = track.parentElement;
+                const containerWidth = outer ? outer.offsetWidth : 0;
+                const gap = 25;
+                const cardW = (containerWidth - gap * (state.visibleCount - 1)) / state.visibleCount;
+                const stepPx = cardW + gap;
+                const base = -(state.index * stepPx);
+                track.style.transform = `translateX(${base + (x - startX)}px)`;
+            }
+            function onEnd(x) {
+                if (!isDragging) return;
+                isDragging = false; track.style.cursor = ''; track.style.transition = '';
+                const diff = x - startX;
+                if (Math.abs(diff) > 40) moveCarousel(diff < 0 ? 1 : -1);
+                else updateCarouselPosition();
+            }
+
+            track.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
+            window.addEventListener('mousemove', e => { if (isDragging) onMove(e.clientX); });
+            window.addEventListener('mouseup',   e => { if (isDragging) onEnd(e.clientX); });
+            track.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            track.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
         }
+
+        window.addEventListener('resize', () => {
+            carouselState.vagas.visibleCount = getVisibleCount();
+            carouselState.vagas.index = 0;
+            updateCarouselPosition();
+        });
 
         // ── Toggle carrossel / grade ─────────────
         function setVagasView(mode) {
@@ -845,7 +899,7 @@
             if (mode === 'carousel') {
                 carouselWrap.style.display = 'block';
                 grade.style.display        = 'none';
-                updateCarousel();
+                updateCarouselPosition();
             } else {
                 carouselWrap.style.display = 'none';
                 grade.style.display        = 'grid';
@@ -877,21 +931,6 @@
                 document.getElementById('vagas-loading').innerHTML = '<p class="info-msg">Erro ao carregar vagas.</p>';
             }
         }
-
-        // ── Drag no carrossel ────────────────────
-        (function() {
-            const track = document.getElementById('vagas-track');
-            let startX = 0, isDragging = false;
-            track.addEventListener('mousedown',  e => { isDragging = true; startX = e.clientX; track.style.cursor = 'grabbing'; });
-            track.addEventListener('mousemove',  e => { if (!isDragging) return; });
-            track.addEventListener('mouseup',    e => {
-                if (!isDragging) return;
-                isDragging = false; track.style.cursor = 'grab';
-                const diff = e.clientX - startX;
-                if (Math.abs(diff) > 50) moveCarousel(diff < 0 ? 1 : -1);
-            });
-            track.addEventListener('mouseleave', () => { isDragging = false; track.style.cursor = 'grab'; });
-        })();
 
         // ── Carregar candidatos ──────────────────
         async function loadCandidatos() {
