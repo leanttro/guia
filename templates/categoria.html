@@ -1710,11 +1710,8 @@
         }
 
         // ── COMPETIÇÃO DE PRATOS ─────────────────────────────────
-        let disputaPratos      = [];
-        let disputaMatches     = [];
-        let disputaMatchIndex  = 0;
-        let disputaVotos       = {};
-        let disputaVencedor    = null;
+        let disputaPratos   = [];
+        let disputaVencedor = null;
 
         function embaralhar(arr) {
             const a = [...arr];
@@ -1725,36 +1722,58 @@
             return a;
         }
 
+        // ── Estado do torneio ──
+        let torneioRodadas    = [];
+        let torneioRodadaIdx  = 0;
+        let torneioDueloIdx   = 0;
+        let torneioVencedores = [];
+
+        function nomeDaRodada(totalRodadas, rodadaIdx) {
+            const faltam = totalRodadas - 1 - rodadaIdx;
+            if (faltam === 0) return 'Final 🏆';
+            if (faltam === 1) return 'Semifinal';
+            if (faltam === 2) return 'Quartas de Final';
+            return `Rodada ${rodadaIdx + 1}`;
+        }
+
+        function totalDuelosGeral() {
+            return torneioRodadas.reduce((s, r) => s + r.pares.length, 0);
+        }
+
+        function totalDuelosAteAgora() {
+            let total = 0;
+            for (let r = 0; r < torneioRodadaIdx; r++) total += torneioRodadas[r].pares.length;
+            return total;
+        }
+
         function iniciarDisputa() {
             const section = document.getElementById('disputa-section');
             if (!todosOsPratos || todosOsPratos.length < 2) { section.style.display = 'none'; return; }
 
             // Reinicia estado
-            disputaMatchIndex = 0;
-            disputaVotos      = {};
+            torneioRodadas    = [];
+            torneioRodadaIdx  = 0;
+            torneioDueloIdx   = 0;
+            torneioVencedores = [];
             disputaVencedor   = null;
-            document.getElementById('disputa-vencedor').style.display    = 'none';
-            document.getElementById('disputa-arena-wrap').style.display  = '';
-            document.getElementById('disputa-feedback').style.display    = 'none';
-            document.getElementById('disputa-form').style.display        = 'flex';
-            document.getElementById('btn-reiniciar').style.display       = 'none';
+
+            document.getElementById('disputa-vencedor').style.display   = 'none';
+            document.getElementById('disputa-arena-wrap').style.display = '';
+            document.getElementById('disputa-feedback').style.display   = 'none';
+            document.getElementById('disputa-form').style.display       = 'flex';
+            document.getElementById('btn-reiniciar').style.display      = 'none';
             document.getElementById('disputa-nome').value  = '';
             document.getElementById('disputa-email').value = '';
 
-            // Pega até 6 pratos aleatórios
-            const pool = embaralhar(todosOsPratos).slice(0, 6);
+            // Pega até 8 pratos aleatórios
+            const pool = embaralhar(todosOsPratos).slice(0, 8);
             disputaPratos = pool;
-            pool.forEach(p => { disputaVotos[p.id] = 0; });
 
-            // Gera os pares
-            disputaMatches = [];
-            for (let i = 0; i + 1 < pool.length; i += 2) {
-                disputaMatches.push([pool[i], pool[i + 1]]);
-            }
-            // Ímpar: último ganha ponto de bye automaticamente
-            if (pool.length % 2 !== 0) {
-                disputaVotos[pool[pool.length - 1].id] += 1;
-            }
+            // Monta a primeira rodada
+            const pares = [];
+            for (let i = 0; i + 1 < pool.length; i += 2) pares.push([pool[i], pool[i + 1]]);
+            const bye = pool.length % 2 !== 0 ? pool[pool.length - 1] : null;
+            torneioRodadas = [{ pares, bye }];
 
             section.style.display = '';
             renderDisputaProgress();
@@ -1762,23 +1781,61 @@
         }
 
         function renderDisputaProgress() {
+            const dueloGlobal = totalDuelosAteAgora() + torneioDueloIdx;
+            const totalGeral  = totalDuelosGeral();
+
             const el = document.getElementById('disputa-progress');
-            el.innerHTML = disputaMatches.map((_, i) => {
+            el.innerHTML = Array.from({ length: totalGeral }, (_, i) => {
                 let cls = 'disputa-dot';
-                if (i < disputaMatchIndex)      cls += ' feito';
-                else if (i === disputaMatchIndex) cls += ' atual';
+                if (i < dueloGlobal)        cls += ' feito';
+                else if (i === dueloGlobal) cls += ' atual';
                 return `<div class="${cls}"></div>`;
             }).join('');
 
             const rodEl = document.getElementById('disputa-rodada');
-            rodEl.textContent = disputaMatchIndex < disputaMatches.length
-                ? `Duelo ${disputaMatchIndex + 1} de ${disputaMatches.length}`
-                : '';
+            if (torneioRodadaIdx < torneioRodadas.length) {
+                const nomeRod = nomeDaRodada(torneioRodadas.length, torneioRodadaIdx);
+                const { pares } = torneioRodadas[torneioRodadaIdx];
+                rodEl.textContent = `${nomeRod} — Duelo ${torneioDueloIdx + 1} de ${pares.length}`;
+            } else {
+                rodEl.textContent = '';
+            }
         }
 
         function renderDisputaMatch() {
-            if (disputaMatchIndex >= disputaMatches.length) { mostrarVencedorDisputa(); return; }
-            const [a, b] = disputaMatches[disputaMatchIndex];
+            if (torneioRodadaIdx >= torneioRodadas.length) { mostrarVencedorDisputa(); return; }
+
+            const rodada = torneioRodadas[torneioRodadaIdx];
+
+            if (torneioDueloIdx >= rodada.pares.length) {
+                // Rodada terminou — acrescenta bye se houver
+                if (rodada.bye) torneioVencedores.push(rodada.bye);
+
+                if (torneioVencedores.length === 1) {
+                    // Sobrou um único — é o campeão
+                    disputaVencedor = torneioVencedores[0];
+                    mostrarVencedorDisputa();
+                    return;
+                }
+
+                // Monta próxima rodada com os vencedores
+                const proxPares = [];
+                for (let i = 0; i + 1 < torneioVencedores.length; i += 2)
+                    proxPares.push([torneioVencedores[i], torneioVencedores[i + 1]]);
+                const proxBye = torneioVencedores.length % 2 !== 0
+                    ? torneioVencedores[torneioVencedores.length - 1] : null;
+
+                torneioRodadas.push({ pares: proxPares, bye: proxBye });
+                torneioRodadaIdx++;
+                torneioDueloIdx   = 0;
+                torneioVencedores = [];
+
+                renderDisputaProgress();
+                renderDisputaMatch();
+                return;
+            }
+
+            const [a, b] = rodada.pares[torneioDueloIdx];
             document.getElementById('disputa-arena').innerHTML =
                 disputaCardHTML(a) +
                 '<div class="disputa-vs">VS</div>' +
@@ -1798,9 +1855,14 @@
         }
 
         function votar(pratoId) {
-            if (disputaMatchIndex >= disputaMatches.length) return;
-            disputaVotos[pratoId] = (disputaVotos[pratoId] || 0) + 1;
-            disputaMatchIndex++;
+            if (torneioRodadaIdx >= torneioRodadas.length) return;
+            const rodada = torneioRodadas[torneioRodadaIdx];
+            if (torneioDueloIdx >= rodada.pares.length) return;
+
+            const [a, b] = rodada.pares[torneioDueloIdx];
+            torneioVencedores.push(a.id === pratoId ? a : b);
+            torneioDueloIdx++;
+
             renderDisputaProgress();
             const arena = document.getElementById('disputa-arena');
             arena.style.opacity = '0';
@@ -1809,12 +1871,6 @@
         }
 
         function mostrarVencedorDisputa() {
-            let maxV = -1, vencedorId = null;
-            for (const [id, v] of Object.entries(disputaVotos)) {
-                if (v > maxV) { maxV = v; vencedorId = parseInt(id); }
-            }
-            disputaVencedor = disputaPratos.find(p => p.id === vencedorId) || disputaPratos[0];
-
             document.getElementById('disputa-arena-wrap').style.display = 'none';
             const venEl = document.getElementById('disputa-vencedor');
             venEl.style.display = 'block';
