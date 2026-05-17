@@ -816,40 +816,53 @@
             if (navEl) navEl.style.display = total <= vis ? 'none' : 'flex';
         }
 
+        let _idxDragHandlers = null;
+
         function addIdxDragSupport() {
-            var track = document.getElementById('idx-rest-track');
+            const track = document.getElementById('idx-rest-track');
             if (!track) return;
-            var startX = 0, isDragging = false, moved = false;
-            function onStart(x) { isDragging = true; moved = false; startX = x; track.style.transition = 'none'; track.style.cursor = 'grabbing'; }
+
+            if (_idxDragHandlers) {
+                window.removeEventListener('mousemove', _idxDragHandlers.move);
+                window.removeEventListener('mouseup',   _idxDragHandlers.up);
+            }
+
+            let startX = 0, isDragging = false;
+
+            function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; track.style.cursor = 'grabbing'; }
             function onMove(x) {
                 if (!isDragging) return;
-                moved = true;
-                var dx = x - startX;
-                var vis  = idxRestCarousel.visibleCount;
-                var gap  = 25;
-                var containerWidth = track.parentElement ? track.parentElement.offsetWidth : 0;
-                var cardW = (containerWidth - gap * (vis - 1)) / vis;
-                var stepPx = cardW + gap;
-                var base = -idxRestCarousel.index * stepPx;
-                track.style.transform = 'translateX(' + (base + dx) + 'px)';
+                const vis  = idxRestCarousel.visibleCount;
+                const gap  = 25;
+                const containerWidth = track.parentElement ? track.parentElement.offsetWidth : 0;
+                const cardW = (containerWidth - gap * (vis - 1)) / vis;
+                const stepPx = cardW + gap;
+                const base = -idxRestCarousel.index * stepPx;
+                track.style.transform = `translateX(${base + (x - startX)}px)`;
             }
             function onEnd(x) {
                 if (!isDragging) return;
                 isDragging = false; track.style.cursor = ''; track.style.transition = '';
-                var diff = x - startX;
-                var threshold = 40;
-                if (Math.abs(diff) > threshold) {
-                    moveIdxCarousel(diff < 0 ? 1 : -1);
-                } else {
-                    updateIdxCarouselPosition();
-                }
+                const diff = x - startX;
+                if (Math.abs(diff) > 40) moveIdxCarousel(diff < 0 ? 1 : -1);
+                else updateIdxCarouselPosition();
             }
-            track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
-            window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
-            window.addEventListener('mouseup', function(e){ if (isDragging) onEnd(e.clientX); });
-            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchmove', function(e){ if (isDragging) { onMove(e.touches[0].clientX); } }, { passive: true });
-            track.addEventListener('touchend', function(e){ onEnd(e.changedTouches[0].clientX); });
+
+            const onMouseMove = e => onMove(e.clientX);
+            const onMouseUp   = e => onEnd(e.clientX);
+            _idxDragHandlers = { move: onMouseMove, up: onMouseUp };
+
+            const newTrack = track.cloneNode(true);
+            track.parentNode.replaceChild(newTrack, track);
+            const t = document.getElementById('idx-rest-track');
+
+            t.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
+            t.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup',   onMouseUp);
         }
 
         function setIdxRestView(mode) {
@@ -908,11 +921,20 @@
             }
         }
 
+        var _carrHandlers = null;
+
         function addCarrDragSupport() {
             var track = document.getElementById('carrossel-track');
             if (!track) return;
-            var startX = 0, isDragging = false;
+
+            if (_carrHandlers) {
+                window.removeEventListener('mousemove', _carrHandlers.move);
+                window.removeEventListener('mouseup',   _carrHandlers.up);
+            }
+
             var cardW = 280 + 20;
+            var startX = 0, isDragging = false;
+
             function onStart(x) { isDragging = true; startX = x; track.style.transition = 'none'; }
             function onMove(x) {
                 if (!isDragging) return;
@@ -926,12 +948,22 @@
                 if (Math.abs(diff) > 40) moverCarrossel(diff < 0 ? 1 : -1);
                 else atualizarCarrossel();
             }
-            track.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
-            window.addEventListener('mousemove', function(e){ if (isDragging) onMove(e.clientX); });
-            window.addEventListener('mouseup', function(e){ if (isDragging) onEnd(e.clientX); });
-            track.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchmove', function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            track.addEventListener('touchend', function(e){ onEnd(e.changedTouches[0].clientX); });
+
+            var onMouseMove = function(e) { onMove(e.clientX); };
+            var onMouseUp   = function(e) { onEnd(e.clientX); };
+            _carrHandlers = { move: onMouseMove, up: onMouseUp };
+
+            var newTrack = track.cloneNode(true);
+            track.parentNode.replaceChild(newTrack, track);
+            var t = document.getElementById('carrossel-track');
+
+            t.addEventListener('mousedown', function(e){ onStart(e.clientX); e.preventDefault(); });
+            t.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchmove',  function(e){ if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
+            t.addEventListener('touchend',   function(e){ onEnd(e.changedTouches[0].clientX); });
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup',   onMouseUp);
         }
 
         document.getElementById('carr-prev').addEventListener('click', function(){ moverCarrossel(-1); });
