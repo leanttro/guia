@@ -1373,7 +1373,6 @@
         function idxCarregarFiltrosBairro() {
             var wrap = document.getElementById('idx-filtros-bairro-wrap');
             var el   = document.getElementById('idx-filtros-bairro');
-            // Filtra a lista parcialmente (categoria + cidade + regiao, sem bairro)
             var lista = idxTodosRestaurantes;
             if (idxCategoriaSel) lista = lista.filter(function(r){ return r.categoria_slug === idxCategoriaSel; });
             if (idxCidadeSel) lista = lista.filter(function(r){ return r.cidade === idxCidadeSel; });
@@ -1383,9 +1382,13 @@
             bairros.sort();
             if (!bairros.length) { wrap.style.display = 'none'; return; }
             wrap.style.display = '';
-            el.innerHTML = '<span class="loc-label">&#127968; Bairro:</span>' +
-                '<button class="chip-loc active" onclick="idxSelecionarBairro(this,'')">Todos</button>' +
-                bairros.map(function(b){ return '<button class="chip-loc" onclick="idxSelecionarBairro(this,'' + b.replace(/'/g, "\'") + '')">' + b + '</button>'; }).join('');
+            var chips = '<span class="loc-label">&#127968; Bairro:</span>';
+            chips += '<button class="chip-loc active" onclick="idxSelecionarBairro(this,\'\')">' + 'Todos' + '</button>';
+            bairros.forEach(function(b) {
+                var safe = b.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                chips += '<button class="chip-loc" onclick="idxSelecionarBairro(this,\'' + safe + '\')">' + b + '</button>';
+            });
+            el.innerHTML = chips;
         }
 
         function idxSelecionarBairro(btn, bairro) {
