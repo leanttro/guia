@@ -130,7 +130,7 @@
         .carousel-track-outer { overflow: hidden; border-radius: 12px; }
         .carousel-track {
             display: flex; gap: 25px;
-            transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+            transition: transform 0.4s ease;
             will-change: transform; cursor: grab; user-select: none;
         }
         .carousel-track .blog-card { flex: 0 0 calc(33.333% - 17px); min-width: 0; }
@@ -206,16 +206,35 @@
         .footer-bottom a:hover { color: #888; text-decoration: underline; }
 
         /* ── Responsive ── */
+        /* ── Mobile: scroll-snap nativo no carrossel ── */
         @media (max-width: 768px) {
             body > header nav.desktop-nav { display: none; }
             .hamburger-menu { display: block; }
             body > header .logo img { height: 60px; }
             .hero-section h1 { font-size: 1.9em; }
             .section-title { font-size: 1.6em; }
-            .carousel-track .blog-card { flex: 0 0 calc(50% - 13px); }
+
+            .carousel-track-outer {
+                overflow-x: scroll;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                scrollbar-width: none;
+            }
+            .carousel-track-outer::-webkit-scrollbar { display: none; }
+            .carousel-track {
+                transform: none !important;
+                transition: none !important;
+                cursor: default;
+                will-change: auto;
+            }
+            .carousel-track .blog-card {
+                flex: 0 0 calc(50% - 13px);
+                scroll-snap-align: start;
+            }
         }
         @media (max-width: 520px) {
-            .carousel-track .blog-card { flex: 0 0 100%; }
+            .carousel-track .blog-card { flex: 0 0 100%; scroll-snap-align: start; }
         }
         @media (max-width: 600px) {
             .vagas-btns { flex-direction: column; align-items: center; }
@@ -465,7 +484,12 @@
             const max = Math.max(0, carouselState.total - carouselState.visibleCount);
             if (carouselState.index > max) carouselState.index = max;
 
-            track.style.transform = `translateX(-${carouselState.index * stepPx}px)`;
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                outer.scrollTo({ left: carouselState.index * stepPx, behavior: 'smooth' });
+            } else {
+                track.style.transform = `translateX(-${carouselState.index * stepPx}px)`;
+            }
 
             // barra de progresso
             const fill = document.getElementById('blog-progress-fill');
@@ -484,10 +508,13 @@
             if (navEl) navEl.style.display = carouselState.total <= carouselState.visibleCount ? 'none' : 'flex';
         }
 
-        // ── Drag / Swipe ──
+        // ── Drag — apenas mouse no desktop; touch é tratado pelo scroll-snap nativo CSS ──
         let _dragHandlers = null;
 
         function addDragSupport() {
+            const track = document.getElementById('blog-track');
+            if (!track) return;
+
             if (_dragHandlers) {
                 window.removeEventListener('mousemove', _dragHandlers.move);
                 window.removeEventListener('mouseup',   _dragHandlers.up);
@@ -495,42 +522,38 @@
 
             let startX = 0, isDragging = false;
 
-            function onStart(x) { isDragging = true; startX = x; const t = document.getElementById('blog-track'); t.style.transition = 'none'; t.style.cursor = 'grabbing'; }
+            function onStart(x) {
+                isDragging = true; startX = x;
+                track.style.transition = 'none'; track.style.cursor = 'grabbing';
+            }
             function onMove(x) {
                 if (!isDragging) return;
-                const t = document.getElementById('blog-track');
-                const outer = t.parentElement;
+                const outer = track.parentElement;
                 const containerWidth = outer ? outer.offsetWidth : 0;
                 const gap = 25;
                 const cardW = (containerWidth - gap * (carouselState.visibleCount - 1)) / carouselState.visibleCount;
                 const stepPx = cardW + gap;
                 const base = -(carouselState.index * stepPx);
-                t.style.transform = `translateX(${base + (x - startX)}px)`;
+                track.style.transform = `translateX(${base + (x - startX)}px)`;
             }
             function onEnd(x) {
                 if (!isDragging) return;
-                isDragging = false;
-                const t = document.getElementById('blog-track');
-                t.style.cursor = ''; t.style.transition = '';
+                isDragging = false; track.style.cursor = ''; track.style.transition = '';
                 const diff = x - startX;
                 if (Math.abs(diff) > 40) moveCarousel(diff < 0 ? 1 : -1);
                 else updateCarouselPosition();
             }
 
             const onMouseMove = e => onMove(e.clientX);
-            const onMouseUp   = e => onEnd(e.clientX);
+            const onMouseUp   = e => { if (isDragging) onEnd(e.clientX); };
+
             _dragHandlers = { move: onMouseMove, up: onMouseUp };
 
-            // cloneNode para limpar listeners antigos do track
-            const track = document.getElementById('blog-track');
-            const newTrack = track.cloneNode(true);
-            track.parentNode.replaceChild(newTrack, track);
-            const t = document.getElementById('blog-track');
-
-            t.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
-            t.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchmove',  e => { if (isDragging) onMove(e.touches[0].clientX); }, { passive: true });
-            t.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX); });
+            // Apenas mouse drag no desktop — touch é tratado pelo scroll-snap nativo CSS
+            track.addEventListener('mousedown', e => {
+                if (window.innerWidth <= 768) return; // skip no mobile
+                onStart(e.clientX); e.preventDefault();
+            });
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup',   onMouseUp);
