@@ -2098,10 +2098,15 @@
                 return;
             }
 
-            const pratosEscolhidos = disputaMatches.map(([a, b]) => ({
-                duelo:    `${a.nome} vs ${b.nome}`,
-                vencedor: (disputaVotos[a.id] || 0) >= (disputaVotos[b.id] || 0) ? a.nome : b.nome
-            }));
+            const pratosEscolhidos = [];
+            torneioRodadas.forEach(rodada => {
+                rodada.pares.forEach(([a, b]) => {
+                    pratosEscolhidos.push({
+                        duelo:    `${a.nome} vs ${b.nome}`,
+                        vencedor: disputaVencedor ? disputaVencedor.nome : ''
+                    });
+                });
+            });
 
             try {
                 const res = await fetch('/api/quiz_resultados', {
