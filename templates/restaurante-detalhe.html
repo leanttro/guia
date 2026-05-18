@@ -12,7 +12,8 @@
     <!-- ═══════════════════════════════════════════════════════
          SEO — Canonical
     ═══════════════════════════════════════════════════════ -->
-    <link rel="canonical" href="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
+    <link rel="canonical" href="https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
+    <meta name="robots" content="index, follow">
 
     <!-- ══ Favicon ══ -->
     <link rel="icon" type="image/png" href="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044702/guiadorodiziologo_zc3fih.png">
@@ -23,7 +24,7 @@
     ═══════════════════════════════════════════════════════ -->
     <meta property="og:type"        content="website">
     <meta property="og:site_name"   content="Guia do Rodízio SP">
-    <meta property="og:url"         content="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
+    <meta property="og:url"         content="https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
     <meta property="og:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %} | Guia do Rodízio">
     <meta property="og:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ restaurante.nome }}, rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %} em {{ restaurante.cidade }}{% endif %}. Cardápio, localização e contato.{% endif %}">
     <meta property="og:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png' }}">
@@ -48,11 +49,11 @@
       "@graph": [
         {
           "@type": "Restaurant",
-          "@id": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}#restaurant",
+          "@id": "https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}#restaurant",
           "name": {{ restaurante.nome | tojson }},
           "description": {{ (restaurante.descricao or '') | tojson }},
           "servesCuisine": {{ (restaurante.categoria_nome or '') | tojson }},
-          "url": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}",
+          "url": "https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}",
           {% if restaurante.foto_url %}
           "image": {{ restaurante.foto_url | tojson }},
           {% endif %}
@@ -99,27 +100,27 @@
               "@type": "ListItem",
               "position": 1,
               "name": "Início",
-              "item": "https://guiadorodizio.com.br/"
+              "item": "https://www.guiadorodizio.com.br/"
             }
             {% if restaurante.categoria_slug and restaurante.categoria_nome %}
             ,{
               "@type": "ListItem",
               "position": 2,
               "name": {{ restaurante.categoria_nome | tojson }},
-              "item": "https://guiadorodizio.com.br/{{ restaurante.categoria_slug }}"
+              "item": "https://www.guiadorodizio.com.br/{{ restaurante.categoria_slug }}"
             },
             {
               "@type": "ListItem",
               "position": 3,
               "name": {{ restaurante.nome | tojson }},
-              "item": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}"
+              "item": "https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}"
             }
             {% else %}
             ,{
               "@type": "ListItem",
               "position": 2,
               "name": {{ restaurante.nome | tojson }},
-              "item": "https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}"
+              "item": "https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}"
             }
             {% endif %}
           ]
@@ -547,7 +548,7 @@
     </script>
 
     <main itemscope itemtype="https://schema.org/Restaurant">
-        <meta itemprop="url" content="https://guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
+        <meta itemprop="url" content="https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
         <meta itemprop="priceRange" content="$$">
         <div class="page-wrap">
 
