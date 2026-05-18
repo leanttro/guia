@@ -345,6 +345,12 @@
                     <select id="filtro-rest-cat" onchange="renderRestaurantesFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
                         <option value="">Todas as categorias</option>
                     </select>
+                    <select id="filtro-rest-cidade" onchange="renderRestaurantesFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
+                        <option value="">Todas as cidades</option>
+                    </select>
+                    <select id="filtro-rest-regiao" onchange="renderRestaurantesFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
+                        <option value="">Todas as regiões</option>
+                    </select>
                     <select id="filtro-rest-bairro" onchange="renderRestaurantesFiltrados()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.9em;background:var(--white)">
                         <option value="">Todos os bairros</option>
                     </select>
@@ -356,6 +362,8 @@
                 <span class="bulk-count" id="bulk-count-rest">0 selecionados</span>
                 <div class="bulk-actions">
                     <button class="btn btn-secondary btn-sm" onclick="bulkRenameBairro()"><i class="fas fa-map-marker-alt"></i> Alterar bairro</button>
+                    <button class="btn btn-secondary btn-sm" onclick="bulkRenameRegiao()"><i class="fas fa-map"></i> Alterar região</button>
+                    <button class="btn btn-secondary btn-sm" onclick="bulkRenameCidade()"><i class="fas fa-city"></i> Alterar cidade</button>
                     <button class="btn btn-danger btn-sm" onclick="bulkDeleteRestaurantes()"><i class="fas fa-trash"></i> Excluir selecionados</button>
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="clearRestSelection()"><i class="fas fa-times"></i> Cancelar</button>
@@ -484,6 +492,62 @@
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeModal('bulk-bairro')">Cancelar</button>
             <button class="btn btn-primary" onclick="confirmBulkBairro()"><i class="fas fa-save"></i> Aplicar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alteração em Massa de Região -->
+<div class="modal-overlay" id="modal-bulk-regiao">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <h3>Alterar região em massa</h3>
+            <button class="modal-close" onclick="closeModal('bulk-regiao')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.9em;color:var(--muted);margin-bottom:16px">A nova região será aplicada a todos os <strong id="bulk-regiao-count">0</strong> restaurante(s) selecionado(s).</p>
+            <div class="field"><label>Nova região *</label><input type="text" id="bulk-regiao-novo" placeholder="Ex: Zona Sul, Centro, Leste..."></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('bulk-regiao')">Cancelar</button>
+            <button class="btn btn-primary" onclick="confirmBulkRegiao()"><i class="fas fa-save"></i> Aplicar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alteração em Massa de Cidade -->
+<div class="modal-overlay" id="modal-bulk-cidade">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <h3>Alterar cidade em massa</h3>
+            <button class="modal-close" onclick="closeModal('bulk-cidade')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.9em;color:var(--muted);margin-bottom:16px">A nova cidade será aplicada a todos os <strong id="bulk-cidade-count">0</strong> restaurante(s) selecionado(s).</p>
+            <div class="field"><label>Nova cidade *</label><input type="text" id="bulk-cidade-novo" placeholder="Ex: São Paulo"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('bulk-cidade')">Cancelar</button>
+            <button class="btn btn-primary" onclick="confirmBulkCidade()"><i class="fas fa-save"></i> Aplicar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmação de Senha para Exclusão em Massa -->
+<div class="modal-overlay" id="modal-bulk-senha">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <h3>⚠️ Confirmar exclusão em massa</h3>
+            <button class="modal-close" onclick="closeModal('bulk-senha')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:0.9em;color:var(--danger);margin-bottom:16px;font-weight:600">Você está prestes a excluir permanentemente <strong id="bulk-senha-count">0</strong> restaurante(s). Esta ação não pode ser desfeita.</p>
+            <p style="font-size:0.88em;color:var(--muted);margin-bottom:16px">Digite sua senha de acesso para confirmar:</p>
+            <div class="field"><label>Senha *</label><input type="password" id="bulk-senha-input" placeholder="••••••••" autocomplete="current-password"></div>
+            <div id="bulk-senha-erro" style="color:var(--danger);font-size:0.88em;display:none;margin-top:-8px"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('bulk-senha')">Cancelar</button>
+            <button class="btn btn-danger" onclick="confirmBulkDelete()"><i class="fas fa-trash"></i> Excluir permanentemente</button>
         </div>
     </div>
 </div>
@@ -959,15 +1023,29 @@ async function loadRestaurantes() {
         const filtroBairro = document.getElementById('filtro-rest-bairro');
         filtroBairro.innerHTML = '<option value="">Todos os bairros</option>' +
             bairros.map(b => `<option value="${b}">${b}</option>`).join('');
+        // popula filtro de cidade
+        const cidades = [...new Set(restaurantes.map(r => r.cidade).filter(Boolean))].sort();
+        const filtroCidade = document.getElementById('filtro-rest-cidade');
+        filtroCidade.innerHTML = '<option value="">Todas as cidades</option>' +
+            cidades.map(c => `<option value="${c}">${c}</option>`).join('');
+        // popula filtro de região
+        const regioes = [...new Set(restaurantes.map(r => r.regiao).filter(Boolean))].sort();
+        const filtroRegiao = document.getElementById('filtro-rest-regiao');
+        filtroRegiao.innerHTML = '<option value="">Todas as regiões</option>' +
+            regioes.map(r => `<option value="${r}">${r}</option>`).join('');
         renderRestaurantesFiltrados();
     } catch(e) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar.</td></tr>'; }
 }
 
 function renderRestaurantesFiltrados() {
     const tb = document.getElementById('tb-restaurantes');
-    const catFiltro   = document.getElementById('filtro-rest-cat').value;
+    const catFiltro    = document.getElementById('filtro-rest-cat').value;
+    const cidadeFiltro = document.getElementById('filtro-rest-cidade').value;
+    const regiaoFiltro = document.getElementById('filtro-rest-regiao').value;
     const bairroFiltro = document.getElementById('filtro-rest-bairro').value;
     let lista = catFiltro ? restaurantes.filter(r => String(r.categoria_id) === catFiltro) : restaurantes;
+    if (cidadeFiltro) lista = lista.filter(r => r.cidade === cidadeFiltro);
+    if (regiaoFiltro) lista = lista.filter(r => r.regiao === regiaoFiltro);
     if (bairroFiltro) lista = lista.filter(r => r.bairro === bairroFiltro);
     if (!lista.length) { tb.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum restaurante encontrado.</td></tr>'; clearRestSelection(); return; }
     tb.innerHTML = lista.map(r => {
@@ -1022,7 +1100,39 @@ function clearRestSelection() {
 async function bulkDeleteRestaurantes() {
     const ids = getSelectedRestIds();
     if (!ids.length) return;
-    if (!confirm(`Excluir ${ids.length} restaurante(s) permanentemente? Esta ação não pode ser desfeita.`)) return;
+    document.getElementById('bulk-senha-count').textContent = ids.length;
+    document.getElementById('bulk-senha-input').value = '';
+    document.getElementById('bulk-senha-erro').style.display = 'none';
+    openModal('bulk-senha');
+}
+
+async function confirmBulkDelete() {
+    const ids = getSelectedRestIds();
+    const senha = document.getElementById('bulk-senha-input').value;
+    if (!senha) {
+        document.getElementById('bulk-senha-erro').textContent = 'Digite sua senha.';
+        document.getElementById('bulk-senha-erro').style.display = 'block';
+        return;
+    }
+    // Verifica a senha via endpoint de login
+    try {
+        const authRes = await fetch('/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: null, senha, _check_only: true })
+        });
+        const authData = await authRes.json();
+        if (!authData.ok) {
+            document.getElementById('bulk-senha-erro').textContent = 'Senha incorreta. Tente novamente.';
+            document.getElementById('bulk-senha-erro').style.display = 'block';
+            return;
+        }
+    } catch(e) {
+        document.getElementById('bulk-senha-erro').textContent = 'Erro ao verificar senha.';
+        document.getElementById('bulk-senha-erro').style.display = 'block';
+        return;
+    }
+    closeModal('bulk-senha');
     let erros = 0;
     for (const id of ids) {
         try {
@@ -1032,6 +1142,68 @@ async function bulkDeleteRestaurantes() {
     }
     if (erros) toast(`${ids.length - erros} excluído(s), ${erros} com erro.`, 'error');
     else toast(`${ids.length} restaurante(s) excluído(s)!`);
+    loadRestaurantes();
+}
+
+function bulkRenameRegiao() {
+    const ids = getSelectedRestIds();
+    if (!ids.length) return;
+    document.getElementById('bulk-regiao-count').textContent = ids.length;
+    document.getElementById('bulk-regiao-novo').value = '';
+    openModal('bulk-regiao');
+}
+
+async function confirmBulkRegiao() {
+    const ids = getSelectedRestIds();
+    const novo = document.getElementById('bulk-regiao-novo').value.trim();
+    if (!novo) { toast('Informe a nova região.', 'error'); return; }
+    let erros = 0;
+    for (const id of ids) {
+        const r = restaurantes.find(x => x.id === id);
+        if (!r) continue;
+        const body = { nome: r.nome, slug: r.slug, categoria_id: r.categoria_id, plano_id: r.plano_id,
+            foto_url: r.foto_url, descricao: r.descricao, endereco: r.endereco,
+            bairro: r.bairro, cidade: r.cidade, regiao: novo, lat: r.lat, lng: r.lng,
+            telefone: r.telefone, website: r.website, instagram: r.instagram, ativo: r.ativo };
+        try {
+            const res = await api('PUT', `/api/admin/restaurantes/${id}`, body);
+            if (res.error) erros++;
+        } catch(e) { erros++; }
+    }
+    closeModal('bulk-regiao');
+    if (erros) toast(`${ids.length - erros} atualizado(s), ${erros} com erro.`, 'error');
+    else toast(`Região atualizada em ${ids.length} restaurante(s)!`);
+    loadRestaurantes();
+}
+
+function bulkRenameCidade() {
+    const ids = getSelectedRestIds();
+    if (!ids.length) return;
+    document.getElementById('bulk-cidade-count').textContent = ids.length;
+    document.getElementById('bulk-cidade-novo').value = '';
+    openModal('bulk-cidade');
+}
+
+async function confirmBulkCidade() {
+    const ids = getSelectedRestIds();
+    const novo = document.getElementById('bulk-cidade-novo').value.trim();
+    if (!novo) { toast('Informe a nova cidade.', 'error'); return; }
+    let erros = 0;
+    for (const id of ids) {
+        const r = restaurantes.find(x => x.id === id);
+        if (!r) continue;
+        const body = { nome: r.nome, slug: r.slug, categoria_id: r.categoria_id, plano_id: r.plano_id,
+            foto_url: r.foto_url, descricao: r.descricao, endereco: r.endereco,
+            bairro: r.bairro, cidade: novo, regiao: r.regiao, lat: r.lat, lng: r.lng,
+            telefone: r.telefone, website: r.website, instagram: r.instagram, ativo: r.ativo };
+        try {
+            const res = await api('PUT', `/api/admin/restaurantes/${id}`, body);
+            if (res.error) erros++;
+        } catch(e) { erros++; }
+    }
+    closeModal('bulk-cidade');
+    if (erros) toast(`${ids.length - erros} atualizado(s), ${erros} com erro.`, 'error');
+    else toast(`Cidade atualizada em ${ids.length} restaurante(s)!`);
     loadRestaurantes();
 }
 
