@@ -760,6 +760,25 @@
                 </div>
                 {% endif %}
 
+                <!-- Banner rotativo -->
+                <div id="banner-box" style="margin-top:16px;">
+                    <div id="banner-rotativo" style="display:none;">
+                        <a id="banner-link" href="#" target="_blank" rel="noopener sponsored">
+                            <img id="banner-img" src="" alt="Anúncio"
+                                style="width:100%;border-radius:10px;display:block;object-fit:cover;max-height:120px;transition:opacity 0.4s;">
+                        </a>
+                    </div>
+                    <div id="banner-placeholder">
+                        <a href="https://wa.me/5511913324827?text=Olá!%20Quero%20anunciar%20no%20Guia%20do%20Rodízio"
+                           target="_blank" rel="noopener"
+                           style="display:block;padding:16px 12px;background:repeating-linear-gradient(45deg,#fafafa,#fafafa 10px,#f0f0f0 10px,#f0f0f0 20px);border:2px dashed #C0392B;border-radius:10px;text-align:center;text-decoration:none;">
+                            <span style="font-size:1.3em;">📢</span><br>
+                            <span style="color:#C0392B;font-weight:700;font-size:0.9em;">Anuncie aqui</span><br>
+                            <span style="color:#6b7280;font-size:0.78em;">Fale pelo WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
@@ -1017,6 +1036,42 @@
         }
 
         loadComentarios();
+    </script>
+
+    <script>
+    // ── Banner rotativo ──
+    (function() {
+        fetch('/api/banners?posicao=restaurante')
+            .then(r => r.json())
+            .then(banners => {
+                if (!banners || !banners.length) return;
+                document.getElementById('banner-placeholder').style.display = 'none';
+                const rot  = document.getElementById('banner-rotativo');
+                const img  = document.getElementById('banner-img');
+                const link = document.getElementById('banner-link');
+                rot.style.display = 'block';
+                let idx = 0;
+
+                function mostrar(b) {
+                    img.style.opacity = '0';
+                    setTimeout(() => {
+                        img.src  = b.imagem_url;
+                        img.alt  = b.titulo || 'Anúncio';
+                        link.href = b.link_destino || '#';
+                        img.style.opacity = '1';
+                    }, 300);
+                }
+
+                mostrar(banners[0]);
+                if (banners.length > 1) {
+                    setInterval(() => {
+                        idx = (idx + 1) % banners.length;
+                        mostrar(banners[idx]);
+                    }, 5000);
+                }
+            })
+            .catch(() => {});
+    })();
     </script>
 </body>
 </html>
