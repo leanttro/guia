@@ -1299,6 +1299,169 @@ def api_admin_avaliacoes():
 
 
 # ════════════════════════════════════════════════════════════
+#  API PÚBLICA — BANNERS
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/banners')
+def api_banners():
+    """Retorna banners ativos para uma posição. Ex: /api/banners?posicao=home"""
+    conn = None
+    try:
+        posicao = request.args.get('posicao', 'home')
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT id, titulo, imagem_url, link_destino
+            FROM banners
+            WHERE ativo = TRUE AND (posicao = %s OR posicao = 'todas')
+            ORDER BY ordem ASC, criado_em DESC
+        """, (posicao,))
+        rows = [dict(r) for r in cur.fetchall()]
+        cur.close()
+        return jsonify(rows)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify([]), 500
+    finally:
+        if conn: conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+#  API ADMIN — BANNERS
+# ════════════════════════════════════════════════════════════
+
+@app.route('/api/admin/banners', methods=['GET', 'POST'])
+@login_required
+def api_admin_banners():
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if request.method == 'GET':
+            cur.execute("SELECT * FROM banners ORDER BY posicao, ordem ASC, criado_em DESC")
+            rows = [format_db_data(dict(r)) for r in cur.fetchall()]
+            cur.close()
+            return jsonify(rows)
+        data = request.get_json()
+        cur.execute("""
+            INSERT INTO banners (titulo, imagem_url, link_destino, posicao, ativo, ordem)
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
+        """, (
+            data.get('titulo', '').strip(),
+            data.get('imagem_url', '').strip(),
+            data.get('link_destino', '').strip() or None,
+            data.get('posicao', 'home'),
+            data.get('ativo', True),
+            data.get('ordem', 0),
+        ))
+        new_id = cur.fetchone()['id']
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True, 'id': new_id})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/admin/banners/<int:banner_id>', methods=['PUT', 'DELETE'])
+@login_required
+def api_admin_banner(banner_id):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        if request.method == 'DELETE':
+            cur.execute("DELETE FROM banners WHERE id = %s", (banner_id,))
+            conn.commit()
+            cur.close()
+            return jsonify({'ok': True})
+        data = request.get_json()
+        cur.execute("""
+            UPDATE banners SET
+                titulo = %s, imagem_url = %s, link_destino = %s,
+                posicao = %s, ativo = %s, ordem = %s
+            WHERE id = %s
+        """, (
+            data.get('titulo', '').strip(),
+            data.get('imagem_url', '').strip(),
+            data.get('link_destino', '').strip() or None,
+            data.get('posicao', 'home'),
+            data.get('ativo', True),
+            data.get('ordem', 0),
+            banner_id,
+        ))
+        conn.commit()
+        cur.close()
+        return jsonify({'ok': True})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/api/admin/banners/upload', methods=['POST'])
+@login_required
+def api_admin_banner_upload():
+    """Recebe imagem base64, faz upload pro Cloudinary e retorna a URL."""
+    import urllib.request as _urllib
+    import json as _json
+    import hashlib
+    import time
+
+    try:
+        data       = request.get_json()
+        image_data = data.get('image', '')
+        if not image_data:
+            return jsonify({'error': 'Imagem não enviada'}), 400
+
+        # Remove prefixo data:image/xxx;base64, se existir
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
+
+        cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+        api_key    = os.getenv('CLOUDINARY_API_KEY')
+        api_secret = os.getenv('CLOUDINARY_API_SECRET')
+
+        if not all([cloud_name, api_key, api_secret]):
+            return jsonify({'error': 'Cloudinary não configurado no .env'}), 500
+
+        timestamp = str(int(time.time()))
+        folder    = 'guiadorodizio_banners'
+        params_to_sign = f"folder={folder}&timestamp={timestamp}{api_secret}"
+        signature = hashlib.sha1(params_to_sign.encode()).hexdigest()
+
+        boundary = 'BannerUploadBoundary'
+        body_parts = []
+        fields = {
+            'file':      f'data:image/jpeg;base64,{image_data}',
+            'api_key':   api_key,
+            'timestamp': timestamp,
+            'folder':    folder,
+            'signature': signature,
+        }
+        for key, val in fields.items():
+            body_parts.append(
+                f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{val}'.encode()
+            )
+        body_parts.append(f'--{boundary}--'.encode())
+        body = b'\r\n'.join(body_parts)
+
+        url = f'https://api.cloudinary.com/v1_1/{cloud_name}/image/upload'
+        req = _urllib.Request(url, data=body,
+            headers={'Content-Type': f'multipart/form-data; boundary={boundary}'})
+        with _urllib.urlopen(req) as resp:
+            result = _json.loads(resp.read())
+
+        return jsonify({'ok': True, 'url': result['secure_url']})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+# ════════════════════════════════════════════════════════════
 #  STATIC FILES
 # ════════════════════════════════════════════════════════════
 
