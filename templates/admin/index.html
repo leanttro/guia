@@ -854,50 +854,23 @@ const PANEL_TITLES = {
 };
 
 function showPanel(name) {
-    try {
-        // Remove active class de todos os painéis
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        
-        // Remove active class de todos os itens do nav
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        
-        // Ativa o painel
-        const panel = document.getElementById('panel-' + name);
-        if (panel) {
-            panel.classList.add('active');
-        } else {
-            console.error('Panel not found: panel-' + name);
-            return;
-        }
-        
-        // Ativa o item do nav
-        const navItem = document.querySelector(`[data-panel="${name}"]`);
-        if (navItem) {
-            navItem.classList.add('active');
-        } else {
-            console.error('Nav item not found: [data-panel="' + name + '"]');
-        }
-        
-        // Atualiza título
-        document.getElementById('topbar-title').textContent = PANEL_TITLES[name] || name;
-        
-        // Carrega os dados específicos de cada seção
-        if (name === 'categorias')   loadCategorias();
-        if (name === 'pratos')       loadPratos();
-        if (name === 'restaurantes') loadRestaurantes();
-        if (name === 'blog')         loadBlog();
-        if (name === 'vagas')        loadVagas();
-        if (name === 'candidatos')   loadCandidatos();
-        if (name === 'comentarios')  loadComentariosAdmin();
-        if (name === 'avaliacoes')   loadAvaliacoes();
-        if (name === 'quiz')         loadQuiz();
-        if (name === 'planos')       loadPlanos();
-        if (name === 'banners')      loadBanners();
-        
-        closeSidebar();
-    } catch(e) {
-        console.error('Erro ao mudar de painel:', e);
-    }
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.querySelector(`[data-panel="${name}"]`).classList.add('active');
+    document.getElementById('topbar-title').textContent = PANEL_TITLES[name] || name;
+    if (name === 'categorias')   loadCategorias();
+    if (name === 'pratos')       loadPratos();
+    if (name === 'restaurantes') loadRestaurantes();
+    if (name === 'blog')         loadBlog();
+    if (name === 'vagas')        loadVagas();
+    if (name === 'candidatos')   loadCandidatos();
+    if (name === 'comentarios')  loadComentariosAdmin();
+    if (name === 'avaliacoes')   loadAvaliacoes();
+    if (name === 'quiz')         loadQuiz();
+    if (name === 'planos')       loadPlanos();
+    if (name === 'banners')      loadBanners();
+    closeSidebar();
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -1764,6 +1737,8 @@ async function deletarComentario(id) {
         toast('Comentário excluído!');
         loadComentariosAdmin();
     } catch(e) { toast('Erro ao excluir.', 'error'); }
+}
+
 // ════════════════════════════════════════
 //  BANNERS
 // ════════════════════════════════════════
@@ -1904,34 +1879,6 @@ async function salvarBanner() {
         toast('Erro ao salvar banner.', 'error');
     }
 }
-
-// ════════════════════════════════════════
-//  INICIALIZAÇÃO
-// ════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', function() {
-    // Garante que o dashboard esteja ativo ao carregar
-    try {
-        const dashPanel = document.getElementById('panel-dashboard');
-        const dashNav = document.querySelector('[data-panel="dashboard"]');
-        if (dashPanel && dashNav) {
-            dashPanel.classList.add('active');
-            dashNav.classList.add('active');
-        }
-        loadStats();
-    } catch(e) {
-        console.error('Erro na inicialização:', e);
-    }
-});
-
-// Alternativamente, se o código acima não funcionar, força a inicialização
-window.addEventListener('load', function() {
-    setTimeout(() => {
-        if (!document.querySelector('.panel.active')) {
-            const dashPanel = document.getElementById('panel-dashboard');
-            if (dashPanel) dashPanel.classList.add('active');
-        }
-    }, 100);
-});
 </script>
 </body>
 </html>
