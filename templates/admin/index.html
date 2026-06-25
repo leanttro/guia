@@ -259,6 +259,11 @@
             <i class="fas fa-users"></i> Candidatos
         </a>
 
+        <div class="nav-section">Monetização</div>
+        <a class="nav-item" data-panel="banners" onclick="showPanel('banners')">
+            <i class="fas fa-ad"></i> Banners
+        </a>
+
         <div class="nav-section">Config</div>
         <a class="nav-item" data-panel="comentarios" onclick="showPanel('comentarios')">
             <i class="fas fa-comments"></i> Comentários
@@ -473,10 +478,77 @@
             </div>
         </div>
 
+        <!-- ── Banners ── -->
+        <div class="panel" id="panel-banners">
+            <div class="toolbar">
+                <h2>Banners</h2>
+                <button class="btn btn-primary" onclick="openBannerModal()"><i class="fas fa-plus"></i> Novo Banner</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Imagem</th><th>Título</th><th>Posição</th><th>Link</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody id="tb-banners"><tr class="empty-row"><td colspan="7">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
     </div><!-- /content -->
 </div><!-- /main -->
 
 <div id="toast"></div>
+
+<!-- Modal Banner -->
+<div class="modal-overlay" id="modal-banner">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modal-banner-titulo">Novo Banner</h3>
+            <button class="modal-close" onclick="closeBannerModal()">×</button>
+        </div>
+        <div style="padding:24px 28px;display:flex;flex-direction:column;gap:14px;">
+            <div class="field">
+                <label>Título interno (para controle)</label>
+                <input type="text" id="banner-titulo" placeholder="Ex: Fushimi Sushi - Jul/2026">
+            </div>
+            <div class="field">
+                <label>Imagem do Banner</label>
+                <input type="file" id="banner-file" accept="image/*" onchange="previewBanner(this)">
+                <img id="banner-preview" src="" alt="Preview" style="display:none;width:100%;max-height:120px;object-fit:cover;border-radius:8px;margin-top:8px;">
+                <input type="hidden" id="banner-imagem-url">
+                <p class="hint" style="font-size:0.78em;color:var(--muted);margin-top:4px;">Recomendado: 728×90px ou 320×100px. JPG ou PNG.</p>
+            </div>
+            <div class="field">
+                <label>Link de destino (opcional)</label>
+                <input type="url" id="banner-link" placeholder="https://restaurante.com.br">
+            </div>
+            <div class="field">
+                <label>Posição no site</label>
+                <select id="banner-posicao">
+                    <option value="todas">Todas as páginas</option>
+                    <option value="home">Home</option>
+                    <option value="japones">Japonês</option>
+                    <option value="carnes">Carnes</option>
+                    <option value="pizza">Pizza</option>
+                    <option value="mexicano">Mexicano</option>
+                    <option value="restaurante">Página do restaurante</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Ordem de exibição</label>
+                <input type="number" id="banner-ordem" value="0" min="0">
+                <p class="hint" style="font-size:0.78em;color:var(--muted);margin-top:4px;">Menor número = aparece primeiro na rotação.</p>
+            </div>
+            <div class="check-row">
+                <input type="checkbox" id="banner-ativo" checked>
+                <label for="banner-ativo">Banner ativo</label>
+            </div>
+            <div id="banner-upload-progress" style="display:none;color:var(--muted);font-size:0.88em;">⏳ Fazendo upload da imagem...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeBannerModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarBanner()"><i class="fas fa-save"></i> Salvar Banner</button>
+        </div>
+    </div>
+</div>
 
 <!-- Modal Alteração em Massa de Bairro -->
 <div class="modal-overlay" id="modal-bulk-bairro">
@@ -778,7 +850,7 @@ const PANEL_TITLES = {
     restaurantes: 'Restaurantes', blog: 'Blog',
     vagas: 'Vagas de Emprego', candidatos: 'Candidatos',
     comentarios: 'Comentários', avaliacoes: 'Avaliações de Pratos',
-    quiz: 'Quiz / Leads', planos: 'Planos'
+    quiz: 'Quiz / Leads', planos: 'Planos', banners: 'Banners'
 };
 
 function showPanel(name) {
@@ -797,6 +869,7 @@ function showPanel(name) {
     if (name === 'avaliacoes')   loadAvaliacoes();
     if (name === 'quiz')         loadQuiz();
     if (name === 'planos')       loadPlanos();
+    if (name === 'banners')      loadBanners();
     closeSidebar();
 }
 
@@ -1509,6 +1582,7 @@ async function deleteItem(type, id) {
         post:        `/api/admin/blog/${id}`,
         vaga:        `/api/admin/vagas/${id}`,
         candidato:   `/api/admin/candidatos/${id}`,
+        banner:      `/api/admin/banners/${id}`,
     };
     try {
         const res = await api('DELETE', urls[type]);
@@ -1520,6 +1594,7 @@ async function deleteItem(type, id) {
         if (type === 'post')        loadBlog();
         if (type === 'vaga')        loadVagas();
         if (type === 'candidato')   loadCandidatos();
+        if (type === 'banner')      loadBanners();
     } catch(e) { toast('Erro ao excluir.', 'error'); }
 }
 
@@ -1662,6 +1737,145 @@ async function deletarComentario(id) {
         toast('Comentário excluído!');
         loadComentariosAdmin();
     } catch(e) { toast('Erro ao excluir.', 'error'); }
+// ════════════════════════════════════════
+//  BANNERS
+// ════════════════════════════════════════
+let bannerEditId = null;
+let bannersData  = [];
+
+const posicaoLabel = {
+    'todas': 'Todas', 'home': 'Home', 'japones': 'Japonês',
+    'carnes': 'Carnes', 'pizza': 'Pizza', 'mexicano': 'Mexicano',
+    'restaurante': 'Restaurante'
+};
+
+async function loadBanners() {
+    const tb = document.getElementById('tb-banners');
+    tb.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
+    try {
+        bannersData = await fetch('/api/admin/banners').then(r => r.json());
+        if (!bannersData.length) {
+            tb.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum banner cadastrado ainda.</td></tr>';
+            return;
+        }
+        tb.innerHTML = bannersData.map(b => `
+            <tr>
+                <td>${b.imagem_url ? `<img src="${b.imagem_url}" class="img-thumb" alt="${b.titulo||'Banner'}">` : '—'}</td>
+                <td><strong>${b.titulo || '—'}</strong></td>
+                <td><span class="badge badge-blue">${posicaoLabel[b.posicao] || b.posicao}</span></td>
+                <td style="font-size:0.82em;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    ${b.link_destino ? `<a href="${b.link_destino}" target="_blank" style="color:var(--primary)">${b.link_destino}</a>` : '—'}
+                </td>
+                <td>${b.ordem}</td>
+                <td><span class="badge ${b.ativo ? 'badge-green' : 'badge-red'}">${b.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                <td><div class="actions">
+                    <button class="btn btn-secondary btn-sm" onclick="editarBanner(${b.id})" title="Editar"><i class="fas fa-pen"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem('banner', ${b.id})" title="Excluir"><i class="fas fa-trash"></i></button>
+                </div></td>
+            </tr>`).join('');
+    } catch(e) {
+        tb.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar.</td></tr>';
+    }
+}
+
+function openBannerModal(id) {
+    bannerEditId = id || null;
+    document.getElementById('modal-banner-titulo').textContent = id ? 'Editar Banner' : 'Novo Banner';
+    document.getElementById('banner-titulo').value    = '';
+    document.getElementById('banner-imagem-url').value = '';
+    document.getElementById('banner-link').value      = '';
+    document.getElementById('banner-posicao').value   = 'home';
+    document.getElementById('banner-ordem').value     = '0';
+    document.getElementById('banner-ativo').checked   = true;
+    document.getElementById('banner-preview').style.display = 'none';
+    document.getElementById('banner-file').value      = '';
+    if (id) {
+        const b = bannersData.find(x => x.id === id);
+        if (b) {
+            document.getElementById('banner-titulo').value     = b.titulo || '';
+            document.getElementById('banner-imagem-url').value = b.imagem_url || '';
+            document.getElementById('banner-link').value       = b.link_destino || '';
+            document.getElementById('banner-posicao').value    = b.posicao || 'home';
+            document.getElementById('banner-ordem').value      = b.ordem ?? 0;
+            document.getElementById('banner-ativo').checked    = b.ativo;
+            if (b.imagem_url) {
+                const prev = document.getElementById('banner-preview');
+                prev.src = b.imagem_url;
+                prev.style.display = 'block';
+            }
+        }
+    }
+    document.getElementById('modal-banner').classList.add('open');
+}
+
+function editarBanner(id) { openBannerModal(id); }
+
+function closeBannerModal() {
+    document.getElementById('modal-banner').classList.remove('open');
+    bannerEditId = null;
+}
+
+function previewBanner(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const prev = document.getElementById('banner-preview');
+        prev.src = e.target.result;
+        prev.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function salvarBanner() {
+    const titulo    = document.getElementById('banner-titulo').value.trim();
+    const link      = document.getElementById('banner-link').value.trim();
+    const posicao   = document.getElementById('banner-posicao').value;
+    const ordem     = parseInt(document.getElementById('banner-ordem').value) || 0;
+    const ativo     = document.getElementById('banner-ativo').checked;
+    const fileInput = document.getElementById('banner-file');
+    let   imagem_url = document.getElementById('banner-imagem-url').value;
+
+    // Upload se tiver arquivo novo
+    if (fileInput.files[0]) {
+        const progress = document.getElementById('banner-upload-progress');
+        progress.style.display = 'block';
+        try {
+            const base64 = await new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = e => res(e.target.result);
+                reader.onerror = rej;
+                reader.readAsDataURL(fileInput.files[0]);
+            });
+            const uploadRes = await fetch('/api/admin/banners/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64 })
+            }).then(r => r.json());
+            if (uploadRes.error) { toast(uploadRes.error, 'error'); progress.style.display = 'none'; return; }
+            imagem_url = uploadRes.url;
+        } catch(e) {
+            toast('Erro no upload da imagem.', 'error');
+            progress.style.display = 'none';
+            return;
+        }
+        progress.style.display = 'none';
+    }
+
+    if (!imagem_url) { toast('Adicione uma imagem ao banner.', 'error'); return; }
+
+    const payload = { titulo, imagem_url, link_destino: link, posicao, ordem, ativo };
+    try {
+        const res = bannerEditId
+            ? await api('PUT',  `/api/admin/banners/${bannerEditId}`, payload)
+            : await api('POST', '/api/admin/banners', payload);
+        if (res.error) { toast(res.error, 'error'); return; }
+        toast(bannerEditId ? 'Banner atualizado!' : 'Banner criado!');
+        closeBannerModal();
+        loadBanners();
+    } catch(e) {
+        toast('Erro ao salvar banner.', 'error');
+    }
 }
 </script>
 </body>
