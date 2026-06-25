@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7617881885143728"
+     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- ═══════════════════════════════════════════════════════
@@ -1106,6 +1108,25 @@
         </div>
     </div>
 
+    <!-- Banner Rotativo -->
+    <section style="padding:0 20px 32px;max-width:900px;margin:0 auto;">
+        <div id="banner-rotativo-categoria" style="display:none;">
+            <a id="banner-link-categoria" href="#" target="_blank" rel="noopener sponsored">
+                <img id="banner-img-categoria" src="" alt="Anúncio"
+                    style="width:100%;border-radius:12px;display:block;object-fit:cover;max-height:120px;transition:opacity 0.4s;">
+            </a>
+        </div>
+        <div id="banner-placeholder-categoria">
+            <a href="https://wa.me/5511913324827?text=Olá!%20Quero%20anunciar%20no%20Guia%20do%20Rodízio"
+               target="_blank" rel="noopener"
+               style="display:block;padding:20px;background:repeating-linear-gradient(45deg,#fafafa,#fafafa 10px,#f0f0f0 10px,#f0f0f0 20px);border:2px dashed #C0392B;border-radius:12px;text-align:center;text-decoration:none;">
+                <span style="font-size:1.5em;">📢</span><br>
+                <span style="color:#C0392B;font-weight:700;font-size:0.95em;">Anuncie aqui</span><br>
+                <span style="color:#6b7280;font-size:0.82em;">Fale pelo WhatsApp</span>
+            </a>
+        </div>
+    </section>
+
     <!-- Banner Vagas -->
     <section class="vagas-banner" aria-label="Trabalhe em rodízios em São Paulo">
         <div class="vagas-emoji" aria-hidden="true">👨‍🍳</div>
@@ -2203,6 +2224,42 @@
         // Init
         loadPratos();
         loadRestaurantes();
+    </script>
+
+    <script>
+    // ── Banner rotativo categoria ──
+    (function() {
+        fetch('/api/banners?posicao=categoria')
+            .then(function(r) { return r.json(); })
+            .then(function(banners) {
+                if (!banners || !banners.length) return;
+                document.getElementById('banner-placeholder-categoria').style.display = 'none';
+                var rot  = document.getElementById('banner-rotativo-categoria');
+                var img  = document.getElementById('banner-img-categoria');
+                var link = document.getElementById('banner-link-categoria');
+                rot.style.display = 'block';
+                var idx = 0;
+
+                function mostrar(b) {
+                    img.style.opacity = '0';
+                    setTimeout(function() {
+                        img.src  = b.imagem_url;
+                        img.alt  = b.titulo || 'Anúncio';
+                        link.href = b.link_destino || '#';
+                        img.style.opacity = '1';
+                    }, 300);
+                }
+
+                mostrar(banners[0]);
+                if (banners.length > 1) {
+                    setInterval(function() {
+                        idx = (idx + 1) % banners.length;
+                        mostrar(banners[idx]);
+                    }, 5000);
+                }
+            })
+            .catch(function() {});
+    })();
     </script>
 </body>
 </html>
