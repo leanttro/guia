@@ -26,14 +26,14 @@
          SEO — Open Graph (WhatsApp, Facebook, LinkedIn)
     ═══════════════════════════════════════════════════════ -->
     <meta property="og:type"        content="website">
-    <meta property="og:site_name"   content="Guia do Rodízio SP">
+    <meta property="og:site_name"   content="Guia do Rodízio">
     <meta property="og:url"         content="https://www.guiadorodizio.com.br/restaurantes/{{ restaurante.slug }}">
     <meta property="og:title"       content="{{ restaurante.nome }} — Rodízio de {{ restaurante.categoria_nome or 'Comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %} | Guia do Rodízio">
     <meta property="og:description" content="{% if restaurante.descricao %}{{ restaurante.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ restaurante.nome }}, rodízio de {{ restaurante.categoria_nome or 'comida' }}{% if restaurante.bairro %} no {{ restaurante.bairro }}{% endif %}{% if restaurante.cidade %} em {{ restaurante.cidade }}{% endif %}. Cardápio, localização e contato.{% endif %}">
     <meta property="og:image"       content="{{ restaurante.foto_url or 'https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png' }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt"   content="{{ restaurante.nome }} — rodízio em São Paulo | Guia do Rodízio">
+    <meta property="og:image:alt"   content="{{ restaurante.nome }} — rodízio{% if restaurante.cidade %} em {{ restaurante.cidade }}{% endif %} | Guia do Rodízio">
     <meta property="og:locale"      content="pt_BR">
 
     <!-- ═══════════════════════════════════════════════════════
@@ -74,7 +74,7 @@
             "streetAddress": "{{ restaurante.endereco }}{% if restaurante.bairro %}, {{ restaurante.bairro }}{% endif %}",
             {% endif %}
             "addressLocality": "{{ restaurante.cidade or 'São Paulo' }}",
-            "addressRegion": "SP",
+            "addressRegion": "{{ restaurante.estado or 'SP' }}",
             "addressCountry": "BR"
           }
           {% if restaurante.lat and restaurante.lng %}
@@ -494,10 +494,10 @@
 
     <header>
         <div class="logo">
-            <a href="/" aria-label="Guia do Rodízio SP — Página inicial">
+            <a href="/" aria-label="Guia do Rodízio — Página inicial">
                 <img
                     src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
-                    alt="Guia do Rodízio SP"
+                    alt="Guia do Rodízio"
                     height="90"
                     width="auto"
                     loading="eager"
@@ -662,7 +662,7 @@
                                 <span itemprop="streetAddress">{{ restaurante.endereco }}</span>
                                 {% if restaurante.bairro %} — <span itemprop="addressLocality">{{ restaurante.bairro }}</span>{% endif %}
                                 {% if restaurante.cidade %}<br><small itemprop="name">{{ restaurante.cidade }}</small>{% endif %}
-                                <meta itemprop="addressRegion" content="SP">
+                                <meta itemprop="addressRegion" content="{{ restaurante.estado or 'SP' }}">
                                 <meta itemprop="addressCountry" content="BR">
                                 <div class="endereco-aviso">
                                     <i class="fas fa-circle-check"></i>
@@ -786,7 +786,7 @@
     </main>
 
     <!-- Banner Vagas -->
-    <section class="vagas-banner" aria-label="Trabalhe em rodízios em São Paulo">
+    <section class="vagas-banner" aria-label="Trabalhe em rodízios">
         <div class="vagas-emoji" aria-hidden="true">👨‍🍳</div>
         <h2>Trabalha na gastronomia?</h2>
         <p>Veja vagas abertas em rodízios ou cadastre seu currículo — é gratuito.</p>
@@ -801,10 +801,10 @@
         <div class="container">
             <div class="footer-inner">
 
-                <a href="/" aria-label="Guia do Rodízio SP — Página inicial" class="footer-logo" itemprop="url">
+                <a href="/" aria-label="Guia do Rodízio — Página inicial" class="footer-logo" itemprop="url">
                     <img
                         src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
-                        alt="Guia do Rodízio SP — Guia completo de rodízios em São Paulo"
+                        alt="Guia do Rodízio — Guia completo de rodízios no Brasil"
                         width="160"
                         height="48"
                         loading="lazy"
@@ -819,8 +819,8 @@
                     <meta itemprop="name" content="Leanttro" />
                     <meta itemprop="url" content="https://www.leanttro.com" />
                     <meta itemprop="telephone" content="+5511913324827" />
-                    <meta itemprop="areaServed" content="São Paulo, SP, Brasil" />
-                    <strong itemprop="description">Você tem uma feira ou negócio local em SP?</strong>
+                    <meta itemprop="areaServed" content="Brasil" />
+                    <strong itemprop="description">Você tem um negócio local?</strong>
                     <span>Criação de Sites e Blogs · Automações · Otimização de Tráfego</span>
                 </div>
 
@@ -855,7 +855,7 @@
             <div class="footer-bottom">
                 <p>
                     <span itemprop="copyrightYear">© 2025</span>
-                    <a href="/" title="Guia do Rodízio SP — Guia completo de rodízios em São Paulo">GuiaDoRodizio.com.br</a>
+                    <a href="/" title="Guia do Rodízio — Guia completo de rodízios no Brasil">GuiaDoRodizio.com.br</a>
                     · Todos os direitos reservados ·
                     Site criado por
                     <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" title="Leanttro — Criação de Sites e Marketing Digital em São Paulo">Leanttro</a>
