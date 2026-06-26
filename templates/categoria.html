@@ -8,8 +8,8 @@
     <!-- ═══════════════════════════════════════════════════════
          SEO — Title & Description dinâmicos por categoria
     ═══════════════════════════════════════════════════════ -->
-    <title>Rodízio de {{ categoria_slug | title }} em São Paulo SP | Melhores Restaurantes | Guia do Rodízio</title>
-    <meta name="description" content="Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo. Veja os pratos servidos, avaliações reais e restaurantes perto de você — filtrados por bairro e região.">
+    <title>Rodízio de {{ categoria_slug | title }} em {{ cidade_nome or "São Paulo" }} | Melhores Restaurantes | Guia do Rodízio</title>
+    <meta name="description" content="Encontre os melhores rodízios de {{ categoria_slug }} em {{ cidade_nome or 'São Paulo' }}. Veja os pratos servidos, avaliações reais e restaurantes perto de você — filtrados por bairro e região.">
 
     <!-- ═══════════════════════════════════════════════════════
          SEO — Canonical + Robots
@@ -26,22 +26,22 @@
          SEO — Open Graph
     ═══════════════════════════════════════════════════════ -->
     <meta property="og:type"         content="website">
-    <meta property="og:site_name"    content="Guia do Rodízio SP">
+    <meta property="og:site_name"    content="Guia do Rodízio">
     <meta property="og:url"          content="https://www.guiadorodizio.com.br/{{ categoria_slug }}">
-    <meta property="og:title"        content="Rodízio de {{ categoria_slug | title }} em São Paulo | Guia do Rodízio">
-    <meta property="og:description"  content="Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo. Pratos, avaliações e restaurantes perto de você.">
+    <meta property="og:title"        content="Rodízio de {{ categoria_slug | title }} em {{ cidade_nome or 'São Paulo' }} | Guia do Rodízio">
+    <meta property="og:description"  content="Encontre os melhores rodízios de {{ categoria_slug }} em {{ cidade_nome or 'São Paulo' }}. Pratos, avaliações e restaurantes perto de você.">
     <meta property="og:image"        content="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png">
     <meta property="og:image:width"  content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt"    content="Guia do Rodízio SP — melhores rodízios em São Paulo">
+    <meta property="og:image:alt"    content="Guia do Rodízio — melhores rodízios no Brasil">
     <meta property="og:locale"       content="pt_BR">
 
     <!-- ═══════════════════════════════════════════════════════
          SEO — Twitter Card
     ═══════════════════════════════════════════════════════ -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:title"       content="Rodízio de {{ categoria_slug | title }} em São Paulo | Guia do Rodízio">
-    <meta name="twitter:description" content="Encontre os melhores rodízios de {{ categoria_slug }} em SP. Pratos, avaliações e localização.">
+    <meta name="twitter:title"       content="Rodízio de {{ categoria_slug | title }} em {{ cidade_nome or 'São Paulo' }} | Guia do Rodízio">
+    <meta name="twitter:description" content="Encontre os melhores rodízios de {{ categoria_slug }} em {{ cidade_nome or 'SP' }}. Pratos, avaliações e localização.">
     <meta name="twitter:image"       content="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png">
     <meta name="twitter:site"        content="@guiadorodizio">
 
@@ -55,7 +55,7 @@
         {
           "@type": "CollectionPage",
           "@id": "https://www.guiadorodizio.com.br/{{ categoria_slug }}#page",
-          "name": "Rodízio de {{ categoria_slug | title }} em São Paulo",
+          "name": "Rodízio de {{ categoria_slug | title }} em {{ cidade_nome or 'São Paulo' }}",
           "description": "Encontre os melhores rodízios de {{ categoria_slug }} em São Paulo por bairro e região.",
           "url": "https://www.guiadorodizio.com.br/{{ categoria_slug }}",
           "inLanguage": "pt-BR",
@@ -857,10 +857,10 @@
 
     <header>
         <div class="logo">
-            <a href="/" aria-label="Guia do Rodízio SP — Página inicial">
+            <a href="/" aria-label="Guia do Rodízio — Página inicial">
                 <img
                     src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
-                    alt="Guia do Rodízio SP"
+                    alt="Guia do Rodízio"
                     height="90"
                     width="auto"
                     loading="eager"
@@ -1055,7 +1055,7 @@
     <!-- Banner Social: Instagram + Compartilhar -->
     <section class="social-banner" aria-label="Siga no Instagram e compartilhe">
         <div class="social-banner-title">📸 Siga o Guia do Rodízio no Instagram</div>
-        <div class="social-banner-sub">Dicas, novidades e os melhores rodízios de SP todo dia!</div>
+        <div class="social-banner-sub">Dicas, novidades e os melhores rodízios todo dia!</div>
         <div class="social-btns">
             <a href="https://www.instagram.com/guiadorodizio.com.br/" target="_blank" rel="noopener noreferrer" class="btn-ig-seguir" aria-label="Seguir @guiadorodizio.com.br no Instagram">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
@@ -1128,7 +1128,7 @@
     </section>
 
     <!-- Banner Vagas -->
-    <section class="vagas-banner" aria-label="Trabalhe em rodízios em São Paulo">
+    <section class="vagas-banner" aria-label="Trabalhe em rodízios">
         <div class="vagas-emoji" aria-hidden="true">👨‍🍳</div>
         <h2>Trabalha na gastronomia?</h2>
         <p>Veja vagas abertas em rodízios ou cadastre seu currículo — é gratuito.</p>
@@ -1143,10 +1143,10 @@
         <div class="container">
             <div class="footer-inner">
 
-                <a href="/" aria-label="Guia do Rodízio SP — Página inicial" class="footer-logo" itemprop="url">
+                <a href="/" aria-label="Guia do Rodízio — Página inicial" class="footer-logo" itemprop="url">
                     <img
                         src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
-                        alt="Guia do Rodízio SP — Guia completo de rodízios em São Paulo"
+                        alt="Guia do Rodízio — Guia completo de rodízios no Brasil"
                         width="160"
                         height="48"
                         loading="lazy"
@@ -1161,8 +1161,8 @@
                     <meta itemprop="name" content="Leanttro" />
                     <meta itemprop="url" content="https://www.leanttro.com" />
                     <meta itemprop="telephone" content="+5511913324827" />
-                    <meta itemprop="areaServed" content="São Paulo, SP, Brasil" />
-                    <strong itemprop="description">Você tem uma feira ou negócio local em SP?</strong>
+                    <meta itemprop="areaServed" content="Brasil" />
+                    <strong itemprop="description">Você tem um negócio local?</strong>
                     <span>Criação de Sites e Blogs · Automações · Otimização de Tráfego</span>
                 </div>
 
@@ -1197,7 +1197,7 @@
             <div class="footer-bottom">
                 <p>
                     <span itemprop="copyrightYear">© 2025</span>
-                    <a href="/" title="Guia do Rodízio SP — Guia completo de rodízios em São Paulo">GuiaDoRodizio.com.br</a>
+                    <a href="/" title="Guia do Rodízio — Guia completo de rodízios no Brasil">GuiaDoRodizio.com.br</a>
                     · Todos os direitos reservados ·
                     Site criado por
                     <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" title="Leanttro — Criação de Sites e Marketing Digital em São Paulo">Leanttro</a>
@@ -1221,7 +1221,7 @@
             const info = CATEGORIAS_INFO[CATEGORIA_SLUG] || { titulo: CATEGORIA_SLUG, descricao: '' };
             document.getElementById('cat-titulo').textContent = info.titulo;
             document.getElementById('cat-descricao').textContent = info.descricao;
-            document.title = `${info.titulo} em SP | Guia do Rodízio`;
+            document.title = `${info.titulo} | Guia do Rodízio`;
 
             try {
                 const cats = await fetch('/api/categorias').then(r => r.json());
@@ -2178,7 +2178,7 @@
 
         // ── Modal de Compartilhamento ──
         var SHARE_URL = 'https://www.guiadorodizio.com.br/';
-        var SHARE_TEXT = 'Encontrei o melhor guia de rodízios de SP! 🍣🥩🍕 Confere lá:';
+        var SHARE_TEXT = 'Encontrei o melhor guia de rodízios do Brasil! 🍣🥩🍕 Confere lá:';
 
         function openShareModal() {
             document.getElementById('share-modal-overlay').classList.add('active');
