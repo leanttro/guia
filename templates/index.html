@@ -1691,18 +1691,53 @@
             idxAplicarFiltros();
         }
 
+        function idxMontarSlicer(containerId, labelEmoji, labelTexto, itens, valorAtivo, onSelectFn, toggleFnNome, slicerFnNome) {
+            var el = document.getElementById(containerId);
+            if (!el) return;
+            var chips = '<button class="chip-loc' + (!valorAtivo ? ' active' : '') + '" onclick="' + slicerFnNome + '(this,\'\')">' + 'Todas' + '</button>';
+            itens.forEach(function(v) {
+                var safe = v.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                chips += '<button class="chip-loc' + (valorAtivo === v ? ' active' : '') + '" onclick="' + slicerFnNome + '(this,\'' + safe + '\')">' + v + '</button>';
+            });
+            var labelAtivo = valorAtivo || 'Todas';
+            var hasActive  = !!valorAtivo;
+            el.innerHTML =
+                '<div class="bairro-slicer-outer">' +
+                '<div class="bairro-slicer-wrap">' +
+                '<span class="bairro-slicer-label">' + labelEmoji + ' ' + labelTexto + ':</span>' +
+                '<button class="bairro-slicer-toggle' + (hasActive ? ' has-active' : '') + '" id="' + containerId + '-btn" onclick="' + toggleFnNome + '()">' +
+                '<span id="' + containerId + '-label">' + labelAtivo + '</span>' +
+                '<span class="slicer-arrow">&#9660;</span>' +
+                '</button>' +
+                '</div>' +
+                '<div class="bairro-slicer-dropdown" id="' + containerId + '-drop">' +
+                chips +
+                '</div>' +
+                '</div>';
+        }
+
+        function idxToggleSlicer(btnId, dropId) {
+            var btn  = document.getElementById(btnId);
+            var drop = document.getElementById(dropId);
+            if (!btn || !drop) return;
+            var open = drop.classList.contains('open');
+            drop.classList.toggle('open', !open);
+            btn.classList.toggle('open', !open);
+        }
+
+        function idxToggleCidadeSlicer()  { idxToggleSlicer('idx-filtros-cidade-btn',  'idx-filtros-cidade-drop'); }
+        function idxToggleRegiaoSlicer()  { idxToggleSlicer('idx-filtros-regiao-btn',  'idx-filtros-regiao-drop'); }
+
         async function idxCarregarFiltrosCidade() {
             try {
                 var url = '/api/cidades';
                 if (idxCategoriaSel) url += '?categoria=' + encodeURIComponent(idxCategoriaSel);
                 var cidades = await fetch(url).then(function(r){ return r.json(); });
                 var wrap = document.getElementById('idx-filtros-cidade-wrap');
-                var el   = document.getElementById('idx-filtros-cidade');
                 if (!cidades.length) { wrap.style.display = 'none'; return; }
                 wrap.style.display = '';
-                el.innerHTML = '<span class="loc-label">&#127961;&#65039; Cidade:</span>' +
-                    '<button class="chip-loc active" onclick="idxSelecionarCidade(this,\'\')">Todas</button>' +
-                    cidades.map(function(c){ return '<button class="chip-loc" onclick="idxSelecionarCidade(this,\'' + c + '\')">' + c + '</button>'; }).join('');
+                idxMontarSlicer('idx-filtros-cidade', '&#127961;&#65039;', 'Cidade', cidades, idxCidadeSel,
+                    idxSelecionarCidade, 'idxToggleCidadeSlicer', 'idxSlicerCidade');
             } catch(e) {}
         }
 
@@ -1710,12 +1745,22 @@
             idxCidadeSel = cidade || null;
             idxRegiaoSel = null;
             idxBairroSel = null;
-            document.querySelectorAll('#idx-filtros-cidade .chip-loc').forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
+            // Atualiza label e visual do toggle cidade
+            var labelEl   = document.getElementById('idx-filtros-cidade-label');
+            var toggleBtn = document.getElementById('idx-filtros-cidade-btn');
+            var drop      = document.getElementById('idx-filtros-cidade-drop');
+            if (labelEl)   labelEl.textContent = cidade || 'Todas';
+            if (toggleBtn) { toggleBtn.classList.toggle('has-active', !!cidade); toggleBtn.classList.remove('open'); }
+            if (drop)      { drop.classList.remove('open'); drop.querySelectorAll('.chip-loc').forEach(function(b){ b.classList.remove('active'); }); }
+            if (btn) btn.classList.add('active');
             if (!idxCidadeSel) { document.getElementById('idx-filtros-bairro-wrap').style.display = 'none'; }
             await idxCarregarFiltrosRegiao();
             if (idxCidadeSel) idxCarregarFiltrosBairro();
             idxAplicarFiltros();
+        }
+
+        function idxSlicerCidade(chipBtn, cidade) {
+            idxSelecionarCidade(chipBtn, cidade);
         }
 
         async function idxCarregarFiltrosRegiao() {
@@ -1725,15 +1770,18 @@
                 var url = '/api/regioes';
                 var params = [];
                 if (idxCategoriaSel) params.push('categoria=' + encodeURIComponent(idxCategoriaSel));
-                if (idxCidadeSel) params.push('cidade=' + encodeURIComponent(idxCidadeSel));
+                if (idxCidadeSel)    params.push('cidade='    + encodeURIComponent(idxCidadeSel));
                 if (params.length) url += '?' + params.join('&');
                 var regioes = await fetch(url).then(function(r){ return r.json(); });
                 if (!regioes.length) { wrap.style.display = 'none'; return; }
                 wrap.style.display = '';
-                el.innerHTML = '<span class="loc-label">&#128205; Regi&#227;o:</span>' +
-                    '<button class="chip-loc active" onclick="idxSelecionarRegiao(this,\'\')">Todas</button>' +
-                    regioes.map(function(r){ return '<button class="chip-loc" onclick="idxSelecionarRegiao(this,\'' + r + '\')">' + r + '</button>'; }).join('');
+                idxMontarSlicer('idx-filtros-regiao', '&#128205;', 'Região', regioes, idxRegiaoSel,
+                    idxSelecionarRegiao, 'idxToggleRegiaoSlicer', 'idxSlicerRegiao');
             } catch(e) { wrap.style.display = 'none'; }
+        }
+
+        function idxSlicerRegiao(chipBtn, regiao) {
+            idxSelecionarRegiao(chipBtn, regiao);
         }
 
         function idxCarregarFiltrosBairro() {
@@ -1813,8 +1861,14 @@
         function idxSelecionarRegiao(btn, regiao) {
             idxRegiaoSel = regiao || null;
             idxBairroSel = null;
-            document.querySelectorAll('#idx-filtros-regiao .chip-loc').forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
+            // Atualiza label e visual do toggle região
+            var labelEl   = document.getElementById('idx-filtros-regiao-label');
+            var toggleBtn = document.getElementById('idx-filtros-regiao-btn');
+            var drop      = document.getElementById('idx-filtros-regiao-drop');
+            if (labelEl)   labelEl.textContent = regiao || 'Todas';
+            if (toggleBtn) { toggleBtn.classList.toggle('has-active', !!regiao); toggleBtn.classList.remove('open'); }
+            if (drop)      { drop.classList.remove('open'); drop.querySelectorAll('.chip-loc').forEach(function(b){ b.classList.remove('active'); }); }
+            if (btn) btn.classList.add('active');
             idxCarregarFiltrosBairro();
             idxAplicarFiltros();
         }
