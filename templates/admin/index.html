@@ -541,7 +541,7 @@
                 <input type="checkbox" id="banner-ativo" checked>
                 <label for="banner-ativo">Banner ativo</label>
             </div>
-            <div id="banner-upload-progress" style="display:none;color:var(--muted);font-size:0.88em;">⏳ Fazendo upload da imagem...</div>
+            <div id="banner-upload-progress" style="display:none;color:var(--muted);font-size:0.88em;">⏳ Fazendo upload para o Imgur...</div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeBannerModal()">Cancelar</button>
@@ -1838,24 +1838,24 @@ async function salvarBanner() {
     const fileInput = document.getElementById('banner-file');
     let   imagem_url = document.getElementById('banner-imagem-url').value;
 
-    // Upload se tiver arquivo novo
+    // Upload via Imgur se tiver arquivo novo
     if (fileInput.files[0]) {
         const progress = document.getElementById('banner-upload-progress');
         progress.style.display = 'block';
         try {
-            const base64 = await new Promise((res, rej) => {
-                const reader = new FileReader();
-                reader.onload = e => res(e.target.result);
-                reader.onerror = rej;
-                reader.readAsDataURL(fileInput.files[0]);
-            });
-            const uploadRes = await fetch('/api/admin/banners/upload', {
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            const uploadRes = await fetch('https://api.imgur.com/3/image', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64 })
+                headers: { 'Authorization': 'Client-ID 546c25a59c58ad7' },
+                body: formData
             }).then(r => r.json());
-            if (uploadRes.error) { toast(uploadRes.error, 'error'); progress.style.display = 'none'; return; }
-            imagem_url = uploadRes.url;
+            if (!uploadRes.success) {
+                toast('Erro no upload: ' + (uploadRes.data?.error || 'desconhecido'), 'error');
+                progress.style.display = 'none';
+                return;
+            }
+            imagem_url = uploadRes.data.link;
         } catch(e) {
             toast('Erro no upload da imagem.', 'error');
             progress.style.display = 'none';
