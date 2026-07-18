@@ -627,12 +627,26 @@
 
         carregarNota();
 
-        // ── Banner rotativo ──
+        // ── Banner rotativo (segmentado pela categoria do prato) ──
         (function() {
-            fetch('/api/banners?posicao=prato')
+            function embaralhar(arr) {
+                var a = arr.slice();
+                for (var i = a.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+                }
+                return a;
+            }
+
+            var params = new URLSearchParams({ posicao: 'prato' });
+            var categoriaSlug = {{ (prato.categoria_slug or '') | tojson }};
+            if (categoriaSlug) params.set('categoria', categoriaSlug);
+
+            fetch('/api/banners?' + params.toString())
                 .then(r => r.json())
                 .then(banners => {
                     if (!banners || !banners.length) return;
+                    banners = embaralhar(banners);
                     document.getElementById('banner-placeholder').style.display = 'none';
                     const rot  = document.getElementById('banner-rotativo');
                     const img  = document.getElementById('banner-img');
