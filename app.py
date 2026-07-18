@@ -121,6 +121,7 @@ def ensure_banners_target_columns():
         cur.execute("ALTER TABLE banners ADD COLUMN IF NOT EXISTS categoria_id INTEGER")
         cur.execute("ALTER TABLE banners ADD COLUMN IF NOT EXISTS cidade VARCHAR(120)")
         cur.execute("ALTER TABLE banners ADD COLUMN IF NOT EXISTS bairro VARCHAR(120)")
+        cur.execute("ALTER TABLE banners ADD COLUMN IF NOT EXISTS prato_id INTEGER")
         conn.commit()
         cur.close()
     except Exception as e:
@@ -1448,22 +1449,34 @@ def api_banners():
         categoria_slug = request.args.get('categoria', '').strip()
         cidade         = request.args.get('cidade', '').strip()
         bairro         = request.args.get('bairro', '').strip()
+        prato_slug     = request.args.get('prato', '').strip()
 
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute("""
-            SELECT b.id, b.titulo, b.imagem_url, b.link_destino
+            SELECT b.id, b.titulo, b.imagem_url, b.link_destino,
+                   (b.prato_id IS NOT NULL) AS especifico_do_prato
             FROM banners b
             LEFT JOIN categorias c ON b.categoria_id = c.id
+            LEFT JOIN pratos p ON b.prato_id = p.id
             WHERE b.ativo = TRUE
               AND (b.posicao = %s OR b.posicao = 'todas')
               AND (b.categoria_id IS NULL OR c.slug = %s)
               AND (b.cidade IS NULL OR b.cidade = '' OR LOWER(b.cidade) = LOWER(%s))
               AND (b.bairro IS NULL OR b.bairro = '' OR LOWER(b.bairro) = LOWER(%s))
+              AND (b.prato_id IS NULL OR p.slug = %s)
             ORDER BY ordem ASC, criado_em DESC
-        """, (posicao, categoria_slug, cidade, bairro))
+        """, (posicao, categoria_slug, cidade, bairro, prato_slug))
         rows = [dict(r) for r in cur.fetchall()]
         cur.close()
+
+        # Banner exclusivo de um prato específico "vence" os genéricos/por categoria
+        # nessa mesma posição — é o que justifica cobrar separado por ele.
+        exclusivos = [r for r in rows if r['especifico_do_prato']]
+        rows = exclusivos or rows
+        for r in rows:
+            r.pop('especifico_do_prato', None)
+
         return jsonify(rows)
     except Exception as e:
         traceback.print_exc()
@@ -1485,9 +1498,11 @@ def api_admin_banners():
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         if request.method == 'GET':
             cur.execute("""
-                SELECT b.*, c.nome as categoria_nome, c.slug as categoria_slug
+                SELECT b.*, c.nome as categoria_nome, c.slug as categoria_slug,
+                       p.nome as prato_nome
                 FROM banners b
                 LEFT JOIN categorias c ON b.categoria_id = c.id
+                LEFT JOIN pratos p ON b.prato_id = p.id
                 ORDER BY b.posicao, b.ordem ASC, b.criado_em DESC
             """)
             rows = [format_db_data(dict(r)) for r in cur.fetchall()]
@@ -1495,8 +1510,8 @@ def api_admin_banners():
             return jsonify(rows)
         data = request.get_json()
         cur.execute("""
-            INSERT INTO banners (titulo, imagem_url, link_destino, posicao, ativo, ordem, categoria_id, cidade, bairro)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            INSERT INTO banners (titulo, imagem_url, link_destino, posicao, ativo, ordem, categoria_id, cidade, bairro, prato_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
         """, (
             data.get('titulo', '').strip(),
             data.get('imagem_url', '').strip(),
@@ -1507,6 +1522,7 @@ def api_admin_banners():
             data.get('categoria_id') or None,
             data.get('cidade', '').strip() or None,
             data.get('bairro', '').strip() or None,
+            data.get('prato_id') or None,
         ))
         new_id = cur.fetchone()['id']
         conn.commit()
@@ -1536,7 +1552,7 @@ def api_admin_banner(banner_id):
             UPDATE banners SET
                 titulo = %s, imagem_url = %s, link_destino = %s,
                 posicao = %s, ativo = %s, ordem = %s,
-                categoria_id = %s, cidade = %s, bairro = %s
+                categoria_id = %s, cidade = %s, bairro = %s, prato_id = %s
             WHERE id = %s
         """, (
             data.get('titulo', '').strip(),
@@ -1548,6 +1564,7 @@ def api_admin_banner(banner_id):
             data.get('categoria_id') or None,
             data.get('cidade', '').strip() or None,
             data.get('bairro', '').strip() or None,
+            data.get('prato_id') or None,
             banner_id,
         ))
         conn.commit()
