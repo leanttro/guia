@@ -486,7 +486,7 @@
             </div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Imagem</th><th>Título</th><th>Posição</th><th>Link</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Imagem</th><th>Título</th><th>Posição</th><th>Segmentação</th><th>Link</th><th>Ordem</th><th>Status</th><th>Ações</th></tr></thead>
                     <tbody id="tb-banners"><tr class="empty-row"><td colspan="7">Carregando...</td></tr></tbody>
                 </table>
             </div>
@@ -528,9 +528,22 @@
                     <option value="categoria">Categoria — rodapé (antes de Vagas)</option>
                     <option value="categoria-topo">Categoria — topo (abaixo da hero)</option>
                     <option value="restaurante">Página do restaurante (sidebar)</option>
+                    <option value="prato">Página do prato (sidebar)</option>
                     <option value="blog">Blog / Post (antes de Vagas)</option>
                     <option value="vagas">Vagas (antes de Vagas)</option>
+                    <option value="todas">Todas as posições acima</option>
                 </select>
+            </div>
+            <div class="field">
+                <label>Segmentação (opcional)</label>
+                <p class="hint" style="font-size:0.78em;color:var(--muted);margin-bottom:8px;">
+                    Deixe em branco pra aparecer em tudo daquela posição. Preenchendo, o banner só aparece quando bater — ótimo pra vender pra restaurantes/anunciantes de uma cidade, bairro ou categoria específica.
+                </p>
+                <select id="banner-categoria" style="margin-bottom:8px;">
+                    <option value="">Todas as categorias</option>
+                </select>
+                <input type="text" id="banner-cidade" placeholder="Cidade (ex: São Paulo) — deixe em branco pra todas" style="margin-bottom:8px;">
+                <input type="text" id="banner-bairro" placeholder="Bairro (ex: Moema) — deixe em branco pra todos">
             </div>
             <div class="field">
                 <label>Ordem de exibição</label>
@@ -1744,20 +1757,41 @@ async function deletarComentario(id) {
 // ════════════════════════════════════════
 let bannerEditId = null;
 let bannersData  = [];
+let categoriasParaBanner = [];
 
 const posicaoLabel = {
-    'todas': 'Todas', 'home': 'Home', 'japones': 'Japonês',
-    'carnes': 'Carnes', 'pizza': 'Pizza', 'mexicano': 'Mexicano',
-    'restaurante': 'Restaurante'
+    'todas': 'Todas as posições', 'home': 'Home — rodapé', 'home-topo': 'Home — topo',
+    'categoria': 'Categoria — rodapé', 'categoria-topo': 'Categoria — topo',
+    'restaurante': 'Restaurante', 'prato': 'Prato', 'blog': 'Blog', 'vagas': 'Vagas'
 };
+
+async function carregarCategoriasParaBanner() {
+    if (categoriasParaBanner.length) return categoriasParaBanner;
+    try {
+        categoriasParaBanner = await fetch('/api/categorias').then(r => r.json());
+        const sel = document.getElementById('banner-categoria');
+        sel.innerHTML = '<option value="">Todas as categorias</option>' +
+            categoriasParaBanner.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    } catch(e) {}
+    return categoriasParaBanner;
+}
+
+function segmentacaoResumo(b) {
+    const partes = [];
+    if (b.categoria_nome) partes.push(b.categoria_nome);
+    if (b.cidade) partes.push(b.cidade);
+    if (b.bairro) partes.push(b.bairro);
+    return partes.length ? partes.join(' · ') : 'Todos';
+}
 
 async function loadBanners() {
     const tb = document.getElementById('tb-banners');
-    tb.innerHTML = '<tr class="empty-row"><td colspan="7">Carregando...</td></tr>';
+    tb.innerHTML = '<tr class="empty-row"><td colspan="8">Carregando...</td></tr>';
     try {
+        await carregarCategoriasParaBanner();
         bannersData = await fetch('/api/admin/banners').then(r => r.json());
         if (!bannersData.length) {
-            tb.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum banner cadastrado ainda.</td></tr>';
+            tb.innerHTML = '<tr class="empty-row"><td colspan="8">Nenhum banner cadastrado ainda.</td></tr>';
             return;
         }
         tb.innerHTML = bannersData.map(b => `
@@ -1765,6 +1799,7 @@ async function loadBanners() {
                 <td>${b.imagem_url ? `<img src="${b.imagem_url}" class="img-thumb" alt="${b.titulo||'Banner'}">` : '—'}</td>
                 <td><strong>${b.titulo || '—'}</strong></td>
                 <td><span class="badge badge-blue">${posicaoLabel[b.posicao] || b.posicao}</span></td>
+                <td style="font-size:0.82em;">${segmentacaoResumo(b)}</td>
                 <td style="font-size:0.82em;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                     ${b.link_destino ? `<a href="${b.link_destino}" target="_blank" style="color:var(--primary)">${b.link_destino}</a>` : '—'}
                 </td>
@@ -1776,7 +1811,7 @@ async function loadBanners() {
                 </div></td>
             </tr>`).join('');
     } catch(e) {
-        tb.innerHTML = '<tr class="empty-row"><td colspan="7">Erro ao carregar.</td></tr>';
+        tb.innerHTML = '<tr class="empty-row"><td colspan="8">Erro ao carregar.</td></tr>';
     }
 }
 
@@ -1787,10 +1822,19 @@ function openBannerModal(id) {
     document.getElementById('banner-imagem-url').value = '';
     document.getElementById('banner-link').value      = '';
     document.getElementById('banner-posicao').value   = 'home';
+    document.getElementById('banner-categoria').value = '';
+    document.getElementById('banner-cidade').value    = '';
+    document.getElementById('banner-bairro').value    = '';
     document.getElementById('banner-ordem').value     = '0';
     document.getElementById('banner-ativo').checked   = true;
     document.getElementById('banner-preview').style.display = 'none';
     document.getElementById('banner-file').value      = '';
+    carregarCategoriasParaBanner().then(() => {
+        if (id) {
+            const b = bannersData.find(x => x.id === id);
+            if (b) document.getElementById('banner-categoria').value = b.categoria_id || '';
+        }
+    });
     if (id) {
         const b = bannersData.find(x => x.id === id);
         if (b) {
@@ -1798,6 +1842,8 @@ function openBannerModal(id) {
             document.getElementById('banner-imagem-url').value = b.imagem_url || '';
             document.getElementById('banner-link').value       = b.link_destino || '';
             document.getElementById('banner-posicao').value    = b.posicao || 'home';
+            document.getElementById('banner-cidade').value     = b.cidade || '';
+            document.getElementById('banner-bairro').value     = b.bairro || '';
             document.getElementById('banner-ordem').value      = b.ordem ?? 0;
             document.getElementById('banner-ativo').checked    = b.ativo;
             if (b.imagem_url) {
@@ -1866,7 +1912,11 @@ async function salvarBanner() {
 
     if (!imagem_url) { toast('Adicione uma imagem ao banner.', 'error'); return; }
 
-    const payload = { titulo, imagem_url, link_destino: link, posicao, ordem, ativo };
+    const categoria_id = document.getElementById('banner-categoria').value || null;
+    const cidade        = document.getElementById('banner-cidade').value.trim();
+    const bairro         = document.getElementById('banner-bairro').value.trim();
+
+    const payload = { titulo, imagem_url, link_destino: link, posicao, ordem, ativo, categoria_id, cidade, bairro };
     try {
         const res = bannerEditId
             ? await api('PUT',  `/api/admin/banners/${bannerEditId}`, payload)
