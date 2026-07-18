@@ -1451,31 +1451,54 @@ def api_banners():
         bairro         = request.args.get('bairro', '').strip()
         prato_slug     = request.args.get('prato', '').strip()
 
+        categoria_norm = gerar_slug(categoria_slug)
+        prato_norm     = gerar_slug(prato_slug)
+
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # OBS: o filtro de categoria/prato NÃO é feito aqui no SQL (c.slug = %s),
+        # porque o campo categorias.slug é digitado à mão no admin e pode não bater
+        # 100% (acento, maiúscula, espaço, hífen) com o slug usado nas páginas
+        # públicas — isso fazia banners existentes sumirem sem erro nenhum.
+        # Trazemos os candidatos e comparamos em Python com gerar_slug() dos dois lados.
         cur.execute("""
             SELECT b.id, b.titulo, b.imagem_url, b.link_destino,
-                   (b.prato_id IS NOT NULL) AS especifico_do_prato
+                   (b.prato_id IS NOT NULL) AS especifico_do_prato,
+                   b.categoria_id, c.slug AS categoria_slug_db, c.nome AS categoria_nome_db,
+                   b.prato_id, p.slug AS prato_slug_db
             FROM banners b
             LEFT JOIN categorias c ON b.categoria_id = c.id
             LEFT JOIN pratos p ON b.prato_id = p.id
             WHERE b.ativo = TRUE
               AND (b.posicao = %s OR b.posicao = 'todas')
-              AND (b.categoria_id IS NULL OR c.slug = %s)
               AND (b.cidade IS NULL OR b.cidade = '' OR LOWER(b.cidade) = LOWER(%s))
               AND (b.bairro IS NULL OR b.bairro = '' OR LOWER(b.bairro) = LOWER(%s))
-              AND (b.prato_id IS NULL OR p.slug = %s)
             ORDER BY ordem ASC, criado_em DESC
-        """, (posicao, categoria_slug, cidade, bairro, prato_slug))
-        rows = [dict(r) for r in cur.fetchall()]
+        """, (posicao, cidade, bairro))
+        candidatos = [dict(r) for r in cur.fetchall()]
         cur.close()
+
+        rows = []
+        for r in candidatos:
+            if r['categoria_id'] is not None:
+                slug_db = gerar_slug(r.get('categoria_slug_db') or '')
+                nome_db = gerar_slug(r.get('categoria_nome_db') or '')
+                if not categoria_norm or categoria_norm not in (slug_db, nome_db):
+                    continue
+            if r['prato_id'] is not None:
+                prato_slug_db = gerar_slug(r.get('prato_slug_db') or '')
+                if not prato_norm or prato_norm != prato_slug_db:
+                    continue
+            rows.append(r)
 
         # Banner exclusivo de um prato específico "vence" os genéricos/por categoria
         # nessa mesma posição — é o que justifica cobrar separado por ele.
         exclusivos = [r for r in rows if r['especifico_do_prato']]
         rows = exclusivos or rows
         for r in rows:
-            r.pop('especifico_do_prato', None)
+            for campo in ('especifico_do_prato', 'categoria_id', 'categoria_slug_db',
+                          'categoria_nome_db', 'prato_id', 'prato_slug_db'):
+                r.pop(campo, None)
 
         return jsonify(rows)
     except Exception as e:
