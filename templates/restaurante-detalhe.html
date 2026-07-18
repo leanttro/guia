@@ -1041,12 +1041,30 @@
     </script>
 
     <script>
-    // ── Banner rotativo ──
+    // ── Banner rotativo (segmentado por categoria/cidade/bairro do restaurante) ──
     (function() {
-        fetch('/api/banners?posicao=restaurante')
+        function embaralhar(arr) {
+            var a = arr.slice();
+            for (var i = a.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+            }
+            return a;
+        }
+
+        var params = new URLSearchParams({ posicao: 'restaurante' });
+        var categoriaSlug = {{ (restaurante.categoria_slug or '') | tojson }};
+        var cidade         = {{ (restaurante.cidade or '') | tojson }};
+        var bairro          = {{ (restaurante.bairro or '') | tojson }};
+        if (categoriaSlug) params.set('categoria', categoriaSlug);
+        if (cidade) params.set('cidade', cidade);
+        if (bairro) params.set('bairro', bairro);
+
+        fetch('/api/banners?' + params.toString())
             .then(r => r.json())
             .then(banners => {
                 if (!banners || !banners.length) return;
+                banners = embaralhar(banners);
                 document.getElementById('banner-placeholder').style.display = 'none';
                 const rot  = document.getElementById('banner-rotativo');
                 const img  = document.getElementById('banner-img');
