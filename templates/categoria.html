@@ -1613,6 +1613,7 @@
             await carregarFiltrosRegiao();
             carregarFiltrosBairro();
             aplicarFiltrosLocalidade();
+            if (typeof carregarBannersCategoria === 'function') carregarBannersCategoria();
         }
 
         async function carregarFiltrosRegiao() {
@@ -2241,14 +2242,39 @@
     </script>
 
     <script>
-    // ── Banner rotativo categoria ──
-    (function() {
-        fetch('/api/banners?posicao=categoria')
+    // ── Banner rotativo categoria (segmentado por categoria + cidade) ──
+    var _bannerCategoriaTimer = null;
+
+    function embaralharArray(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+        }
+        return a;
+    }
+
+    function carregarBannersCategoria() {
+        var params = new URLSearchParams({ posicao: 'categoria', categoria: CATEGORIA_SLUG });
+        if (typeof cidadeSelecionada !== 'undefined' && cidadeSelecionada) {
+            params.set('cidade', cidadeSelecionada);
+        }
+
+        fetch('/api/banners?' + params.toString())
             .then(function(r) { return r.json(); })
             .then(function(banners) {
-                if (!banners || !banners.length) return;
-                document.getElementById('banner-placeholder-categoria').style.display = 'none';
+                if (_bannerCategoriaTimer) { clearInterval(_bannerCategoriaTimer); _bannerCategoriaTimer = null; }
+                var placeholder = document.getElementById('banner-placeholder-categoria');
                 var rot  = document.getElementById('banner-rotativo-categoria');
+                if (!banners || !banners.length) {
+                    placeholder.style.display = '';
+                    rot.style.display = 'none';
+                    return;
+                }
+                // Embaralha a cada carregamento/recarregamento — a ordem e o
+                // primeiro banner exibido mudam a cada visita.
+                banners = embaralharArray(banners);
+                placeholder.style.display = 'none';
                 var img  = document.getElementById('banner-img-categoria');
                 var link = document.getElementById('banner-link-categoria');
                 rot.style.display = 'block';
@@ -2266,14 +2292,16 @@
 
                 mostrar(banners[0]);
                 if (banners.length > 1) {
-                    setInterval(function() {
+                    _bannerCategoriaTimer = setInterval(function() {
                         idx = (idx + 1) % banners.length;
                         mostrar(banners[idx]);
                     }, 5000);
                 }
             })
             .catch(function() {});
-    })();
+    }
+
+    carregarBannersCategoria();
     </script>
 </body>
 </html>
