@@ -1495,7 +1495,7 @@
                         <h3>${p.nome}</h3>
                         ${p.ingredientes ? `<p class="ingredientes">${p.ingredientes}</p>` : ''}
                         ${p.descricao ? `<p>${truncarTexto(p.descricao, 80)}</p>` : ''}
-                        ${p.slug ? `<a href="/pratos/${p.slug}" class="link-receita-completa">Ver receita completa →</a>` : ''}
+                        ${p.slug ? `<a href="/pratos/${p.slug}" class="link-receita-completa">Ver detalhes do prato →</a>` : ''}
                         ${estrelasHTML}
                         ${p.cta_url ? `<a href="${p.cta_url}" class="btn-cta" target="_blank">${p.cta_texto || 'Saiba mais'}</a>` : ''}
                         <div class="restaurantes-do-prato" id="rest-prato-${p.id}">
