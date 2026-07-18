@@ -1510,7 +1510,7 @@ def api_banners():
               AND (b.posicao = %s OR b.posicao = 'todas')
               AND (b.cidade IS NULL OR b.cidade = '' OR LOWER(b.cidade) = LOWER(%s))
               AND (b.bairro IS NULL OR b.bairro = '' OR LOWER(b.bairro) = LOWER(%s))
-            ORDER BY ordem ASC, criado_em DESC
+            ORDER BY b.ordem ASC, b.criado_em DESC
         """, (posicao, cidade, bairro))
         candidatos = [dict(r) for r in cur.fetchall()]
         cur.close()
