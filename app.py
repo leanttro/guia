@@ -1,4 +1,6 @@
 import os
+import re
+import unicodedata
 import psycopg2
 import psycopg2.extras
 from flask import Flask, jsonify, request, send_from_directory, render_template, make_response, session, redirect, url_for
@@ -46,6 +48,88 @@ def login_required(f):
             return redirect('/admin/login')
         return f(*args, **kwargs)
     return decorated
+
+
+# ── Slugs de pratos (para SEO — /pratos/<slug>) ───────────────
+def gerar_slug(texto):
+    """Transforma 'Alcatra de Boi!' em 'alcatra-de-boi'."""
+    if not texto:
+        return ''
+    texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('ascii')
+    texto = texto.lower().strip()
+    texto = re.sub(r'[^a-z0-9]+', '-', texto)
+    texto = re.sub(r'-+', '-', texto).strip('-')
+    return texto
+
+def _slug_prato_disponivel(cur, slug, excluir_id=None):
+    if excluir_id:
+        cur.execute("SELECT id FROM pratos WHERE slug = %s AND id != %s", (slug, excluir_id))
+    else:
+        cur.execute("SELECT id FROM pratos WHERE slug = %s", (slug,))
+    return cur.fetchone() is None
+
+def gerar_slug_unico_prato(cur, nome, excluir_id=None):
+    """Gera um slug a partir do nome, evitando colisão com outros pratos."""
+    base = gerar_slug(nome) or 'prato'
+    slug = base
+    i = 2
+    while not _slug_prato_disponivel(cur, slug, excluir_id):
+        slug = f"{base}-{i}"
+        i += 1
+    return slug
+
+def ensure_pratos_slug_column():
+    """Cria a coluna 'slug' em pratos (se não existir) e preenche os pratos
+    que ainda não têm slug — roda sozinho ao subir o app, sem precisar de
+    migração manual no banco."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("ALTER TABLE pratos ADD COLUMN IF NOT EXISTS slug VARCHAR(255)")
+        conn.commit()
+
+        cur.execute("SELECT id, nome FROM pratos WHERE slug IS NULL OR slug = '' ORDER BY id")
+        pendentes = cur.fetchall()
+        for row in pendentes:
+            novo_slug = gerar_slug_unico_prato(cur, row['nome'], excluir_id=row['id'])
+            cur.execute("UPDATE pratos SET slug = %s WHERE id = %s", (novo_slug, row['id']))
+            conn.commit()
+
+        cur.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_pratos_slug ON pratos (slug)")
+        conn.commit()
+        cur.close()
+        if pendentes:
+            print(f"✅ Slugs de pratos: {len(pendentes)} gerado(s) automaticamente.")
+    except Exception as e:
+        print("⚠️  Não foi possível preparar a coluna 'slug' em pratos:", e)
+        traceback.print_exc()
+    finally:
+        if conn: conn.close()
+
+ensure_pratos_slug_column()
+
+
+# ── Segmentação de banners (categoria / cidade / bairro) ──────
+def ensure_banners_target_columns():
+    """Cria as colunas de segmentação em 'banners' se ainda não existirem —
+    roda sozinho ao subir o app, sem precisar de migração manual."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("ALTER TABLE banners ADD COLUMN IF NOT EXISTS categoria_id INTEGER")
+        cur.execute("ALTER TABLE banners ADD COLUMN IF NOT EXISTS cidade VARCHAR(120)")
+        cur.execute("ALTER TABLE banners ADD COLUMN IF NOT EXISTS bairro VARCHAR(120)")
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        print("⚠️  Não foi possível preparar colunas de segmentação de banners:", e)
+        traceback.print_exc()
+    finally:
+        if conn: conn.close()
+
+ensure_banners_target_columns()
 
 
 # ════════════════════════════════════════════════════════════
@@ -124,6 +208,45 @@ def restaurante_detalhe(slug):
     except Exception as e:
         traceback.print_exc()
         return "Erro ao carregar restaurante", 500
+    finally:
+        if conn: conn.close()
+
+
+@app.route('/pratos/<slug>')
+def prato_detalhe(slug):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT p.*, c.nome as categoria_nome, c.slug as categoria_slug
+            FROM pratos p
+            LEFT JOIN categorias c ON p.categoria_id = c.id
+            WHERE p.slug = %s
+        """, (slug,))
+        prato = cur.fetchone()
+        if not prato:
+            return "Prato não encontrado", 404
+
+        # Restaurantes que servem este prato (mesmo critério da API pública)
+        cur.execute("""
+            SELECT r.id, r.nome, r.slug, r.foto_url, r.bairro, r.cidade,
+                   r.lat, r.lng, p2.destaque, p2.aparece_em_pratos
+            FROM restaurantes r
+            JOIN restaurante_pratos rp ON r.id = rp.restaurante_id
+            JOIN planos p2 ON r.plano_id = p2.id
+            WHERE rp.prato_id = %s AND r.ativo = TRUE AND p2.aparece_em_pratos = TRUE
+            ORDER BY p2.destaque DESC, r.nome
+        """, (prato['id'],))
+        restaurantes = [format_db_data(dict(r)) for r in cur.fetchall()]
+        cur.close()
+
+        return render_template('prato-detalhe.html',
+                               prato=format_db_data(dict(prato)),
+                               restaurantes=restaurantes)
+    except Exception as e:
+        traceback.print_exc()
+        return "Erro ao carregar prato", 500
     finally:
         if conn: conn.close()
 
@@ -961,19 +1084,25 @@ def api_admin_pratos():
             cur.close()
             return jsonify(rows)
         data = request.get_json()
+        nome = data.get('nome', '')
+        slug_informado = gerar_slug(data.get('slug', '')) if data.get('slug') else ''
+        slug = slug_informado or gerar_slug_unico_prato(cur, nome)
+        # Garante que o slug (mesmo se digitado manualmente) não colide com outro prato
+        if not _slug_prato_disponivel(cur, slug):
+            slug = gerar_slug_unico_prato(cur, slug)
         cur.execute("""
-            INSERT INTO pratos (nome, categoria_id, foto_url, ingredientes, descricao, cta_texto, cta_url, destaque)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            INSERT INTO pratos (nome, categoria_id, foto_url, ingredientes, descricao, cta_texto, cta_url, destaque, slug)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
         """, (
-            data.get('nome', ''), data.get('categoria_id') or None,
+            nome, data.get('categoria_id') or None,
             data.get('foto_url', ''), data.get('ingredientes', ''),
             data.get('descricao', ''), data.get('cta_texto', ''),
-            data.get('cta_url', ''), data.get('destaque', False)
+            data.get('cta_url', ''), data.get('destaque', False), slug
         ))
         new_id = cur.fetchone()['id']
         conn.commit()
         cur.close()
-        return jsonify({'ok': True, 'id': new_id})
+        return jsonify({'ok': True, 'id': new_id, 'slug': slug})
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
@@ -993,18 +1122,23 @@ def api_admin_prato(prato_id):
             cur.close()
             return jsonify({'ok': True})
         data = request.get_json()
+        nome = data.get('nome', '')
+        slug_informado = gerar_slug(data.get('slug', '')) if data.get('slug') else ''
+        slug = slug_informado or gerar_slug_unico_prato(cur, nome, excluir_id=prato_id)
+        if not _slug_prato_disponivel(cur, slug, excluir_id=prato_id):
+            slug = gerar_slug_unico_prato(cur, slug, excluir_id=prato_id)
         cur.execute("""
             UPDATE pratos SET nome=%s, categoria_id=%s, foto_url=%s, ingredientes=%s,
-            descricao=%s, cta_texto=%s, cta_url=%s, destaque=%s WHERE id=%s
+            descricao=%s, cta_texto=%s, cta_url=%s, destaque=%s, slug=%s WHERE id=%s
         """, (
-            data.get('nome', ''), data.get('categoria_id') or None,
+            nome, data.get('categoria_id') or None,
             data.get('foto_url', ''), data.get('ingredientes', ''),
             data.get('descricao', ''), data.get('cta_texto', ''),
-            data.get('cta_url', ''), data.get('destaque', False), prato_id
+            data.get('cta_url', ''), data.get('destaque', False), slug, prato_id
         ))
         conn.commit()
         cur.close()
-        return jsonify({'ok': True})
+        return jsonify({'ok': True, 'slug': slug})
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
@@ -1304,18 +1438,30 @@ def api_admin_avaliacoes():
 
 @app.route('/api/banners')
 def api_banners():
-    """Retorna banners ativos para uma posição. Ex: /api/banners?posicao=home"""
+    """Retorna banners ativos para uma posição, já filtrados pela segmentação.
+    Ex: /api/banners?posicao=categoria&categoria=carnes&cidade=São Paulo
+    Um banner sem categoria/cidade/bairro definidos aparece em tudo daquela posição;
+    se o admin preencher algum desses campos, o banner só aparece quando bater."""
     conn = None
     try:
-        posicao = request.args.get('posicao', 'home')
+        posicao        = request.args.get('posicao', 'home')
+        categoria_slug = request.args.get('categoria', '').strip()
+        cidade         = request.args.get('cidade', '').strip()
+        bairro         = request.args.get('bairro', '').strip()
+
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute("""
-            SELECT id, titulo, imagem_url, link_destino
-            FROM banners
-            WHERE ativo = TRUE AND (posicao = %s OR posicao = 'todas')
+            SELECT b.id, b.titulo, b.imagem_url, b.link_destino
+            FROM banners b
+            LEFT JOIN categorias c ON b.categoria_id = c.id
+            WHERE b.ativo = TRUE
+              AND (b.posicao = %s OR b.posicao = 'todas')
+              AND (b.categoria_id IS NULL OR c.slug = %s)
+              AND (b.cidade IS NULL OR b.cidade = '' OR LOWER(b.cidade) = LOWER(%s))
+              AND (b.bairro IS NULL OR b.bairro = '' OR LOWER(b.bairro) = LOWER(%s))
             ORDER BY ordem ASC, criado_em DESC
-        """, (posicao,))
+        """, (posicao, categoria_slug, cidade, bairro))
         rows = [dict(r) for r in cur.fetchall()]
         cur.close()
         return jsonify(rows)
@@ -1338,14 +1484,19 @@ def api_admin_banners():
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         if request.method == 'GET':
-            cur.execute("SELECT * FROM banners ORDER BY posicao, ordem ASC, criado_em DESC")
+            cur.execute("""
+                SELECT b.*, c.nome as categoria_nome, c.slug as categoria_slug
+                FROM banners b
+                LEFT JOIN categorias c ON b.categoria_id = c.id
+                ORDER BY b.posicao, b.ordem ASC, b.criado_em DESC
+            """)
             rows = [format_db_data(dict(r)) for r in cur.fetchall()]
             cur.close()
             return jsonify(rows)
         data = request.get_json()
         cur.execute("""
-            INSERT INTO banners (titulo, imagem_url, link_destino, posicao, ativo, ordem)
-            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
+            INSERT INTO banners (titulo, imagem_url, link_destino, posicao, ativo, ordem, categoria_id, cidade, bairro)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
         """, (
             data.get('titulo', '').strip(),
             data.get('imagem_url', '').strip(),
@@ -1353,6 +1504,9 @@ def api_admin_banners():
             data.get('posicao', 'home'),
             data.get('ativo', True),
             data.get('ordem', 0),
+            data.get('categoria_id') or None,
+            data.get('cidade', '').strip() or None,
+            data.get('bairro', '').strip() or None,
         ))
         new_id = cur.fetchone()['id']
         conn.commit()
@@ -1381,7 +1535,8 @@ def api_admin_banner(banner_id):
         cur.execute("""
             UPDATE banners SET
                 titulo = %s, imagem_url = %s, link_destino = %s,
-                posicao = %s, ativo = %s, ordem = %s
+                posicao = %s, ativo = %s, ordem = %s,
+                categoria_id = %s, cidade = %s, bairro = %s
             WHERE id = %s
         """, (
             data.get('titulo', '').strip(),
@@ -1390,6 +1545,9 @@ def api_admin_banner(banner_id):
             data.get('posicao', 'home'),
             data.get('ativo', True),
             data.get('ordem', 0),
+            data.get('categoria_id') or None,
+            data.get('cidade', '').strip() or None,
+            data.get('bairro', '').strip() or None,
             banner_id,
         ))
         conn.commit()
