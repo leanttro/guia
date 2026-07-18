@@ -994,6 +994,9 @@ def sitemap():
         cur.execute("SELECT slug FROM restaurantes WHERE ativo = TRUE AND slug IS NOT NULL")
         for row in cur.fetchall():
             urls.append(f'https://www.guiadorodizio.com.br/restaurantes/{row[0]}')
+        cur.execute("SELECT slug FROM pratos WHERE slug IS NOT NULL")
+        for row in cur.fetchall():
+            urls.append(f'https://www.guiadorodizio.com.br/pratos/{row[0]}')
         cur.execute("SELECT slug FROM posts WHERE ativo = TRUE AND slug IS NOT NULL")
         for row in cur.fetchall():
             urls.append(f'https://www.guiadorodizio.com.br/blog/{row[0]}')
@@ -1429,43 +1432,6 @@ def api_admin_avaliacoes():
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-    finally:
-        if conn: conn.close()
-
-
-# ════════════════════════════════════════════════════════════
-#  DIAGNÓSTICO TEMPORÁRIO — remover depois de resolver o banner
-# ════════════════════════════════════════════════════════════
-
-@app.route('/api/_versao')
-def api_versao_debug():
-    """Só confirma se o código que está no ar é este arquivo (com o fix de
-    banners) ou uma versão anterior."""
-    return jsonify({'versao': 'fix-banners-2026-07-18-normalizado'})
-
-@app.route('/api/_debug-banners')
-def api_debug_banners():
-    """Mostra cru o que ESTA conexão de banco enxerga na tabela banners,
-    e qual banco/host ela está de fato acessando — pra descartar
-    'admin e site público lendo bancos diferentes'."""
-    conn = None
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("SELECT current_database() AS banco, inet_server_addr()::text AS host")
-        origem = dict(cur.fetchone())
-        cur.execute("""
-            SELECT id, titulo, posicao, ativo::text AS ativo_raw,
-                   categoria_id, cidade, bairro, prato_id
-            FROM banners
-            ORDER BY id
-        """)
-        rows = [dict(r) for r in cur.fetchall()]
-        cur.close()
-        return jsonify({'origem': origem, 'banners': rows, 'total': len(rows)})
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({'erro': str(e)}), 500
     finally:
         if conn: conn.close()
 
