@@ -355,6 +355,11 @@
             transition: background 0.3s; margin-top: auto;
         }
         .prato-card .btn-cta:hover { background: var(--dark); }
+        .link-receita-completa {
+            display: inline-block; color: var(--primary); font-size: 0.85em;
+            font-weight: 600; text-decoration: none; margin-bottom: 12px;
+        }
+        .link-receita-completa:hover { text-decoration: underline; }
 
         /* Restaurantes onde serve */
         .restaurantes-do-prato { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--medium-gray); }
@@ -1458,6 +1463,14 @@
             updateCarouselPosition('pratos');
         }
 
+        // ── Corta um texto em N caracteres sem quebrar palavra no meio ──
+        function truncarTexto(texto, max) {
+            if (!texto || texto.length <= max) return texto || '';
+            const cortado = texto.slice(0, max);
+            const ultimoEspaco = cortado.lastIndexOf(' ');
+            return (ultimoEspaco > 0 ? cortado.slice(0, ultimoEspaco) : cortado).trim() + '…';
+        }
+
         // ── Gera HTML de um card de prato ──
         function pratosCardHTML(p) {
             const estrelasHTML = `
@@ -1481,7 +1494,8 @@
                         ${p.destaque ? '<span class="badge-destaque">⭐ Destaque</span>' : ''}
                         <h3>${p.nome}</h3>
                         ${p.ingredientes ? `<p class="ingredientes">${p.ingredientes}</p>` : ''}
-                        ${p.descricao ? `<p>${p.descricao}</p>` : ''}
+                        ${p.descricao ? `<p>${truncarTexto(p.descricao, 80)}</p>` : ''}
+                        ${p.slug ? `<a href="/pratos/${p.slug}" class="link-receita-completa">Ver receita completa →</a>` : ''}
                         ${estrelasHTML}
                         ${p.cta_url ? `<a href="${p.cta_url}" class="btn-cta" target="_blank">${p.cta_texto || 'Saiba mais'}</a>` : ''}
                         <div class="restaurantes-do-prato" id="rest-prato-${p.id}">
