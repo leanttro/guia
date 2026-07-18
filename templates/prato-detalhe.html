@@ -640,7 +640,9 @@
 
             var params = new URLSearchParams({ posicao: 'prato' });
             var categoriaSlug = {{ (prato.categoria_slug or '') | tojson }};
+            var pratoSlug = {{ (prato.slug or '') | tojson }};
             if (categoriaSlug) params.set('categoria', categoriaSlug);
+            if (pratoSlug) params.set('prato', pratoSlug);
 
             fetch('/api/banners?' + params.toString())
                 .then(r => r.json())
