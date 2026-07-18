@@ -437,7 +437,13 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="info-message">Nenhum restaurante cadastrado servindo este prato no momento.</p>
+                    <a href="https://wa.me/5511913324827?text=Olá!%20Meu%20restaurante%20serve%20{{ prato.nome | urlencode }}%20e%20quero%20aparecer%20na%20página%20desse%20prato%20no%20Guia%20do%20Rodízio"
+                       target="_blank" rel="noopener"
+                       style="display:block;padding:20px 16px;background:repeating-linear-gradient(45deg,#fafafa,#fafafa 10px,#f0f0f0 10px,#f0f0f0 20px);border:2px dashed #C0392B;border-radius:10px;text-align:center;text-decoration:none;">
+                        <span style="font-size:1.4em;">📍</span><br>
+                        <span style="color:#C0392B;font-weight:700;font-size:1em;">Seu restaurante serve esse prato?</span><br>
+                        <span style="color:#6b7280;font-size:0.85em;">Anuncie aqui e apareça pra quem procura {{ prato.nome }} — fale pelo WhatsApp</span>
+                    </a>
                     {% endif %}
                 </div>
 
