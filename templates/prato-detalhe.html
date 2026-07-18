@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7617881885143728"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Title & Description dinâmicos por prato
+    ═══════════════════════════════════════════════════════ -->
+    <title>{{ prato.nome }} — Rodízio de {{ prato.categoria_nome or 'Comida' }} | Guia do Rodízio</title>
+    <meta name="description" content="{% if prato.descricao %}{{ prato.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ prato.nome }}, prato do rodízio de {{ prato.categoria_nome or 'comida' }}. Veja onde encontrar, avaliações e receita completa no Guia do Rodízio.{% endif %}">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Canonical
+    ═══════════════════════════════════════════════════════ -->
+    <link rel="canonical" href="https://www.guiadorodizio.com.br/pratos/{{ prato.slug }}">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#C0392B">
+
+    <!-- ══ Favicon ══ -->
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044702/guiadorodiziologo_zc3fih.png">
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044702/guiadorodiziologo_zc3fih.png">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Open Graph (WhatsApp, Facebook, LinkedIn)
+    ═══════════════════════════════════════════════════════ -->
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Guia do Rodízio">
+    <meta property="og:url"         content="https://www.guiadorodizio.com.br/pratos/{{ prato.slug }}">
+    <meta property="og:title"       content="{{ prato.nome }} — Rodízio de {{ prato.categoria_nome or 'Comida' }} | Guia do Rodízio">
+    <meta property="og:description" content="{% if prato.descricao %}{{ prato.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ prato.nome }}, prato do rodízio de {{ prato.categoria_nome or 'comida' }}.{% endif %}">
+    <meta property="og:image"       content="{{ prato.foto_url or 'https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png' }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt"   content="{{ prato.nome }} — Guia do Rodízio">
+    <meta property="og:locale"      content="pt_BR">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Twitter Card
+    ═══════════════════════════════════════════════════════ -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="{{ prato.nome }} — Rodízio de {{ prato.categoria_nome or 'Comida' }}">
+    <meta name="twitter:description" content="{% if prato.descricao %}{{ prato.descricao | truncate(155, True, '...') }}{% else %}Conheça o {{ prato.nome }} no Guia do Rodízio.{% endif %}">
+    <meta name="twitter:image"       content="{{ prato.foto_url or 'https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779044588/guiadorodiziowpp_ecozw9.png' }}">
+    <meta name="twitter:site"        content="@guiadorodizio">
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEO — Schema.org JSON-LD (MenuItem + BreadcrumbList)
+    ═══════════════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "MenuItem",
+          "@id": "https://www.guiadorodizio.com.br/pratos/{{ prato.slug }}#prato",
+          "name": {{ prato.nome | tojson }},
+          "description": {{ (prato.descricao or prato.ingredientes or '') | tojson }},
+          "url": "https://www.guiadorodizio.com.br/pratos/{{ prato.slug }}"
+          {% if prato.foto_url %}
+          ,"image": {{ prato.foto_url | tojson }}
+          {% endif %}
+          {% if prato.categoria_nome %}
+          ,"menuAddOn": {{ prato.categoria_nome | tojson }}
+          {% endif %}
+          {% if prato.media_nota and prato.total_votos and prato.total_votos > 0 %}
+          ,"aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "{{ prato.media_nota }}",
+            "reviewCount": "{{ prato.total_votos }}",
+            "bestRating": "5",
+            "worstRating": "1"
+          }
+          {% endif %}
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Início",
+              "item": "https://www.guiadorodizio.com.br/"
+            }
+            {% if prato.categoria_slug and prato.categoria_nome %}
+            ,{
+              "@type": "ListItem",
+              "position": 2,
+              "name": {{ prato.categoria_nome | tojson }},
+              "item": "https://www.guiadorodizio.com.br/{{ prato.categoria_slug }}"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": {{ prato.nome | tojson }},
+              "item": "https://www.guiadorodizio.com.br/pratos/{{ prato.slug }}"
+            }
+            {% else %}
+            ,{
+              "@type": "ListItem",
+              "position": 2,
+              "name": {{ prato.nome | tojson }},
+              "item": "https://www.guiadorodizio.com.br/pratos/{{ prato.slug }}"
+            }
+            {% endif %}
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- ══ Google Analytics GA4 ══ -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HKSQLE7TR1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-HKSQLE7TR1');
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #C0392B; --dark: #922B21; --light: #FADBD8;
+            --light-gray: #f8f9fa; --medium-gray: #e0e0e0;
+            --dark-gray: #343a40; --text-color: #495057; --white: #ffffff;
+            --shadow-light: rgba(0,0,0,0.08); --shadow-medium: rgba(0,0,0,0.15);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Roboto', sans-serif; background: var(--light-gray); color: var(--text-color); line-height: 1.6; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+
+        /* ── Header ── */
+        body > header {
+            background-color: var(--primary);
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            position: relative;
+        }
+        body > header .logo { display: flex; align-items: center; }
+        body > header .logo a { display: block; }
+        body > header .logo img { height: 90px; width: auto; display: block; filter: brightness(0) invert(1); }
+        body > header nav.desktop-nav ul { list-style: none; display: flex; gap: 35px; justify-content: center; }
+        body > header nav.desktop-nav ul li a {
+            text-decoration: none; color: var(--white); font-weight: 500;
+            position: relative; padding-bottom: 5px; transition: color 0.3s;
+        }
+        body > header nav.desktop-nav ul li a::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            bottom: -5px; left: 0; background: var(--white); transition: width 0.3s;
+        }
+        body > header nav.desktop-nav ul li a:hover::after { width: 100%; }
+        .hamburger-menu { display: none; font-size: 1.8em; color: var(--white); cursor: pointer; padding: 10px 20px; z-index: 1001; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+        .mobile-nav-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s; }
+        .mobile-nav-overlay.active { display: flex; opacity: 1; }
+        .mobile-nav-overlay nav ul { list-style: none; flex-direction: column; text-align: center; padding: 0; }
+        .mobile-nav-overlay nav ul li { margin: 20px 0; }
+        .mobile-nav-overlay nav ul li a { color: var(--white); font-size: 1.8em; font-weight: 700; text-decoration: none; display: block; }
+
+        /* ── Foto de destaque ── */
+        .cat-hero-foto {
+            display: flex; justify-content: center; align-items: center;
+            padding: 28px 20px; background: var(--light-gray);
+        }
+        .cat-hero-foto img {
+            max-width: 560px; width: 100%; height: auto; max-height: 320px;
+            object-fit: contain; border-radius: 12px;
+            box-shadow: 0 4px 18px var(--shadow-medium); display: block;
+        }
+        .cat-hero-slim { width: 100%; height: 18px; background: var(--light); }
+
+        /* ── Layout principal ── */
+        .page-wrap {
+            max-width: 1100px; margin: 0 auto;
+            padding: 32px 20px 60px;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 28px;
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--white); border-radius: 14px;
+            box-shadow: 0 4px 14px var(--shadow-light);
+            padding: 28px; margin-bottom: 24px;
+        }
+        .card:last-child { margin-bottom: 0; }
+        .card h2 {
+            font-size: 1.05em; font-weight: 700; color: var(--dark-gray);
+            margin-bottom: 18px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--light);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card h2 i { color: var(--primary); }
+
+        /* ── Cabeçalho do prato ── */
+        .rest-title-block { margin-bottom: 24px; }
+        .breadcrumb { font-size: 0.88em; margin-bottom: 12px; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .rest-categoria-badge {
+            display: inline-block; background: var(--light);
+            color: var(--dark); font-size: 0.78em; font-weight: 700;
+            padding: 3px 12px; border-radius: 20px;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+        }
+        .rest-nome { font-size: 2em; font-weight: 700; color: var(--dark-gray); line-height: 1.2; margin-bottom: 10px; }
+        .prato-ingredientes { font-size: 0.98em; color: var(--primary); font-weight: 500; margin-bottom: 6px; }
+        .prato-descricao-completa { font-size: 1em; color: var(--text-color); white-space: pre-line; }
+
+        /* ── Estrelas de avaliação ── */
+        .prato-estrelas { display: flex; align-items: center; gap: 10px; margin: 16px 0 4px; flex-wrap: wrap; }
+        .estrelas-btn-wrap { display: flex; gap: 3px; }
+        .estrela-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.6em; color: var(--medium-gray);
+            transition: color 0.15s, transform 0.15s; line-height: 1; padding: 0;
+        }
+        .estrela-btn:hover { color: #f39c12; transform: scale(1.15); }
+        .estrela-btn.acesa { color: #f39c12; }
+        .estrelas-media { font-size: 0.85em; color: #6c757d; white-space: nowrap; }
+        .estrelas-ja-votou { font-size: 0.8em; color: var(--primary); font-weight: 600; margin-left: 4px; }
+
+        /* ── CTA ── */
+        .btn-cta-prato {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--primary); color: #fff; text-decoration: none;
+            padding: 12px 22px; border-radius: 10px; font-weight: 700;
+            font-size: 0.95em; margin-top: 18px; transition: background 0.2s;
+        }
+        .btn-cta-prato:hover { background: var(--dark); }
+
+        /* ── Restaurantes que servem o prato ── */
+        .pratos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+        .prato-card {
+            border-radius: 10px; overflow: hidden;
+            border: 1px solid var(--medium-gray); background: var(--white);
+            text-decoration: none; color: inherit;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .prato-card:hover { box-shadow: 0 4px 16px var(--shadow-medium); transform: translateY(-3px); }
+        .prato-card img { width: 100%; height: 130px; object-fit: cover; display: block; }
+        .prato-card .prato-info { padding: 10px 12px; }
+        .prato-card .prato-info h3 { font-size: 0.92em; font-weight: 700; color: var(--dark-gray); margin-bottom: 4px; }
+        .prato-card .prato-info p { font-size: 0.8em; color: var(--text-color); }
+        .info-message { color: #6c757d; font-size: 0.9em; }
+
+        /* ── Sidebar ── */
+        .sidebar { display: flex; flex-direction: column; gap: 24px; }
+
+        /* ── Footer ── */
+        footer { background: #0d0d0d; border-top: 1px solid #1e1e1e; padding: 40px 0 28px; font-family: 'Roboto', sans-serif; }
+        .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; }
+        .footer-logo img { height: 48px; width: auto; display: block; filter: brightness(0) invert(1); }
+        .footer-divider { width: 1px; height: 48px; background: #2a2a2a; flex-shrink: 0; }
+        .footer-text { flex: 1; min-width: 200px; }
+        .footer-text strong { display: block; color: #ffffff; font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+        .footer-text span { color: #707070; font-size: 12.5px; line-height: 1.5; }
+        .footer-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+        .f-btn { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; text-decoration: none; padding: 9px 17px; border-radius: 6px; white-space: nowrap; letter-spacing: 0.02em; transition: opacity 0.2s, transform 0.15s; border: none; cursor: pointer; }
+        .f-btn:hover { opacity: 0.82; transform: translateY(-1px); }
+        .f-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+        .f-btn-site { background: #ffffff; color: #0d0d0d; }
+        .f-btn-wpp  { background: #25D366; color: #fff; }
+        .f-btn-ig   { background: #7c5cfc; color: #fff; }
+        .footer-bottom { margin-top: 28px; padding-top: 18px; border-top: 1px solid #1a1a1a; text-align: center; color: #3a3a3a; font-size: 11.5px; }
+        .footer-bottom a { color: #555; text-decoration: none; }
+        .footer-bottom a:hover { color: #888; text-decoration: underline; }
+
+        /* ── Banner Vagas ── */
+        .vagas-banner { background: #1a0a0a; color: #fff; padding: 60px 20px; text-align: center; }
+        .vagas-banner .vagas-emoji { font-size: 3em; margin-bottom: 16px; }
+        .vagas-banner h2 { font-size: 1.9em; font-weight: 700; margin-bottom: 10px; color: #fff; }
+        .vagas-banner p { font-size: 1.05em; color: #c0a0a0; margin-bottom: 32px; max-width: 520px; margin-left: auto; margin-right: auto; }
+        .vagas-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .vagas-btn-primary { display: inline-block; background: #C0392B; color: #fff; padding: 13px 30px; border-radius: 7px; font-size: 1em; font-weight: 700; text-decoration: none; transition: background 0.3s, transform 0.2s; }
+        .vagas-btn-primary:hover { background: #922B21; transform: translateY(-2px); }
+        .vagas-btn-outline { display: inline-block; background: transparent; color: #fff; border: 2px solid #fff; padding: 13px 30px; border-radius: 7px; font-size: 1em; font-weight: 700; text-decoration: none; transition: background 0.3s, color 0.3s, transform 0.2s; }
+        .vagas-btn-outline:hover { background: #fff; color: #1a0a0a; transform: translateY(-2px); }
+        @media (max-width: 600px) {
+            .vagas-btns { flex-direction: column; align-items: center; }
+            .vagas-btn-primary, .vagas-btn-outline { width: 100%; max-width: 320px; text-align: center; }
+        }
+        @media (max-width: 640px) {
+            .footer-inner { flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+            .footer-divider { display: none; }
+            .footer-logo img { height: 38px; }
+            .footer-text { min-width: unset; }
+            .footer-actions { width: 100%; justify-content: center; }
+            .f-btn { flex: 1; justify-content: center; font-size: 12px; padding: 9px 10px; }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .page-wrap { grid-template-columns: 1fr; }
+            .sidebar { order: -1; }
+        }
+        @media (max-width: 768px) {
+            body > header nav.desktop-nav { display: none; }
+            .hamburger-menu { display: block; }
+            body > header .logo img { height: 60px; }
+            .rest-nome { font-size: 1.6em; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <a href="/" aria-label="Guia do Rodízio — Página inicial">
+                <img
+                    src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+                    alt="Guia do Rodízio" height="90" width="auto" loading="eager" decoding="async"
+                />
+            </a>
+        </div>
+        <nav class="desktop-nav" aria-label="Navegação principal">
+            <ul>
+                <li><a href="/">Início</a></li>
+                <li><a href="/japones" {% if prato.categoria_slug == 'japones' %}class="active"{% endif %}>Japonês</a></li>
+                <li><a href="/carnes" {% if prato.categoria_slug == 'carnes' %}class="active"{% endif %}>Carnes</a></li>
+                <li><a href="/pizza" {% if prato.categoria_slug == 'pizza' %}class="active"{% endif %}>Pizza</a></li>
+                <li><a href="/mexicano" {% if prato.categoria_slug == 'mexicano' %}class="active"{% endif %}>Mexicano</a></li>
+                <li><a href="/vagas">Empregos</a></li>
+                <li><a href="/blog">Blog</a></li>
+            </ul>
+        </nav>
+        <div class="hamburger-menu" id="hamburger-btn" aria-label="Abrir menu de navegação" role="button" tabindex="0"><i class="fas fa-bars"></i></div>
+    </header>
+
+    <div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true" aria-label="Menu de navegação">
+        <button onclick="closeMobileNav()" aria-label="Fechar menu" style="position:absolute;top:20px;right:24px;background:none;border:none;color:#fff;font-size:2.2em;cursor:pointer;line-height:1;z-index:1002;">&#x2715;</button>
+        <nav aria-label="Navegação mobile">
+            <ul>
+                <li><a href="/" onclick="closeMobileNav()">Início</a></li>
+                <li><a href="/japones" onclick="closeMobileNav()">Japonês</a></li>
+                <li><a href="/carnes" onclick="closeMobileNav()">Carnes</a></li>
+                <li><a href="/pizza" onclick="closeMobileNav()">Pizza</a></li>
+                <li><a href="/mexicano" onclick="closeMobileNav()">Mexicano</a></li>
+                <li><a href="/vagas" onclick="closeMobileNav()">Empregos</a></li>
+                <li><a href="/blog" onclick="closeMobileNav()">Blog</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Foto do prato -->
+    {% if prato.foto_url %}
+        <div class="cat-hero-foto">
+            <img
+                src="{{ prato.foto_url }}"
+                alt="{{ prato.nome }} — prato do rodízio de {{ prato.categoria_nome or 'comida' }}"
+                width="560" height="320" loading="eager" decoding="async" itemprop="image"
+                onerror="this.onerror=null;this.closest('.cat-hero-foto').outerHTML='<div class=\'cat-hero-slim\'></div>';"
+            >
+        </div>
+    {% else %}
+        <div class="cat-hero-slim"></div>
+    {% endif %}
+
+    <script>
+        const PRATO_ID = {{ prato.id }};
+    </script>
+
+    <main itemscope itemtype="https://schema.org/MenuItem">
+        <meta itemprop="url" content="https://www.guiadorodizio.com.br/pratos/{{ prato.slug }}">
+        <div class="page-wrap">
+
+            <!-- ── Coluna principal ── -->
+            <div class="main-col">
+
+                <div class="rest-title-block">
+                    <nav class="breadcrumb" aria-label="Navegação estrutural">
+                        <a href="/">Início</a> &rsaquo;
+                        {% if prato.categoria_slug %}
+                            <a href="/{{ prato.categoria_slug }}">{{ prato.categoria_nome }}</a> &rsaquo;
+                        {% endif %}
+                        {{ prato.nome }}
+                    </nav>
+                    {% if prato.categoria_nome %}
+                        <span class="rest-categoria-badge">{{ prato.categoria_nome }}</span>
+                    {% endif %}
+                    <h1 class="rest-nome" itemprop="name">{{ prato.nome }}</h1>
+                    {% if prato.ingredientes %}
+                        <p class="prato-ingredientes">{{ prato.ingredientes }}</p>
+                    {% endif %}
+
+                    <!-- Estrelas de avaliação -->
+                    <div class="prato-estrelas" id="estrelas-{{ prato.id }}">
+                        <div class="estrelas-btn-wrap" id="estrelas-btns-{{ prato.id }}">
+                            {% for n in range(1,6) %}
+                            <button class="estrela-btn" data-nota="{{ n }}"
+                                onmouseover="hoverEstrelas({{ n }})"
+                                onmouseout="resetHoverEstrelas()"
+                                onclick="avaliarPrato({{ n }})">★</button>
+                            {% endfor %}
+                        </div>
+                        <span class="estrelas-media" id="estrelas-media">carregando...</span>
+                    </div>
+
+                    {% if prato.cta_url %}
+                        <a href="{{ prato.cta_url }}" class="btn-cta-prato" target="_blank" rel="noopener">
+                            <i class="fas fa-utensils"></i> {{ prato.cta_texto or 'Saiba mais' }}
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Descrição completa -->
+                {% if prato.descricao %}
+                <div class="card">
+                    <h2><i class="fas fa-scroll"></i> Sobre o {{ prato.nome }}</h2>
+                    <p class="prato-descricao-completa" itemprop="description">{{ prato.descricao }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Onde encontrar -->
+                <div class="card">
+                    <h2><i class="fas fa-map-marker-alt"></i> Onde encontrar</h2>
+                    {% if restaurantes %}
+                    <div class="pratos-grid">
+                        {% for r in restaurantes %}
+                        <a href="/restaurantes/{{ r.slug }}" class="prato-card">
+                            <img src="{{ r.foto_url or 'https://placehold.co/400x260/f8f9fa/343a40?text=' ~ r.nome }}"
+                                 alt="{{ r.nome }}" width="400" height="130" loading="lazy" decoding="async"
+                                 onerror="this.src='https://placehold.co/400x260/f8f9fa/343a40?text={{ r.nome }}'">
+                            <div class="prato-info">
+                                <h3>{{ r.nome }}</h3>
+                                <p>{{ [r.bairro, r.cidade] | select | join(' · ') }}</p>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="info-message">Nenhum restaurante cadastrado servindo este prato no momento.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- ── Sidebar ── -->
+            <div class="sidebar">
+
+                {% if prato.categoria_slug %}
+                <div style="text-align:center;">
+                    <a href="/{{ prato.categoria_slug }}"
+                       style="color:var(--primary);font-size:0.9em;font-weight:600;text-decoration:none;">
+                        ← Ver todos os pratos de {{ prato.categoria_nome }}
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Banner rotativo -->
+                <div id="banner-box" style="margin-top:16px;">
+                    <div id="banner-rotativo" style="display:none;">
+                        <a id="banner-link" href="#" target="_blank" rel="noopener sponsored">
+                            <img id="banner-img" src="" alt="Anúncio"
+                                style="width:100%;border-radius:10px;display:block;object-fit:cover;max-height:120px;transition:opacity 0.4s;">
+                        </a>
+                    </div>
+                    <div id="banner-placeholder">
+                        <a href="https://wa.me/5511913324827?text=Olá!%20Quero%20anunciar%20no%20Guia%20do%20Rodízio"
+                           target="_blank" rel="noopener"
+                           style="display:block;padding:16px 12px;background:repeating-linear-gradient(45deg,#fafafa,#fafafa 10px,#f0f0f0 10px,#f0f0f0 20px);border:2px dashed #C0392B;border-radius:10px;text-align:center;text-decoration:none;">
+                            <span style="font-size:1.3em;">📢</span><br>
+                            <span style="color:#C0392B;font-weight:700;font-size:0.9em;">Anuncie aqui</span><br>
+                            <span style="color:#6b7280;font-size:0.78em;">Fale pelo WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Banner Vagas -->
+    <section class="vagas-banner" aria-label="Trabalhe em rodízios">
+        <div class="vagas-emoji" aria-hidden="true">👨‍🍳</div>
+        <h2>Trabalha na gastronomia?</h2>
+        <p>Veja vagas abertas em rodízios ou cadastre seu currículo — é gratuito.</p>
+        <div class="vagas-btns">
+            <a href="/vagas" class="vagas-btn-primary">Ver vagas</a>
+            <a href="/vagas" class="vagas-btn-outline">Cadastrar currículo</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer itemscope itemtype="https://schema.org/WPFooter">
+        <div class="container">
+            <div class="footer-inner">
+
+                <a href="/" aria-label="Guia do Rodízio — Página inicial" class="footer-logo" itemprop="url">
+                    <img
+                        src="https://res.cloudinary.com/dfzbvq3nf/image/upload/v1778883998/Rod%C3%ADzio_2000_x_1200_px_e6vpxu.png"
+                        alt="Guia do Rodízio — Guia completo de rodízios no Brasil"
+                        width="160" height="48" loading="lazy" decoding="async" itemprop="logo"
+                    />
+                </a>
+
+                <div class="footer-divider" aria-hidden="true"></div>
+
+                <div class="footer-text" itemscope itemtype="https://schema.org/Organization">
+                    <meta itemprop="name" content="Leanttro" />
+                    <meta itemprop="url" content="https://www.leanttro.com" />
+                    <meta itemprop="telephone" content="+5511913324827" />
+                    <meta itemprop="areaServed" content="Brasil" />
+                    <strong itemprop="description">Você tem um negócio local?</strong>
+                    <span>Criação de Sites e Blogs · Automações · Otimização de Tráfego</span>
+                </div>
+
+                <nav class="footer-actions" aria-label="Contato com a Leanttro">
+                    <img
+                        src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png"
+                        alt="Leanttro" height="32" width="auto" loading="lazy" decoding="async"
+                        style="height:32px;width:auto;display:block;flex-shrink:0;"
+                    />
+                    <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-site" aria-label="Conhecer o site da Leanttro">
+                        Quero meu site
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                    <a href="https://wa.me/5511913324827" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-wpp" aria-label="Falar com a Leanttro pelo WhatsApp">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.01 1.18 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                        WhatsApp
+                    </a>
+                    <a href="https://instagram.com/leanttro" target="_blank" rel="noopener noreferrer" class="f-btn f-btn-ig" aria-label="Seguir a Leanttro no Instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg>
+                        Instagram
+                    </a>
+                </nav>
+            </div>
+
+            <div class="footer-bottom">
+                <p>
+                    <span itemprop="copyrightYear">© 2025</span>
+                    <a href="/" title="Guia do Rodízio — Guia completo de rodízios no Brasil">GuiaDoRodizio.com.br</a>
+                    · Todos os direitos reservados ·
+                    Site criado por
+                    <a href="https://www.leanttro.com" target="_blank" rel="noopener noreferrer" title="Leanttro — Criação de Sites e Marketing Digital em São Paulo">Leanttro</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ── Mobile nav ──
+        document.getElementById('hamburger-btn').addEventListener('click', () => {
+            document.getElementById('mobile-nav').classList.toggle('active');
+        });
+        function closeMobileNav() {
+            document.getElementById('mobile-nav').classList.remove('active');
+        }
+
+        // ── Estrelas de avaliação (mesmo padrão das páginas de categoria) ──
+        let jaAvaliou = false;
+
+        function renderEstrelas(media, total, votou) {
+            document.querySelectorAll(`#estrelas-btns-${PRATO_ID} .estrela-btn`).forEach(btn => {
+                const n = parseInt(btn.dataset.nota);
+                btn.classList.toggle('acesa', n <= Math.round(media));
+            });
+            const el = document.getElementById('estrelas-media');
+            if (total === 0) {
+                el.textContent = 'Seja o primeiro a avaliar!';
+            } else {
+                el.innerHTML = `${media.toFixed(1)} <span style="color:#f39c12">★</span> (${total} voto${total !== 1 ? 's' : ''})`;
+            }
+            if (votou) {
+                document.getElementById(`estrelas-btns-${PRATO_ID}`).style.pointerEvents = 'none';
+                const wrap = document.getElementById(`estrelas-${PRATO_ID}`);
+                if (!wrap.querySelector('.estrelas-ja-votou')) {
+                    const badge = document.createElement('span');
+                    badge.className = 'estrelas-ja-votou';
+                    badge.textContent = '✓ Avaliado';
+                    wrap.appendChild(badge);
+                }
+            }
+        }
+
+        async function carregarNota() {
+            try {
+                const res  = await fetch(`/api/pratos/${PRATO_ID}/nota`);
+                const data = await res.json();
+                renderEstrelas(data.media || 0, data.total || 0, jaAvaliou);
+            } catch(e) {
+                document.getElementById('estrelas-media').textContent = '';
+            }
+        }
+
+        function hoverEstrelas(nota) {
+            if (jaAvaliou) return;
+            document.querySelectorAll(`#estrelas-btns-${PRATO_ID} .estrela-btn`).forEach(btn => {
+                btn.classList.toggle('acesa', parseInt(btn.dataset.nota) <= nota);
+            });
+        }
+
+        function resetHoverEstrelas() {
+            if (jaAvaliou) return;
+            document.querySelectorAll(`#estrelas-btns-${PRATO_ID} .estrela-btn`).forEach(btn => {
+                btn.classList.remove('acesa');
+            });
+        }
+
+        async function avaliarPrato(nota) {
+            if (jaAvaliou) return;
+            jaAvaliou = true;
+            try {
+                const res  = await fetch(`/api/pratos/${PRATO_ID}/avaliar`, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ nota })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    await carregarNota();
+                } else {
+                    jaAvaliou = false;
+                }
+            } catch(e) {
+                jaAvaliou = false;
+            }
+        }
+
+        carregarNota();
+
+        // ── Banner rotativo ──
+        (function() {
+            fetch('/api/banners?posicao=prato')
+                .then(r => r.json())
+                .then(banners => {
+                    if (!banners || !banners.length) return;
+                    document.getElementById('banner-placeholder').style.display = 'none';
+                    const rot  = document.getElementById('banner-rotativo');
+                    const img  = document.getElementById('banner-img');
+                    const link = document.getElementById('banner-link');
+                    rot.style.display = 'block';
+                    let idx = 0;
+                    function mostrar(b) {
+                        img.style.opacity = '0';
+                        setTimeout(() => {
+                            img.src  = b.imagem_url;
+                            img.alt  = b.titulo || 'Anúncio';
+                            link.href = b.link_destino || '#';
+                            img.style.opacity = '1';
+                        }, 300);
+                    }
+                    mostrar(banners[0]);
+                    if (banners.length > 1) {
+                        setInterval(() => {
+                            idx = (idx + 1) % banners.length;
+                            mostrar(banners[idx]);
+                        }, 5000);
+                    }
+                })
+                .catch(() => {});
+        })();
+    </script>
+</body>
+</html>
