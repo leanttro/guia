@@ -252,6 +252,17 @@
         .prato-card .prato-info p { font-size: 0.8em; color: var(--text-color); }
         .info-message { color: #6c757d; font-size: 0.9em; }
 
+        /* ── Filtro de cidade (Onde encontrar) ── */
+        .filtros-cidade-prato { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .filtros-cidade-prato .filtro-label { font-size: 0.82em; color: #6c757d; font-weight: 500; white-space: nowrap; }
+        .chip-cidade-prato {
+            border: 1px solid var(--medium-gray); background: var(--white); color: var(--text-color);
+            border-radius: 999px; padding: 6px 14px; font-size: 0.82em; font-weight: 500;
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .chip-cidade-prato:hover { border-color: var(--primary); color: var(--primary); }
+        .chip-cidade-prato.active { background: var(--dark-gray); border-color: var(--dark-gray); color: var(--white); }
+
         /* ── Sidebar ── */
         .sidebar { display: flex; flex-direction: column; gap: 24px; }
 
@@ -423,9 +434,13 @@
                 <div class="card">
                     <h2><i class="fas fa-map-marker-alt"></i> Onde encontrar</h2>
                     {% if restaurantes %}
-                    <div class="pratos-grid">
+                    <div id="filtros-cidade-prato-wrap" class="filtros-cidade-prato" style="display:none;">
+                        <span class="filtro-label">🏙️ Cidade:</span>
+                        <div id="filtros-cidade-prato"></div>
+                    </div>
+                    <div class="pratos-grid" id="pratos-restaurantes-grid">
                         {% for r in restaurantes %}
-                        <a href="/restaurantes/{{ r.slug }}" class="prato-card">
+                        <a href="/restaurantes/{{ r.slug }}" class="prato-card" data-cidade="{{ r.cidade or '' }}" data-bairro="{{ r.bairro or '' }}">
                             <img src="{{ r.foto_url or 'https://placehold.co/400x260/f8f9fa/343a40?text=' ~ r.nome }}"
                                  alt="{{ r.nome }}" width="400" height="130" loading="lazy" decoding="async"
                                  onerror="this.src='https://placehold.co/400x260/f8f9fa/343a40?text={{ r.nome }}'">
@@ -436,6 +451,7 @@
                         </a>
                         {% endfor %}
                     </div>
+                    <p class="info-message" id="pratos-restaurantes-vazio" style="display:none;">Nenhum restaurante nessa cidade servindo este prato no momento.</p>
                     {% else %}
                     <a href="https://wa.me/5511913324827?text=Olá!%20Meu%20restaurante%20serve%20{{ prato.nome | urlencode }}%20e%20quero%20aparecer%20na%20página%20desse%20prato%20no%20Guia%20do%20Rodízio"
                        target="_blank" rel="noopener"
@@ -633,30 +649,81 @@
 
         carregarNota();
 
-        // ── Banner rotativo (segmentado pela categoria do prato) ──
-        (function() {
-            function embaralhar(arr) {
-                var a = arr.slice();
-                for (var i = a.length - 1; i > 0; i--) {
-                    var j = Math.floor(Math.random() * (i + 1));
-                    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
-                }
-                return a;
-            }
+        // ── Filtro de cidade (lista "Onde encontrar") ──
+        var cidadeSelecionadaPrato = null;
 
+        function inicializarFiltroCidadePrato() {
+            var cards = document.querySelectorAll('#pratos-restaurantes-grid .prato-card');
+            var cidades = [];
+            cards.forEach(function(c) {
+                var cid = c.getAttribute('data-cidade');
+                if (cid && cidades.indexOf(cid) === -1) cidades.push(cid);
+            });
+            if (cidades.length < 2) return; // só um restaurante ou todos na mesma cidade — não precisa filtro
+            cidades.sort();
+
+            var wrap = document.getElementById('filtros-cidade-prato-wrap');
+            var el   = document.getElementById('filtros-cidade-prato');
+            wrap.style.display = 'flex';
+            el.innerHTML = '<button class="chip-cidade-prato active" data-cidade="" onclick="selecionarCidadePrato(this, \'\')">Todas</button>' +
+                cidades.map(function(c) {
+                    var safe = c.replace(/'/g, "\\'");
+                    return '<button class="chip-cidade-prato" data-cidade="' + c + '" onclick="selecionarCidadePrato(this, \'' + safe + '\')">' + c + '</button>';
+                }).join('');
+        }
+
+        function selecionarCidadePrato(btn, cidade) {
+            cidadeSelecionadaPrato = cidade || null;
+            document.querySelectorAll('.chip-cidade-prato').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+
+            var cards = document.querySelectorAll('#pratos-restaurantes-grid .prato-card');
+            var visiveis = 0;
+            cards.forEach(function(c) {
+                var mostra = !cidadeSelecionadaPrato || c.getAttribute('data-cidade') === cidadeSelecionadaPrato;
+                c.style.display = mostra ? '' : 'none';
+                if (mostra) visiveis++;
+            });
+            document.getElementById('pratos-restaurantes-vazio').style.display = visiveis ? 'none' : 'block';
+
+            carregarBannersPrato();
+        }
+
+        inicializarFiltroCidadePrato();
+
+        // ── Banner rotativo (segmentado por categoria/prato/cidade) ──
+        var _bannerPratoTimer = null;
+
+        function embaralharBannersPrato(arr) {
+            var a = arr.slice();
+            for (var i = a.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+            }
+            return a;
+        }
+
+        function carregarBannersPrato() {
             var params = new URLSearchParams({ posicao: 'prato' });
             var categoriaSlug = {{ (prato.categoria_slug or '') | tojson }};
             var pratoSlug = {{ (prato.slug or '') | tojson }};
             if (categoriaSlug) params.set('categoria', categoriaSlug);
             if (pratoSlug) params.set('prato', pratoSlug);
+            if (cidadeSelecionadaPrato) params.set('cidade', cidadeSelecionadaPrato);
 
             fetch('/api/banners?' + params.toString())
                 .then(r => r.json())
                 .then(banners => {
-                    if (!banners || !banners.length) return;
-                    banners = embaralhar(banners);
-                    document.getElementById('banner-placeholder').style.display = 'none';
+                    if (_bannerPratoTimer) { clearInterval(_bannerPratoTimer); _bannerPratoTimer = null; }
+                    const placeholder = document.getElementById('banner-placeholder');
                     const rot  = document.getElementById('banner-rotativo');
+                    if (!banners || !banners.length) {
+                        placeholder.style.display = '';
+                        rot.style.display = 'none';
+                        return;
+                    }
+                    banners = embaralharBannersPrato(banners);
+                    placeholder.style.display = 'none';
                     const img  = document.getElementById('banner-img');
                     const link = document.getElementById('banner-link');
                     rot.style.display = 'block';
@@ -672,14 +739,16 @@
                     }
                     mostrar(banners[0]);
                     if (banners.length > 1) {
-                        setInterval(() => {
+                        _bannerPratoTimer = setInterval(() => {
                             idx = (idx + 1) % banners.length;
                             mostrar(banners[idx]);
                         }, 5000);
                     }
                 })
                 .catch(() => {});
-        })();
+        }
+
+        carregarBannersPrato();
     </script>
 </body>
 </html>
