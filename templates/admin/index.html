@@ -543,7 +543,13 @@
                     <option value="">Todas as categorias</option>
                 </select>
                 <input type="text" id="banner-cidade" placeholder="Cidade (ex: São Paulo) — deixe em branco pra todas" style="margin-bottom:8px;">
-                <input type="text" id="banner-bairro" placeholder="Bairro (ex: Moema) — deixe em branco pra todos">
+                <input type="text" id="banner-bairro" placeholder="Bairro (ex: Moema) — deixe em branco pra todos" style="margin-bottom:8px;">
+                <select id="banner-prato">
+                    <option value="">Todos os pratos (não exclusivo)</option>
+                </select>
+                <p class="hint" style="font-size:0.78em;color:var(--muted);margin-top:4px;">
+                    Escolhendo um prato aqui, o banner fica <strong>exclusivo daquela página</strong> — só ele aparece ali (mesmo que exista outro banner de categoria pra posição "Página do prato"). Ideal pra vender espaço num prato específico.
+                </p>
             </div>
             <div class="field">
                 <label>Ordem de exibição</label>
@@ -1758,6 +1764,7 @@ async function deletarComentario(id) {
 let bannerEditId = null;
 let bannersData  = [];
 let categoriasParaBanner = [];
+let pratosParaBanner = [];
 
 const posicaoLabel = {
     'todas': 'Todas as posições', 'home': 'Home — rodapé', 'home-topo': 'Home — topo',
@@ -1776,8 +1783,20 @@ async function carregarCategoriasParaBanner() {
     return categoriasParaBanner;
 }
 
+async function carregarPratosParaBanner() {
+    if (pratosParaBanner.length) return pratosParaBanner;
+    try {
+        pratosParaBanner = await fetch('/api/admin/pratos').then(r => r.json());
+        const sel = document.getElementById('banner-prato');
+        sel.innerHTML = '<option value="">Todos os pratos (não exclusivo)</option>' +
+            pratosParaBanner.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+    } catch(e) {}
+    return pratosParaBanner;
+}
+
 function segmentacaoResumo(b) {
     const partes = [];
+    if (b.prato_nome) return `Exclusivo: ${b.prato_nome}`;
     if (b.categoria_nome) partes.push(b.categoria_nome);
     if (b.cidade) partes.push(b.cidade);
     if (b.bairro) partes.push(b.bairro);
@@ -1789,6 +1808,7 @@ async function loadBanners() {
     tb.innerHTML = '<tr class="empty-row"><td colspan="8">Carregando...</td></tr>';
     try {
         await carregarCategoriasParaBanner();
+        await carregarPratosParaBanner();
         bannersData = await fetch('/api/admin/banners').then(r => r.json());
         if (!bannersData.length) {
             tb.innerHTML = '<tr class="empty-row"><td colspan="8">Nenhum banner cadastrado ainda.</td></tr>';
@@ -1825,6 +1845,7 @@ function openBannerModal(id) {
     document.getElementById('banner-categoria').value = '';
     document.getElementById('banner-cidade').value    = '';
     document.getElementById('banner-bairro').value    = '';
+    document.getElementById('banner-prato').value     = '';
     document.getElementById('banner-ordem').value     = '0';
     document.getElementById('banner-ativo').checked   = true;
     document.getElementById('banner-preview').style.display = 'none';
@@ -1833,6 +1854,12 @@ function openBannerModal(id) {
         if (id) {
             const b = bannersData.find(x => x.id === id);
             if (b) document.getElementById('banner-categoria').value = b.categoria_id || '';
+        }
+    });
+    carregarPratosParaBanner().then(() => {
+        if (id) {
+            const b = bannersData.find(x => x.id === id);
+            if (b) document.getElementById('banner-prato').value = b.prato_id || '';
         }
     });
     if (id) {
@@ -1915,8 +1942,9 @@ async function salvarBanner() {
     const categoria_id = document.getElementById('banner-categoria').value || null;
     const cidade        = document.getElementById('banner-cidade').value.trim();
     const bairro         = document.getElementById('banner-bairro').value.trim();
+    const prato_id       = document.getElementById('banner-prato').value || null;
 
-    const payload = { titulo, imagem_url, link_destino: link, posicao, ordem, ativo, categoria_id, cidade, bairro };
+    const payload = { titulo, imagem_url, link_destino: link, posicao, ordem, ativo, categoria_id, cidade, bairro, prato_id };
     try {
         const res = bannerEditId
             ? await api('PUT',  `/api/admin/banners/${bannerEditId}`, payload)
