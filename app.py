@@ -39,6 +39,28 @@ def format_db_data(data_dict):
             formatted[key] = value
     return formatted
 
+# ── Contar restaurantes por categoria (para SEO) ──────────────
+def contar_restaurantes_por_categoria(categoria_slug):
+    """Retorna o número total de restaurantes ativos em uma categoria."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT COUNT(DISTINCT r.id) as total
+            FROM restaurantes r
+            JOIN categorias c ON r.categoria_id = c.id
+            WHERE c.slug = %s AND r.ativo = TRUE
+        """, (categoria_slug,))
+        result = cur.fetchone()
+        cur.close()
+        return result[0] if result else 0
+    except Exception as e:
+        traceback.print_exc()
+        return 0
+    finally:
+        if conn: conn.close()
+
 # ── Auth helper ──────────────────────────────────────────────
 def login_required(f):
     from functools import wraps
@@ -143,19 +165,23 @@ def index():
 
 @app.route('/japones')
 def japones():
-    return render_template('categoria.html', categoria_slug='japones')
+    total = contar_restaurantes_por_categoria('japones')
+    return render_template('categoria.html', categoria_slug='japones', total_restaurantes=total)
 
 @app.route('/carnes')
 def carnes():
-    return render_template('categoria.html', categoria_slug='carnes')
+    total = contar_restaurantes_por_categoria('carnes')
+    return render_template('categoria.html', categoria_slug='carnes', total_restaurantes=total)
 
 @app.route('/pizza')
 def pizza():
-    return render_template('categoria.html', categoria_slug='pizza')
+    total = contar_restaurantes_por_categoria('pizza')
+    return render_template('categoria.html', categoria_slug='pizza', total_restaurantes=total)
 
 @app.route('/mexicano')
 def mexicano():
-    return render_template('categoria.html', categoria_slug='mexicano')
+    total = contar_restaurantes_por_categoria('mexicano')
+    return render_template('categoria.html', categoria_slug='mexicano', total_restaurantes=total)
 
 @app.route('/blog')
 def blog():
