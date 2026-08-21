@@ -77,6 +77,43 @@
               "item": "https://www.guiadorodizio.com.br/{{ categoria_slug }}"
             }
           ]
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Quantos rodízios de {{ categoria_slug | title }} tem em São Paulo?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Encontramos {{ total_restaurantes }} rodízios de {{ categoria_slug | title }} cadastrados em São Paulo. Você pode filtrar por bairro ou região para encontrar o mais próximo de você."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Como encontrar um rodízio de {{ categoria_slug | title }} perto de mim?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Clique no botão 'Ordenar por distância' para ativar sua geolocalização. Nosso sistema ordena automaticamente os {{ total_restaurantes }} rodízios mais próximos de você, com distância em quilômetros."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Posso filtrar rodízios de {{ categoria_slug | title }} por bairro?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sim! Você pode usar os filtros de bairro para refinar sua busca entre os {{ total_restaurantes }} rodízios disponíveis. Também oferecemos filtros por avaliação e classificação."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Qual é o melhor rodízio de {{ categoria_slug | title }} em São Paulo?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Não há um 'melhor' único — depende de suas preferências! Nossa lista de {{ total_restaurantes }} rodízios é ordenada por avaliações de clientes reais. Explore os restaurantes, leia os comentários e escolha o que mais combina com você."
+              }
+            }
+          ]
         }
       ]
     }
@@ -906,7 +943,7 @@
     <div class="hero-categoria" id="hero-cat">
         <a href="/" class="voltar">❮ Voltar para o início</a>
         <h1 id="cat-titulo">Carregando...</h1>
-        <p id="cat-descricao"></p>
+        <p id="cat-descricao">{% if total_restaurantes %}{{ total_restaurantes }} rodízios de {{ categoria_slug | title }} para explorar em São Paulo.{% else %}Carregando opções...{% endif %}</p>
     </div>
 
     <!-- Pratos da categoria -->
